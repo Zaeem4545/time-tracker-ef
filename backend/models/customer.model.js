@@ -1,5 +1,21 @@
 const db = require('../config/db');
 
+// Detect available columns in `customers` table to support different schemas
+let availableColumns = null;
+const initColumns = (async () => {
+    try {
+        const dbName = process.env.DB_NAME || 'time_tracking';
+        const [rows] = await db.query(
+            `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'customers'`,
+            [dbName]
+        );
+        availableColumns = rows.map(r => r.COLUMN_NAME);
+    } catch (e) {
+        console.error('Error detecting customer columns', e);
+        availableColumns = [];
+    }
+})();
+
 // Get all customers
 async function getAllCustomers() {
     const [rows] = await db.query('SELECT * FROM customers ORDER BY name ASC');
@@ -46,19 +62,50 @@ async function createCustomer(data) {
         customFieldsJson = custom_fields.trim();
     }
     
-    const [result] = await db.query(
-        'INSERT INTO customers (name, email, phone, project_name, region, notes, custom_fields) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-            name.trim(),
-            email?.trim() || null,
-            phone?.trim() || null,
-            project_name?.trim() || null,
-            region?.trim() || null,
-            notes?.trim() || null,
-            customFieldsJson
-        ]
-    );
-    
+    await initColumns;
+
+    // Build dynamic insert based on available columns to avoid schema errors
+    const mapping = {
+        name: ['name'],
+        email: ['email'],
+        phone: ['phone', 'contact_number'],
+        project_name: ['project_name', 'company'],
+        region: ['region'],
+        notes: ['notes'],
+        custom_fields: ['custom_fields', 'custom_field1']
+    };
+
+    const cols = [];
+    const vals = [];
+
+    const pushIfAvailable = (fieldKey, value) => {
+        const candidates = mapping[fieldKey] || [fieldKey];
+        for (const col of candidates) {
+            if (availableColumns.includes(col)) {
+                cols.push(col);
+                vals.push(value);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    pushIfAvailable('name', name.trim());
+    pushIfAvailable('email', email?.trim() || null);
+    pushIfAvailable('phone', phone?.trim() || null);
+    pushIfAvailable('project_name', project_name?.trim() || null);
+    pushIfAvailable('region', region?.trim() || null);
+    pushIfAvailable('notes', notes?.trim() || null);
+    pushIfAvailable('custom_fields', customFieldsJson);
+
+    if (cols.length === 0) {
+        throw new Error('No writable columns available in customers table');
+    }
+
+    const placeholders = cols.map(() => '?').join(', ');
+    const sql = `INSERT INTO customers (${cols.join(', ')}) VALUES (${placeholders})`;
+    const [result] = await db.query(sql, vals);
+
     return { id: result.insertId, ...data };
 }
 
@@ -76,20 +123,47 @@ async function updateCustomer(id, data) {
         }
     }
     
-    await db.query(
-        'UPDATE customers SET name = ?, email = ?, phone = ?, project_name = ?, region = ?, notes = ?, custom_fields = ? WHERE id = ?',
-        [
-            name.trim(),
-            email?.trim() || null,
-            phone?.trim() || null,
-            project_name?.trim() || null,
-            region?.trim() || null,
-            notes?.trim() || null,
-            customFieldsJson,
-            id
-        ]
-    );
-    
+    await initColumns;
+
+    const mapping = {
+        name: ['name'],
+        email: ['email'],
+        phone: ['phone', 'contact_number'],
+        project_name: ['project_name', 'company'],
+        region: ['region'],
+        notes: ['notes'],
+        custom_fields: ['custom_fields', 'custom_field1']
+    };
+
+    const sets = [];
+    const vals = [];
+
+    const setIfAvailable = (fieldKey, value) => {
+        const candidates = mapping[fieldKey] || [fieldKey];
+        for (const col of candidates) {
+            if (availableColumns.includes(col)) {
+                sets.push(`${col} = ?`);
+                vals.push(value);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    setIfAvailable('name', name.trim());
+    setIfAvailable('email', email?.trim() || null);
+    setIfAvailable('phone', phone?.trim() || null);
+    setIfAvailable('project_name', project_name?.trim() || null);
+    setIfAvailable('region', region?.trim() || null);
+    setIfAvailable('notes', notes?.trim() || null);
+    setIfAvailable('custom_fields', customFieldsJson);
+
+    if (sets.length === 0) return { id, ...data };
+
+    const sql = `UPDATE customers SET ${sets.join(', ')} WHERE id = ?`;
+    vals.push(id);
+    await db.query(sql, vals);
+
     return { id, ...data };
 }
 
