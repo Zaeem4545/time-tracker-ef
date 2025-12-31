@@ -65,7 +65,7 @@
                   </div>
                   <div *ngIf="project.attachment">
                     <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
-                    <a [href]="'http://localhost:3000' + project.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <a [href]="project.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
                       <span>📎</span>
                       <span>{{ getAttachmentFileName(project.attachment) }}</span>
                     </a>
@@ -859,7 +859,7 @@
             <div>
               <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
               <div *ngIf="selectedProjectForDetails.attachment && selectedProjectForDetails.attachment.trim() !== ''; else noAttachment">
-                <a [href]="'http://localhost:3000' + selectedProjectForDetails.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0;">
+                <a [href]="selectedProjectForDetails.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0;">
                   <span style="font-size: 1.2rem;">📎</span>
                   <span>{{ getAttachmentFileName(selectedProjectForDetails.attachment) }}</span>
                   <span style="font-size: 0.75rem; color: #666; margin-left: 0.5rem;">(Click to open)</span>

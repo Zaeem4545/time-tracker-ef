@@ -253,7 +253,7 @@
               </div>
               <div *ngIf="project.attachment">
                 <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
-                <a [href]="'http://localhost:3000' + project.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <a [href]="project.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
                   <span>📎</span>
                   <span>{{ getAttachmentFileName(project.attachment) }}</span>
                 </a>

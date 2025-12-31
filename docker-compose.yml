@@ -24,9 +24,8 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
       args:
-        # Pass backend URL for production build
-        # host.docker.internal allows Docker container to reach host services
-        API_URL: "http://host.docker.internal:3000"
+        # Use relative /api in production; nginx will proxy /api -> host backend
+        API_URL: "/api"
     container_name: time-tracking-frontend
     restart: unless-stopped
     ports:
