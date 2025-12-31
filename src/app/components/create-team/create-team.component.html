@@ -1,0 +1,92 @@
+<div class="page-container">
+  <div class="content-card">
+    <h2 class="page-title-main">
+      <span class="arrow">►</span>
+      <span class="title-text">Create Team</span>
+    </h2>
+    
+    <div class="dashboard-sections">
+      <!-- Create Team Section -->
+      <div class="section-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 class="section-title">Create New Team</h3>
+          <button (click)="toggleCreateForm()" class="create-btn">
+            {{ showCreateForm ? '− Hide Form' : '+ Create Team' }}
+          </button>
+        </div>
+
+        <!-- Create Team Form (Expandable) -->
+        <div *ngIf="showCreateForm" style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 0.875rem; font-weight: 600;">Team Name (Optional):</label>
+              <input 
+                type="text" 
+                [(ngModel)]="teamName" 
+                placeholder="Enter team name"
+                style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; width: 100%; font-size: 0.875rem;"
+              />
+            </div>
+            
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 0.875rem; font-weight: 600;">Select Team Lead *:</label>
+              <select 
+                [(ngModel)]="selectedManagerId" 
+                style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; width: 100%; font-size: 0.875rem;"
+                required
+              >
+                <option [value]="null">-- Select a team lead --</option>
+                <option *ngFor="let manager of managers" [value]="manager.id">
+                  {{ manager.name || manager.email }} (ID: {{ manager.id }})
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Selected Team Lead Display -->
+          <div *ngIf="selectedManagerId" style="margin-bottom: 1rem; padding: 1rem; background: #e3f2fd; border-radius: 4px; border-left: 4px solid #1976d2;">
+            <div style="font-weight: 600; color: #333; margin-bottom: 0.25rem;">Selected Team Lead:</div>
+            <div style="color: #666; font-size: 0.875rem;">{{ getSelectedManagerName() }}</div>
+          </div>
+
+          <!-- Employee Selection -->
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 0.875rem; font-weight: 600;">Select Employees *:</label>
+            <div style="max-height: 300px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 0.75rem; background: #fff;">
+              <div *ngIf="employees.length === 0" style="text-align: center; padding: 2rem; color: #999; font-style: italic;">
+                No employees available.
+              </div>
+              <div *ngFor="let employee of employees" 
+                   style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 4px; cursor: pointer; transition: background 0.2s;"
+                   [style.background]="isEmployeeSelected(employee.id) ? '#e3f2fd' : 'transparent'"
+                   (click)="toggleEmployeeSelection(employee.id)">
+                <input 
+                  type="checkbox" 
+                  [checked]="isEmployeeSelected(employee.id)"
+                  (change)="toggleEmployeeSelection(employee.id)"
+                  style="width: 18px; height: 18px; cursor: pointer;"
+                />
+                <label style="cursor: pointer; flex: 1; font-size: 0.875rem; color: #333;">
+                  {{ employee.name || employee.email }} (ID: {{ employee.id }}) - {{ employee.contact_number || 'No contact' }}
+                </label>
+              </div>
+            </div>
+            <div *ngIf="selectedEmployeeIds.size > 0" style="margin-top: 0.5rem; color: #1976d2; font-size: 0.875rem; font-weight: 500;">
+              {{ getSelectedEmployeesCount() }} employee(s) selected
+            </div>
+          </div>
+
+          <button 
+            (click)="createTeam()" 
+            class="btn-expertflow btn-primary" 
+            [disabled]="!selectedManagerId || selectedEmployeeIds.size === 0"
+            style="padding: 0.75rem 1.5rem; font-size: 0.875rem;"
+          >
+            + Create Team
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,95 @@
+<div class="page-container">
+  <div class="content-card">
+    <h2 class="page-title-main">
+      <span class="arrow">►</span>
+      <span class="title-text">Calendar</span>
+    </h2>
+    
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <button (click)="previousMonth()" class="nav-btn">‹</button>
+        <h3>{{ getCurrentMonthYear() }}</h3>
+        <button (click)="nextMonth()" class="nav-btn">›</button>
+      </div>
+
+      <div class="calendar-grid">
+        <div class="day-header" *ngFor="let dayName of dayNames">
+          {{ dayName }}
+        </div>
+
+        <div 
+          class="calendar-day" 
+          *ngFor="let day of daysInMonth; let i = index"
+          [class.empty]="day === 0"
+          [class.has-projects]="day !== 0 && getProjectsForDate(day).length > 0"
+          [class.has-task-date]="day !== 0 && isTaskDateHighlighted(day)">
+          
+          <div class="day-number" *ngIf="day !== 0">{{ day }}</div>
+          
+          <div class="projects-list" *ngIf="day !== 0">
+            <div 
+              class="project-badge" 
+              [class.past-date]="isProjectDatePast(project, day)"
+              [class.task-highlighted]="isTaskDateHighlighted(day)"
+              *ngFor="let project of getProjectsForDate(day)"
+              (click)="onProjectClick(project, $event)"
+              [title]="project.name + ' (' + formatDate(project.start_date) + ' - ' + formatDate(project.end_date) + ')'">
+              {{ project.name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="projects-legend" *ngIf="projects.length > 0">
+        <h3 class="legend-title">📋 Projects</h3>
+        <div class="legend-list">
+          <div class="legend-item" *ngFor="let project of projects" (click)="onProjectClick(project, $event)" style="cursor: pointer;">
+            <div class="legend-info">
+              <strong>{{ project.name }}</strong>
+              <span *ngIf="project.start_date && project.end_date">
+                {{ formatDate(project.start_date) }} - {{ formatDate(project.end_date) }}
+              </span>
+              <span *ngIf="!project.start_date || !project.end_date" class="no-dates">
+                No dates set
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- Tasks Modal -->
+    <div *ngIf="showTasksModal" class="modal-overlay" (click)="closeTasksModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Tasks for {{ selectedProject?.name }}</h3>
+          <button class="close-btn" (click)="closeTasksModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="getTasksForSelectedProject().length === 0" class="no-tasks">
+            <p>No tasks found for this project.</p>
+          </div>
+          <div *ngIf="getTasksForSelectedProject().length > 0" class="tasks-list">
+            <div 
+              class="task-item" 
+              *ngFor="let task of getTasksForSelectedProject()"
+              [class.selected]="selectedTask?.id === task.id"
+              (click)="onTaskClick(task, $event)">
+              <div class="task-title">{{ task.title }}</div>
+              <div class="task-info">
+                <span class="task-status" [class]="'status-' + task.status">{{ task.status | titlecase }}</span>
+                <span class="task-date" *ngIf="task.due_date">
+                  Due: {{ formatTaskDate(task.due_date) }}
+                </span>
+                <span class="task-date" *ngIf="!task.due_date" class="no-date">
+                  No due date
+                </span>
+              </div>
+              <div class="task-description" *ngIf="task.description">{{ task.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

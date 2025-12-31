@@ -1,0 +1,67 @@
+<div class="login-page" [style.--bg-image]="'url(assets/1742173347793.jpg)'">
+  <!-- Left Section: Login Form -->
+  <div class="login-left">
+    <div class="login-overlay"></div>
+    <div class="login-content">
+      <h1 class="login-title">LOGIN</h1>
+      <p class="login-instruction">Please provide a valid username and password to login to your account.</p>
+      
+      <form class="login-form" (ngSubmit)="login()">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="Enter Your Email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Enter Your Password"
+            required
+          />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <input
+            type="checkbox"
+            id="remember"
+            [(ngModel)]="rememberMe"
+            name="remember"
+          />
+          <label for="remember">Remember Me</label>
+        </div>
+
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+
+      <div id="googleBtn" class="google-btn-container"></div>
+    </div>
+  </div>
+
+  <!-- Right Section: Branding -->
+  <div class="login-right" style="background-image: url('assets/1742173347793.jpg');">
+    <div class="branding-overlay"></div>
+    <div class="branding-content">
+      <div class="logo-top">
+        <img src="assets/new-logo.png" alt="ExpertFlow" class="logo-image" />
+        <p class="logo-tagline">your callcenter experts</p>
+      </div>
+
+      <div class="logo-bottom">
+        <img src="assets/new-logo.png" alt="ExpertFlow" class="logo-image" />
+        <p class="logo-tagline">your callcenter experts</p>
+      </div>
+    </div>
+  </div>
+</div>
+

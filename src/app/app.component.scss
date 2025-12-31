@@ -1,0 +1,30 @@
+:root {
+  --sidebar-width: 70px;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 70px;
+  margin-top: 56px;
+  padding: 0;
+  width: calc(100% - 70px);
+  max-width: 100%;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+
+  &.with-sidebar {
+    // Uses fixed width
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .main-content.with-sidebar {
+    margin-left: 0;
+  }
+}

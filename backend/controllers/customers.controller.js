@@ -1,0 +1,135 @@
+const Customer = require('../models/customer.model');
+
+// Get all customers
+async function getAllCustomers(req, res) {
+  try {
+    const customers = await Customer.getAllCustomers();
+    res.json(customers);
+  } catch (err) {
+    console.error('Error fetching customers:', err);
+    res.status(500).json({ message: 'Failed to fetch customers' });
+  }
+}
+
+// Get customer by ID
+async function getCustomerById(req, res) {
+  try {
+    const { id } = req.params;
+    const customer = await Customer.getCustomerById(id);
+    
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    
+    res.json(customer);
+  } catch (err) {
+    console.error('Error fetching customer:', err);
+    res.status(500).json({ message: 'Failed to fetch customer' });
+  }
+}
+
+// Create a new customer
+async function createCustomer(req, res) {
+  try {
+    const { name, email, phone, project_name, region, notes, custom_fields } = req.body;
+    
+    // Validate required fields
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ message: 'Customer name is required' });
+    }
+    
+    const customer = await Customer.createCustomer({
+      name,
+      email,
+      phone,
+      project_name,
+      region,
+      notes,
+      custom_fields
+    });
+    
+    res.status(201).json({ success: true, message: 'Customer created successfully', customer });
+  } catch (err) {
+    console.error('Error creating customer:', err);
+    res.status(500).json({ message: 'Failed to create customer' });
+  }
+}
+
+// Update a customer
+async function updateCustomer(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, project_name, region, notes, custom_fields } = req.body;
+    
+    // Validate required fields
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ message: 'Customer name is required' });
+    }
+    
+    // Check if customer exists
+    const existingCustomer = await Customer.getCustomerById(id);
+    if (!existingCustomer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    
+    // Check if region has changed
+    const regionChanged = existingCustomer.region !== region;
+    const newRegion = region ? region.trim() : null;
+    
+    await Customer.updateCustomer(id, {
+      name,
+      email,
+      phone,
+      project_name,
+      region,
+      notes,
+      custom_fields
+    });
+    
+    // Update region in all projects associated with this customer
+    if (regionChanged) {
+      try {
+        const db = require('../config/db');
+        await db.query('UPDATE projects SET region = ? WHERE customer_id = ?', [newRegion, id]);
+        console.log(`Updated region in all projects for customer ${id} to "${newRegion}"`);
+      } catch (projectUpdateError) {
+        console.error('Error updating projects region:', projectUpdateError);
+        // Don't fail the customer update if project update fails
+      }
+    }
+    
+    res.json({ success: true, message: 'Customer updated successfully' });
+  } catch (err) {
+    console.error('Error updating customer:', err);
+    res.status(500).json({ message: 'Failed to update customer' });
+  }
+}
+
+// Delete a customer
+async function deleteCustomer(req, res) {
+  try {
+    const { id } = req.params;
+    
+    // Check if customer exists
+    const existingCustomer = await Customer.getCustomerById(id);
+    if (!existingCustomer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    
+    await Customer.deleteCustomer(id);
+    
+    res.json({ success: true, message: 'Customer deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting customer:', err);
+    res.status(500).json({ message: 'Failed to delete customer' });
+  }
+}
+
+module.exports = {
+  getAllCustomers,
+  getCustomerById,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer
+};
+

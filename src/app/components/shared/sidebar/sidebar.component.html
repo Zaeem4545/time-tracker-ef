@@ -1,0 +1,13 @@
+<div class="sidebar collapsed">
+  <nav class="sidebar-nav">
+    <ul>
+      <li *ngFor="let item of menuItems" [class.active]="item.active">
+        <a (click)="navigate(item.route)" [class.active]="item.active">
+          <span class="icon">{{ item.icon }}</span>
+          <span class="label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+

@@ -1,0 +1,407 @@
+// ExpertFlow Simple Calendar Styles
+
+.calendar-container {
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    color: #333;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .nav-btn {
+    background: #ffffff;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    &:hover {
+      background: #f5f5f5;
+      border-color: #1976d2;
+      color: #1976d2;
+    }
+
+    &:active {
+      background: #e3f2fd;
+    }
+  }
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day-header {
+  background: #f5f5f5;
+  color: #333;
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 1px solid #e0e0e0;
+}
+
+.calendar-day {
+  min-height: 100px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  padding: 0.5rem;
+  transition: background 0.15s ease;
+  position: relative;
+
+  &.empty {
+    background: transparent;
+    border: none;
+  }
+
+  &.has-projects {
+    background: #f9f9f9;
+    border-color: #1976d2;
+  }
+
+  &.has-task-date {
+    background: #e8f5e9;
+    border-color: #4caf50;
+    border-width: 2px;
+  }
+
+  &:hover:not(.empty) {
+    background: #f5f5f5;
+  }
+
+  .day-number {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .project-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    border: 1px solid #bbdefb;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #bbdefb;
+    }
+
+    &.past-date {
+      background: #ffebee;
+      color: #c62828;
+      border-color: #ef5350;
+
+      &:hover {
+        background: #ffcdd2;
+      }
+    }
+
+    &.task-highlighted {
+      background: #c8e6c9;
+      color: #2e7d32;
+      border-color: #4caf50;
+      font-weight: 600;
+      box-shadow: 0 0 0 2px #81c784;
+    }
+  }
+}
+
+.projects-legend {
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+
+  .legend-title {
+    color: #333;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .legend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 3px solid #1976d2;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+
+    .legend-info {
+      flex: 1;
+
+      strong {
+        color: #333;
+        font-size: 0.875rem;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 600;
+      }
+
+      span {
+        color: #666;
+        font-size: 0.8125rem;
+        display: block;
+
+        &.no-dates {
+          color: #999;
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+// Modal Styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f5f5f5;
+      color: #333;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.no-tasks {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+
+  p {
+    margin: 0;
+  }
+}
+
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.task-item {
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: #ffffff;
+
+  &:hover {
+    background: #f5f5f5;
+    border-color: #1976d2;
+  }
+
+  &.selected {
+    background: #e3f2fd;
+    border-color: #1976d2;
+    border-width: 2px;
+  }
+
+  .task-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 0.9375rem;
+  }
+
+  .task-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .task-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+
+    &.status-pending {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+
+    &.status-in_progress {
+      background: #e3f2fd;
+      color: #1976d2;
+    }
+
+    &.status-completed {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+  }
+
+  .task-date {
+    color: #666;
+    font-size: 0.8125rem;
+
+    &.no-date {
+      color: #999;
+      font-style: italic;
+    }
+  }
+
+  .task-description {
+    color: #666;
+    font-size: 0.8125rem;
+    margin-top: 0.5rem;
+    line-height: 1.4;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 1rem;
+  }
+
+  .calendar-day {
+    min-height: 80px;
+    padding: 0.25rem;
+
+    .day-number {
+      font-size: 0.8125rem;
+    }
+
+    .project-badge {
+      font-size: 0.6875rem;
+      padding: 2px 4px;
+    }
+  }
+
+  .day-header {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 1rem;
+
+    h3 {
+      font-size: 1rem;
+    }
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+}

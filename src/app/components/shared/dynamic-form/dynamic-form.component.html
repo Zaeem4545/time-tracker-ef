@@ -1,0 +1,157 @@
+<div class="dynamic-form">
+  <div class="form-fields">
+    <ng-container *ngFor="let field of fields">
+      <div *ngIf="!isFieldHidden(field.id)" class="form-field-wrapper">
+      <div class="field-controls" *ngIf="showAddField && isFieldDeletable(field)">
+        <button (click)="removeField(field.id)" class="btn-remove-field" title="Remove Field">×</button>
+      </div>
+      
+      <div class="form-field">
+        <label *ngIf="field.label">{{ field.label }}<span *ngIf="field.required"> *</span></label>
+        
+        <!-- Text Input -->
+        <input 
+          *ngIf="field.type === 'text' || field.type === 'email' || field.type === 'password'"
+          [type]="field.type"
+          [placeholder]="field.placeholder || field.label"
+          [required]="field.required || false"
+          [value]="getFieldValue(field.id)"
+          (input)="onFieldChange(field.id, $any($event.target).value)"
+          class="form-input" />
+        
+        <!-- Number Input -->
+        <input 
+          *ngIf="field.type === 'number'"
+          type="number"
+          [placeholder]="field.placeholder || field.label"
+          [required]="field.required || false"
+          [value]="getFieldValue(field.id)"
+          (input)="onFieldChange(field.id, $any($event.target).value)"
+          class="form-input" />
+        
+        <!-- Date Input -->
+        <input 
+          *ngIf="field.type === 'date'"
+          type="date"
+          [placeholder]="field.placeholder || field.label"
+          [required]="field.required || false"
+          [value]="getFieldValue(field.id)"
+          (change)="onFieldChange(field.id, $any($event.target).value)"
+          class="form-input" />
+        
+        <!-- Select Dropdown -->
+        <select 
+          *ngIf="field.type === 'select'"
+          [required]="field.required || false"
+          [ngModel]="getFieldValue(field.id)"
+          (ngModelChange)="onFieldChange(field.id, $event)"
+          class="form-input">
+          <option value="">{{ field.placeholder || 'Select...' }}</option>
+          <option *ngFor="let option of getFieldOptions(field)" [value]="option.value">{{ option.label }}</option>
+        </select>
+        
+        <!-- Textarea -->
+        <textarea 
+          *ngIf="field.type === 'textarea'"
+          [placeholder]="field.placeholder || field.label"
+          [required]="field.required || false"
+          [value]="getFieldValue(field.id)"
+          (input)="onFieldChange(field.id, $any($event.target).value)"
+          class="form-input"
+          rows="3"></textarea>
+        
+        <!-- File Input -->
+        <div *ngIf="field.type === 'file'" class="file-upload-wrapper">
+          <input 
+            type="file"
+            [id]="'file_' + field.id"
+            [required]="field.required || false"
+            (change)="onFileChange(field.id, $event)"
+            class="file-input"
+            accept="*/*" />
+          <label [for]="'file_' + field.id" class="file-label">
+            <span class="file-icon">📎</span>
+            <span class="file-text">{{ getFileLabel(field.id) || 'Choose File' }}</span>
+          </label>
+          <button *ngIf="getFileLabel(field.id)" type="button" (click)="clearFile(field.id)" class="file-clear-btn" title="Remove file">×</button>
+        </div>
+      </div>
+    </div>
+    </ng-container>
+  </div>
+
+  <!-- Add Field Button -->
+  <div *ngIf="showAddField" class="add-field-section">
+    <button (click)="toggleAddFieldModal()" class="btn-add-field">+ Add Field</button>
+  </div>
+
+  <!-- Add Field Modal -->
+  <div *ngIf="showAddFieldModal" class="add-field-modal" (click)="toggleAddFieldModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Add New Field</h3>
+        <button type="button" (click)="toggleAddFieldModal()" class="btn-close-modal" title="Close">×</button>
+      </div>
+      <div class="modal-form">
+        <input 
+          type="text" 
+          placeholder="Field Name (e.g., 'custom_field')" 
+          [(ngModel)]="newField.name"
+          class="form-input" />
+        <input 
+          type="text" 
+          placeholder="Field Label (e.g., 'Custom Field')" 
+          [(ngModel)]="newField.label"
+          class="form-input" />
+        <select [(ngModel)]="newField.type" (change)="onFieldTypeChange()" class="form-input">
+          <option value="text">Text</option>
+          <option value="email">Email</option>
+          <option value="password">Password</option>
+          <option value="number">Number</option>
+          <option value="date">Date</option>
+          <option value="select">Select Dropdown</option>
+          <option value="textarea">Textarea</option>
+          <option value="file">File Upload</option>
+        </select>
+        
+        <!-- Dropdown Options Section (only shown when type is 'select') -->
+        <div *ngIf="newField.type === 'select'" class="dropdown-options-section">
+          <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Dropdown Options *</label>
+          <div class="options-list" *ngIf="newFieldOptions.length > 0">
+            <div *ngFor="let option of newFieldOptions; let i = index" class="option-item">
+              <span class="option-display">{{ option.label }}</span>
+              <button type="button" (click)="removeOption(i)" class="btn-remove-option" title="Remove Option">×</button>
+            </div>
+          </div>
+          <div class="add-option-form">
+            <input 
+              type="text" 
+              placeholder="Option Name *" 
+              [(ngModel)]="newOptionName"
+              class="form-input option-input"
+              required />
+            <button type="button" (click)="addOption()" class="btn-add-option">+ Add Option</button>
+          </div>
+          <p *ngIf="newFieldOptions.length === 0" class="options-hint" style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+            Add at least one option for the dropdown
+          </p>
+        </div>
+        
+        <input 
+          type="text" 
+          placeholder="Placeholder (optional)" 
+          [(ngModel)]="newField.placeholder"
+          class="form-input" />
+        <label>
+          <input type="checkbox" [(ngModel)]="newField.required" />
+          Required Field
+        </label>
+        <div class="modal-actions">
+          <button (click)="addField()" class="btn-expertflow btn-primary">Add Field</button>
+          <button (click)="toggleAddFieldModal()" class="btn-expertflow">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

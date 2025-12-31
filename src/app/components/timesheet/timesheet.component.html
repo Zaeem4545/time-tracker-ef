@@ -1,0 +1,310 @@
+<div class="timesheet-container">
+  <div class="content-card">
+    <h2 class="page-title-main">
+      <span class="arrow">►</span>
+      <span class="title-text">Timesheet</span>
+    </h2>
+
+    <!-- Search Bar with Dropdown - Top of Page -->
+    <div class="search-container-top">
+      <div class="search-bar-wrapper">
+        <span class="search-icon">🔍</span>
+        
+        <!-- Active Filters Tags -->
+        <div class="active-filters-container" *ngIf="activeFilters.length > 0 || selectedProjectFilter !== null">
+          <!-- Filter Tags -->
+          <div class="filter-tag" *ngFor="let filter of activeFilters">
+            <span class="filter-tag-text">{{ getFilterDisplayName(filter) }}</span>
+            <button class="filter-tag-remove" (click)="removeFilter(filter); $event.stopPropagation()" title="Remove filter">×</button>
+          </div>
+          
+          <!-- Project Filter Tag -->
+          <div class="filter-tag" *ngIf="selectedProjectFilter !== null">
+            <span class="filter-tag-text">Project: {{ getProjectName(selectedProjectFilter) }}</span>
+            <button class="filter-tag-remove" (click)="clearProjectFilter(); $event.stopPropagation()" title="Remove project filter">×</button>
+          </div>
+        </div>
+        
+        <input 
+          type="text" 
+          class="search-input" 
+          [placeholder]="activeFilters.length > 0 ? '' : 'Search...'" 
+          [(ngModel)]="searchTerm"
+          (input)="onSearchInputChange()"
+          (focus)="showSearchSuggestions = true"
+          (blur)="onSearchBlur()"
+        />
+        <button class="search-dropdown-toggle" (click)="toggleSearchDropdown(); $event.stopPropagation()" [class.active]="showSearchDropdown">
+          <span>{{ showSearchDropdown ? '▲' : '▼' }}</span>
+        </button>
+      </div>
+      
+      <!-- Search Suggestions Dropdown -->
+      <div *ngIf="showSearchSuggestions && searchTerm && searchTerm.trim() !== ''" class="search-suggestions-dropdown" (click)="$event.stopPropagation()">
+        <div class="search-suggestion-item" (click)="applySearchOption('activity')" [class.hovered]="selectedSearchOption === 'activity'">
+          <span>Search <strong>Activity</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+        <div class="search-suggestion-item" (click)="applySearchOption('project')" [class.hovered]="selectedSearchOption === 'project'">
+          <span>Search <strong>Project</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+        <div class="search-suggestion-item" (click)="applySearchOption('description')" [class.hovered]="selectedSearchOption === 'description'">
+          <span>Search <strong>Description</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+      </div>
+      
+      <!-- Dropdown Menu -->
+      <div *ngIf="showSearchDropdown" class="search-dropdown" (click)="$event.stopPropagation()">
+        <div class="dropdown-section">
+          <div class="dropdown-header">
+            <span class="dropdown-icon">🔽</span>
+            <span class="dropdown-title">Filters</span>
+          </div>
+          <div class="dropdown-content">
+            <div class="dropdown-item" [class.active]="isFilterActive('my-entries')" (click)="applyFilter('my-entries')">
+              <span>My Entries</span>
+              <span class="checkmark" *ngIf="isFilterActive('my-entries')">✓</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item project-filter-item" (click)="toggleProjectFilter(); $event.stopPropagation()">
+              <span>Project</span>
+              <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showProjectFilter" class="project-filter-dropdown" (click)="$event.stopPropagation()">
+                <select [ngModel]="selectedProjectFilter" (ngModelChange)="setProjectFilter($event)" class="project-select">
+                  <option [ngValue]="null">All Projects</option>
+                  <option *ngFor="let project of projects" [ngValue]="project.id">{{ project.name }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Start/Stop Time Tracking Section -->
+    <div class="time-tracking-controls">
+      <!-- Active Timer Display -->
+      <div *ngIf="activeEntry" class="active-timer-section">
+        <button (click)="stopTime()" class="btn-stop">
+          <span class="stop-icon">■</span> Stop
+        </button>
+        <button (click)="discardTime()" class="btn-discard">Discard</button>
+        <div class="timer-display">{{ formatTimer(elapsedTime) }}</div>
+      </div>
+
+      <!-- Start Time Form -->
+      <div *ngIf="!activeEntry" class="start-time-section">
+        <div class="form-row">
+          <select [(ngModel)]="selectedProjectId" (change)="onProjectChange()" required class="form-select">
+            <option [ngValue]="null">Select Project *</option>
+            <option *ngFor="let project of projects" [ngValue]="project.id">{{ project.name }}</option>
+          </select>
+          <select [(ngModel)]="selectedTaskId" required class="form-select" [disabled]="!selectedProjectId || !projectTasks[selectedProjectId!] || projectTasks[selectedProjectId!].length === 0">
+            <option [ngValue]="null">Select Task *</option>
+            <option *ngFor="let task of projectTasks[selectedProjectId!]" [ngValue]="task.id">{{ task.title }}</option>
+            <option *ngIf="selectedProjectId && (!projectTasks[selectedProjectId] || projectTasks[selectedProjectId].length === 0)" [ngValue]="null" disabled>No tasks available</option>
+          </select>
+          <input type="text" placeholder="Description (Optional)" [(ngModel)]="description" class="form-input" />
+        </div>
+        <button (click)="startTime()" class="btn-expertflow btn-primary" [disabled]="!selectedProjectId || !selectedTaskId">
+          Start Timer
+        </button>
+      </div>
+    </div>
+
+    <!-- Week Navigation -->
+    <div class="week-navigation">
+      <button (click)="goToToday()" class="btn-today">Today</button>
+      <button (click)="navigateView(-1)" class="btn-nav">←</button>
+      <select [(ngModel)]="selectedView" (change)="onViewChange()" class="week-select">
+        <option value="day">Day</option>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+      </select>
+      <button (click)="navigateView(1)" class="btn-nav">→</button>
+      <!-- Admin Controls -->
+      <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+        <button (click)="exportToExcel()" class="btn-clear-all" style="background: #2196F3; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📊</span>
+          <span>Spreadsheet</span>
+        </button>
+        <button (click)="toggleAddLineForm()" class="btn-clear-all" style="background: #4caf50; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer;">
+          {{ showAddLineForm ? 'Cancel Add Line' : '+ Add Line' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Line Modal -->
+    <div *ngIf="showAddLineForm" class="modal-overlay" (click)="cancelAddLine()">
+      <div class="modal-content add-line-modal" [class.maximized]="isModalMaximized" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Add a Line</h3>
+          <div class="modal-actions">
+            <button class="modal-btn-icon" (click)="toggleMaximizeModal()" title="Maximize/Restore">
+              <span *ngIf="!isModalMaximized">□</span>
+              <span *ngIf="isModalMaximized">❐</span>
+            </button>
+            <button class="modal-btn-icon" (click)="cancelAddLine()" title="Close">×</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div class="form-field">
+            <label>Project</label>
+            <div class="project-select-wrapper">
+              <select [(ngModel)]="newTimeEntry.project_id" (change)="onAddLineProjectChange()" required class="form-select project-select">
+                <option [ngValue]="null">Select Project</option>
+                <option *ngFor="let project of projects" [ngValue]="project.id">{{ project.name }}</option>
+              </select>
+              <span class="project-select-icon">▼</span>
+              <span class="project-external-icon" title="Open project details">⤴</span>
+            </div>
+          </div>
+          
+          <div class="form-field">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="newTimeEntry.date" required class="form-input date-input" />
+          </div>
+          
+          <div class="form-field">
+            <label>Task</label>
+            <div class="task-select-wrapper">
+              <select 
+                [(ngModel)]="newTimeEntry.task_id" 
+                (change)="onAddLineTaskChange()" 
+                required 
+                class="form-select task-select"
+                [disabled]="!newTimeEntry.project_id">
+                <option [ngValue]="null">Select Task</option>
+                <option *ngIf="newTimeEntry.project_id && projectTasks[newTimeEntry.project_id]" 
+                        value="CREATE_TASK" 
+                        class="create-task-option">
+                  + Create Task
+                </option>
+                <option *ngFor="let task of (projectTasks[newTimeEntry.project_id] || [])" 
+                        [ngValue]="task.id">
+                  {{ task.title }}
+                </option>
+              </select>
+              <span class="task-select-icon">▼</span>
+            </div>
+            <div *ngIf="showCreateTaskInput" class="create-task-input-wrapper">
+              <input 
+                type="text" 
+                [(ngModel)]="newTaskTitle" 
+                placeholder="Enter new task title" 
+                class="form-input create-task-input"
+                (keyup.enter)="createTaskFromAddLine()" />
+              <div class="create-task-buttons">
+                <button (click)="createTaskFromAddLine()" class="btn-expertflow btn-primary">Create Task</button>
+                <button (click)="cancelCreateTask()" class="btn-expertflow">Cancel</button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-field">
+            <label>Time Spent</label>
+            <input type="text" [(ngModel)]="newTimeEntry.time_spent" required class="form-input time-input" placeholder="HH:MM" pattern="^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" maxlength="5" />
+          </div>
+          
+          <div class="form-field">
+            <label>Describe your activity</label>
+            <textarea [(ngModel)]="newTimeEntry.description" placeholder="Describe your activity" class="form-textarea activity-description"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button (click)="cancelAddLine()" class="btn-discard">Discard</button>
+          <button (click)="saveNewTimeEntry()" class="btn-save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time Entries Table -->
+    <div class="time-entries-table">
+      <table class="week-table">
+        <thead>
+          <tr>
+            <th class="activity-header">Activity</th>
+            <th *ngFor="let day of weekDays" class="day-header" [class.today]="day.isToday" [class.active-day]="day.isToday">
+              {{ day.dayName }}, {{ day.monthName }} {{ day.dayNumber }}
+            </th>
+            <th class="total-header">Time Spent</th>
+            <th class="allocated-header">Allocated Time</th>
+            <th class="users-header">Worked By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let activity of activityRows" class="activity-row" [class.active-timer-row]="isActivityTimerActive(activity)">
+            <td class="activity-cell">
+              <div class="activity-timer-wrapper">
+                <button 
+                  *ngIf="!isActivityTimerActive(activity)"
+                  (click)="startActivityTimer(activity); $event.stopPropagation()" 
+                  class="btn-timer-start"
+                  title="Start timer">
+                  <span class="timer-play-icon">▶</span>
+                </button>
+                <button 
+                  *ngIf="isActivityTimerActive(activity)"
+                  (click)="stopActivityTimer(activity); $event.stopPropagation()" 
+                  class="btn-timer-stop"
+                  title="Stop timer">
+                  <span class="timer-stop-icon">■</span>
+                </button>
+                <div class="activity-info">
+                  <div class="activity-name">{{ activity.taskName }}</div>
+                  <div class="activity-project" *ngIf="activity.projectName">{{ activity.projectName }}</div>
+                  <div class="activity-description" *ngIf="activity.description">{{ activity.description }}</div>
+                  <div *ngIf="isActivityTimerActive(activity)" class="activity-timer-display">
+                    {{ formatTimer(getActivityElapsedTime(activity)) }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td *ngFor="let day of weekDays" class="time-cell editable-cell" [class.today]="day.isToday" [class.active-day]="day.isToday" [class.editing]="isCellEditing(activity, day)" [class.time-exceeded-cell]="activity.timeExceeded && getTimeForDay(activity, day) > 0">
+              <div *ngIf="!isCellEditing(activity, day)" 
+                   (click)="startEditingCell(activity, day); $event.stopPropagation()" 
+                   class="time-cell-content"
+                   [class.time-exceeded]="activity.timeExceeded && getTimeForDay(activity, day) > 0"
+                   title="Click to edit time">
+                {{ formatTime(getTimeForDay(activity, day)) }}
+              </div>
+              <div *ngIf="isCellEditing(activity, day)" class="time-cell-edit" (click)="$event.stopPropagation()">
+                <input 
+                  type="text" 
+                  [(ngModel)]="editingCellTime" 
+                  (blur)="saveCellTime(activity, day)"
+                  (keydown.enter)="saveCellTime(activity, day); $event.preventDefault()"
+                  (keydown.escape)="cancelCellEdit(); $event.preventDefault()"
+                  placeholder="HH:MM"
+                  class="time-input-edit"
+                  autofocus
+                />
+                <button (click)="saveCellTime(activity, day); $event.stopPropagation()" class="btn-save-time">✓</button>
+                <button (click)="cancelCellEdit(); $event.stopPropagation()" class="btn-cancel-time">×</button>
+              </div>
+            </td>
+            <td class="total-cell" [class.time-exceeded]="activity.timeExceeded">{{ formatTime(activity.totalTime) }}</td>
+            <td class="allocated-cell">{{ formatAllocatedTime(activity.allocatedTime) }}</td>
+            <td class="users-cell">
+              <div *ngIf="activity.userList && activity.userList.length > 0" class="users-list">
+                <div *ngFor="let userName of activity.userList" class="user-item">
+                  <span class="user-name" style="font-weight: 500; color: #333;">{{ userName }}</span>
+                  <span class="user-time" style="color: #666; font-size: 0.875rem;">({{ formatTime(getUserTimeForName(activity, userName)) }})</span>
+                </div>
+              </div>
+              <span *ngIf="!activity.userList || activity.userList.length === 0" class="no-users" style="color: #999;">-</span>
+            </td>
+          </tr>
+          <tr class="total-row">
+            <td class="total-label-cell">Total</td>
+            <td *ngFor="let day of weekDays" class="total-day-cell" [class.today]="day.isToday" [class.active-day]="day.isToday">
+              {{ formatTime(getTotalForDay(day)) }}
+            </td>
+            <td class="grand-total-cell">{{ formatTime(getGrandTotal()) }}</td>
+            <td class="allocated-total-cell">-</td>
+            <td class="users-total-cell">-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

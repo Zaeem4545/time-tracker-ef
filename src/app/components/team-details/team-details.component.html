@@ -1,0 +1,92 @@
+<div class="page-container">
+  <div class="content-card">
+    <h2 class="page-title-main">
+      <span class="arrow">►</span>
+      <span class="title-text">Team Details</span>
+    </h2>
+
+    <!-- Admin View: Single table showing all users -->
+    <div *ngIf="isAdmin">
+      <table class="expertflow-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Contact Number</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="teamMembers.length === 0" class="no-results">
+            <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+              No team members found.
+            </td>
+          </tr>
+          <tr *ngFor="let member of teamMembers" class="user-row">
+            <td>{{ member.id }}</td>
+            <td>{{ member.name || '-' }}</td>
+            <td>{{ member.email }}</td>
+            <td>{{ member.contact_number || '-' }}</td>
+            <td class="role-cell">
+              <span class="role-text">{{ member.role | titlecase }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Head Manager View: Separate table for each manager's team -->
+    <div *ngIf="isHeadManager">
+      <div *ngIf="teamGroups.length === 0" style="text-align: center; padding: 2rem; color: #666;">
+        No team members found. Please select managers from the dashboard.
+      </div>
+      
+      <div *ngFor="let teamGroup of teamGroups" class="team-group" style="margin-bottom: 2rem;">
+        <h3 class="team-title" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: #f5f5f5; border-left: 4px solid #007bff; color: #333; font-size: 1.1rem; font-weight: 600;">
+          Team {{ teamGroup.selectionOrder }} - Manager: {{ teamGroup.manager.email }} (ID: {{ teamGroup.manager.id }})
+        </h3>
+        
+        <table class="expertflow-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Contact Number</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Team Lead row -->
+            <tr class="user-row manager-row" style="background-color: #e3f2fd;">
+              <td>{{ teamGroup.manager.id }}</td>
+              <td><strong>{{ teamGroup.manager.name || '-' }}</strong></td>
+              <td><strong>{{ teamGroup.manager.email }}</strong></td>
+              <td>{{ teamGroup.manager.contact_number || '-' }}</td>
+              <td class="role-cell">
+                <span class="role-text" style="font-weight: 600;">{{ teamGroup.manager.role | titlecase }}</span>
+              </td>
+            </tr>
+            
+            <!-- Employees rows -->
+            <tr *ngIf="teamGroup.employees.length === 0" class="no-results">
+              <td colspan="5" style="text-align: center; padding: 1rem; color: #999; font-style: italic;">
+                No employees assigned to this team lead yet.
+              </td>
+            </tr>
+            <tr *ngFor="let employee of teamGroup.employees" class="user-row employee-row">
+              <td>{{ employee.id }}</td>
+              <td>{{ employee.name || '-' }}</td>
+              <td>{{ employee.email }}</td>
+              <td>{{ employee.contact_number || '-' }}</td>
+              <td class="role-cell">
+                <span class="role-text">{{ employee.role | titlecase }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

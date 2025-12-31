@@ -1,0 +1,68 @@
+<div class="page-container">
+  <div class="content-card">
+    <h2 class="page-title-main">
+      <span class="arrow">►</span>
+      <span class="title-text">Add Employee</span>
+    </h2>
+    
+    <div class="dashboard-sections">
+      <!-- Add Employee Section -->
+      <div class="section-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 class="section-title">Add Employee to Team</h3>
+          <button (click)="toggleAddEmployeeForm()" class="create-btn">
+            {{ showAddEmployeeForm ? '− Hide Form' : '+ Add Employee' }}
+          </button>
+        </div>
+
+        <!-- Add Employee Form (Expandable) -->
+        <div *ngIf="showAddEmployeeForm" style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+          <div style="margin-bottom: 1rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 0.875rem; font-weight: 600;">Select Employee:</label>
+            <select [(ngModel)]="selectedEmployeeId" style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; width: 100%; font-size: 0.875rem;">
+              <option [value]="null">-- Select an employee --</option>
+              <option *ngFor="let employee of availableEmployees" [value]="employee.id">
+                {{ employee.email }} (ID: {{ employee.id }}) - {{ employee.contact_number || 'No contact' }}
+              </option>
+            </select>
+            <div *ngIf="availableEmployees.length === 0" style="padding: 1rem; color: #999; font-style: italic; text-align: center;">
+              No employees available to add. All employees are already assigned to managers.
+            </div>
+          </div>
+          <button (click)="addEmployee()" class="btn-expertflow btn-primary" [disabled]="!selectedEmployeeId">+ Add Employee</button>
+        </div>
+      </div>
+
+      <!-- Team Members Section -->
+      <div class="section-card" style="margin-top: 1.5rem;">
+        <h3 class="section-title">Team Members</h3>
+        <table class="expertflow-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Contact</th>
+              <th>Email</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of teamMembers" class="user-row">
+              <td>{{ member.name || member.email || '-' }}</td>
+              <td>{{ member.contact_number || '-' }}</td>
+              <td>{{ member.email }}</td>
+              <td class="action-cell">
+                <button (click)="removeEmployee(member.id)" class="btn-expertflow btn-icon btn-delete" title="Remove">🗑️</button>
+              </td>
+            </tr>
+            <tr *ngIf="teamMembers.length === 0">
+              <td colspan="4" style="text-align: center; padding: 2rem; color: #666;">
+                No team members found.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>

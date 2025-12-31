@@ -1,0 +1,54 @@
+<header class="app-header">
+  <div class="header-content">
+    <div class="header-left">
+      <div class="logo">
+        <img src="assets/new-logo.png" alt="ExpertFlow" class="logo-image" />
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <span class="user-name">{{ getUserDisplayName() }}</span>
+        <div class="user-avatar">{{ getUserDisplayName().charAt(0) }}</div>
+      </div>
+      <div class="notifications-container">
+        <button class="icon-btn" title="Notifications" (click)="toggleNotifications()">
+          <span>🔔</span>
+          <span *ngIf="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+        </button>
+        <div class="dropdown notifications-dropdown" *ngIf="showNotifications">
+          <div class="dropdown-content">
+            <div class="notifications-header">
+              <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #333;">Notifications</h4>
+              <button *ngIf="unreadCount > 0" (click)="markAllAsRead(); $event.stopPropagation(); $event.preventDefault()" class="mark-all-read-btn" style="background: none; border: none; color: #1976d2; cursor: pointer; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: background 0.15s ease;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">Mark all as read</button>
+            </div>
+            <div *ngIf="notifications.length === 0" class="dropdown-item no-notifications">
+              No notifications
+            </div>
+            <div *ngFor="let notification of notifications" 
+                 class="dropdown-item notification-item" 
+                 [class.unread]="!notification.is_read"
+                 (click)="markAsRead(notification)">
+              <div class="notification-content">
+                <p class="notification-message">{{ notification.message }}</p>
+                <span class="notification-time">{{ formatNotificationTime(notification.created_at) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="menu-container">
+        <button class="icon-btn" title="Menu" (click)="toggleMenu()">
+          <span>⋮</span>
+        </button>
+        <div class="dropdown menu-dropdown" *ngIf="showMenu">
+          <div class="dropdown-content">
+            <div class="dropdown-item" (click)="handleLogout()">
+              Logout
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+

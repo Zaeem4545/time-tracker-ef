@@ -1,0 +1,9 @@
+<div class="app-container">
+  <app-sidebar *ngIf="showNavbar"></app-sidebar>
+  <app-header *ngIf="showNavbar"></app-header>
+  <main class="main-content" [class.with-sidebar]="showNavbar">
+    <router-outlet></router-outlet>
+  </main>
+  <app-toast-notification></app-toast-notification>
+  <app-confirmation-modal></app-confirmation-modal>
+</div>

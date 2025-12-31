@@ -1,0 +1,13 @@
+<div class="toast-container" *ngIf="show" [@slideInOut]="show ? 'in' : 'out'">
+  <div class="toast" [ngClass]="'toast-' + type">
+    <div class="toast-icon">
+      <span *ngIf="type === 'success'">✓</span>
+      <span *ngIf="type === 'info'">🔔</span>
+      <span *ngIf="type === 'warning'">⚠</span>
+      <span *ngIf="type === 'error'">✕</span>
+    </div>
+    <div class="toast-message">{{ message }}</div>
+    <button class="toast-close" (click)="close()" aria-label="Close">×</button>
+  </div>
+</div>
+

@@ -1,0 +1,36 @@
+<div class="page-container">
+  <div class="content-card">
+    <h2 class="page-title-main">
+      <span class="arrow">►</span>
+      <span class="title-text">Employee Details</span>
+    </h2>
+
+    <table class="expertflow-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Contact Number</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="employees.length === 0" class="no-results">
+          <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+            No employees found.
+          </td>
+        </tr>
+        <tr *ngFor="let employee of employees" class="user-row">
+          <td>{{ employee.id }}</td>
+          <td>{{ employee.name || '-' }}</td>
+          <td>{{ employee.email }}</td>
+          <td>{{ employee.contact_number || '-' }}</td>
+          <td class="role-cell">
+            <span class="role-text">{{ employee.role | titlecase }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

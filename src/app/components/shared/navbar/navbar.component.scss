@@ -1,0 +1,85 @@
+/* Navbar Container */
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+  background: linear-gradient(90deg, #4b6cb7, #182848);
+  color: #fff;
+  height: 60px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  .logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.05);
+      color: #ffd700;
+    }
+  }
+
+  ul {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+
+    li {
+      a {
+        text-decoration: none;
+        color: #fff;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.2);
+          color: #ffd700;
+        }
+      }
+
+      /* Special style for Logout button */
+      &:last-child a {
+        background-color: #ff4b5c;
+        color: #fff;
+        cursor: pointer; 
+
+        &:hover {
+          background-color: #ff1f3a;
+          color: #fff;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem 2rem;
+    height: auto;
+
+    ul {
+      flex-direction: column;
+      width: 100%;
+      gap: 0.8rem;
+
+      li a {
+        width: 100%;
+        display: block;
+        text-align: center;
+      }
+    }
+  }
+}

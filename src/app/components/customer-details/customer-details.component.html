@@ -1,0 +1,282 @@
+<div class="customer-details-container">
+  <div class="page-header">
+    <h1>Customer Details</h1>
+    <button *ngIf="canEdit()" (click)="openAddModal()" class="btn-expertflow btn-primary">
+      + Add Customer
+    </button>
+  </div>
+
+  <!-- Search Bar with Dropdown -->
+  <div class="search-container-top">
+    <div class="search-bar-wrapper">
+      <span class="search-icon">🔍</span>
+      
+      <!-- Active Filters Tags -->
+      <div class="active-filters-container" *ngIf="activeFilters.length > 0 || selectedProjectFilter !== null || selectedRegionFilter !== null">
+        <!-- Filter Tags -->
+        <div class="filter-tag" *ngFor="let filter of activeFilters">
+          <span class="filter-tag-text">{{ getFilterDisplayName(filter) }}</span>
+          <button class="filter-tag-remove" (click)="removeFilter(filter); $event.stopPropagation()" title="Remove filter">×</button>
+        </div>
+        
+        <!-- Project Filter Tag -->
+        <div class="filter-tag" *ngIf="selectedProjectFilter !== null">
+          <span class="filter-tag-text">Project: {{ getProjectName(selectedProjectFilter) }}</span>
+          <button class="filter-tag-remove" (click)="setProjectFilter(null); $event.stopPropagation()" title="Remove project filter">×</button>
+        </div>
+        
+        <!-- Region Filter Tag -->
+        <div class="filter-tag" *ngIf="selectedRegionFilter !== null">
+          <span class="filter-tag-text">Region: {{ selectedRegionFilter }}</span>
+          <button class="filter-tag-remove" (click)="setRegionFilter(null); $event.stopPropagation()" title="Remove region filter">×</button>
+        </div>
+      </div>
+      
+      <input 
+        type="text" 
+        class="search-input" 
+        [placeholder]="activeFilters.length > 0 ? '' : 'Search...'" 
+        [(ngModel)]="searchTerm"
+        (input)="onSearchInputChange()"
+        (focus)="showSearchSuggestions = true"
+        (blur)="onSearchBlur()"
+      />
+      <button class="search-dropdown-toggle" (click)="toggleSearchDropdown(); $event.stopPropagation()" [class.active]="showSearchDropdown">
+        <span>{{ showSearchDropdown ? '▲' : '▼' }}</span>
+      </button>
+    </div>
+    
+    <!-- Search Suggestions Dropdown -->
+    <div *ngIf="showSearchSuggestions && searchTerm && searchTerm.trim() !== ''" class="search-suggestions-dropdown" (click)="$event.stopPropagation()">
+      <div class="search-suggestion-item" (click)="applySearchOption('name')" [class.hovered]="selectedSearchOption === 'name'">
+        <span>Search <strong>Name</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+      </div>
+      <div class="search-suggestion-item" (click)="applySearchOption('email')" [class.hovered]="selectedSearchOption === 'email'">
+        <span>Search <strong>Email</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+      </div>
+      <div class="search-suggestion-item" (click)="applySearchOption('phone')" [class.hovered]="selectedSearchOption === 'phone'">
+        <span>Search <strong>Phone</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+      </div>
+      <div class="search-suggestion-item" (click)="applySearchOption('project')" [class.hovered]="selectedSearchOption === 'project'">
+        <span>► Search <strong>Project</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+      </div>
+      <div class="search-suggestion-item" (click)="applySearchOption('region')" [class.hovered]="selectedSearchOption === 'region'">
+        <span>► Search <strong>Region</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+      </div>
+    </div>
+    
+    <!-- Dropdown Menu -->
+    <div *ngIf="showSearchDropdown" class="search-dropdown" (click)="$event.stopPropagation()">
+      <div class="dropdown-section">
+        <div class="dropdown-header">
+          <span class="dropdown-icon">🔽</span>
+          <span class="dropdown-title">Filters</span>
+        </div>
+        <div class="dropdown-content">
+          <div class="dropdown-item" [class.active]="isFilterActive('name')" (click)="applyFilter('name')">
+            <span>Name</span>
+            <span class="checkmark" *ngIf="isFilterActive('name')">✓</span>
+          </div>
+          <div class="dropdown-item" [class.active]="isFilterActive('email')" (click)="applyFilter('email')">
+            <span>Email</span>
+            <span class="checkmark" *ngIf="isFilterActive('email')">✓</span>
+          </div>
+          <div class="dropdown-item" [class.active]="isFilterActive('phone')" (click)="applyFilter('phone')">
+            <span>Phone Number</span>
+            <span class="checkmark" *ngIf="isFilterActive('phone')">✓</span>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item project-filter-item" (click)="toggleProjectFilter(); $event.stopPropagation()">
+            <span>Project</span>
+            <span class="dropdown-arrow">▼</span>
+            <div *ngIf="showProjectFilter" class="manager-filter-dropdown" (click)="$event.stopPropagation()">
+              <select [ngModel]="selectedProjectFilter" (ngModelChange)="setProjectFilter($event)" class="manager-select">
+                <option [ngValue]="null">All Projects</option>
+                <option *ngFor="let project of projects" [ngValue]="project.id">{{ project.name }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="dropdown-item region-filter-item" (click)="toggleRegionFilter(); $event.stopPropagation()">
+            <span>Region</span>
+            <span class="dropdown-arrow">▼</span>
+            <div *ngIf="showRegionFilter" class="manager-filter-dropdown" (click)="$event.stopPropagation()">
+              <div class="region-dropdown-header" style="padding: 0.5rem; font-weight: 600; border-bottom: 1px solid #e0e0e0; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                Select Region:
+              </div>
+              <div class="region-option" (click)="setRegionFilter(null); $event.stopPropagation()" [class.active]="selectedRegionFilter === null" style="padding: 0.5rem; cursor: pointer; border-radius: 4px; margin-bottom: 0.25rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>All Regions</span>
+                <span class="checkmark" *ngIf="selectedRegionFilter === null">✓</span>
+              </div>
+              <div *ngFor="let region of availableRegions" class="region-option" (click)="setRegionFilter(region); $event.stopPropagation()" [class.active]="selectedRegionFilter === region" style="padding: 0.5rem; cursor: pointer; border-radius: 4px; margin-bottom: 0.25rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>{{ region }}</span>
+                <span class="checkmark" *ngIf="selectedRegionFilter === region">✓</span>
+              </div>
+              <div *ngIf="availableRegions.length === 0" style="padding: 0.5rem; color: #999; font-size: 0.875rem; font-style: italic;">
+                No regions found.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="customers-table-container">
+    <table class="customers-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Region</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="filteredCustomers.length === 0">
+          <td [attr.colspan]="6" class="no-data">
+            No customers found
+          </td>
+        </tr>
+        <tr *ngFor="let customer of filteredCustomers">
+          <td>{{ customer.name || '-' }}</td>
+          <td>{{ customer.email || '-' }}</td>
+          <td>{{ customer.phone || '-' }}</td>
+          <td>{{ customer.region || '-' }}</td>
+          <td>{{ customer.notes || '-' }}</td>
+          <td class="actions-cell">
+            <button (click)="openProjectsModal(customer)" class="btn-details" title="View Projects">
+              <span class="icon-details">📋</span>
+            </button>
+            <button *ngIf="canEdit()" (click)="openEditModal(customer)" class="btn-edit" title="Edit">
+              <span class="icon-edit">✏️</span>
+            </button>
+            <button *ngIf="canDelete()" (click)="deleteCustomer(customer)" class="btn-delete" title="Delete">
+              <span class="icon-delete">🗑️</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Customer Modal -->
+  <div *ngIf="showAddModal" class="modal-overlay" (click)="closeAddModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Add New Customer</h2>
+        <button (click)="closeAddModal()" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="createCustomerError" style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
+          {{ createCustomerError }}
+        </div>
+        <app-dynamic-form
+          formId="createCustomer"
+          [defaultFields]="customerFormFields"
+          [formData]="newCustomer"
+          [showAddField]="true"
+          (formDataChange)="onCustomerFormDataChange($event)">
+        </app-dynamic-form>
+      </div>
+      <div class="modal-footer">
+        <button (click)="createCustomer()" class="btn-expertflow btn-primary">Create Customer</button>
+        <button (click)="closeAddModal()" class="btn-expertflow">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Customer Modal -->
+  <div *ngIf="showEditModal && selectedCustomer" class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Edit Customer</h2>
+        <button (click)="closeEditModal()" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <app-dynamic-form
+          [formId]="'editCustomer_' + selectedCustomer.id"
+          [defaultFields]="customerFormFields"
+          [formData]="editCustomerData"
+          [showAddField]="true"
+          (formDataChange)="onEditCustomerFormDataChange(selectedCustomer.id, $event)">
+        </app-dynamic-form>
+      </div>
+      <div class="modal-footer">
+        <button (click)="updateCustomer()" class="btn-expertflow btn-primary">Update Customer</button>
+        <button (click)="closeEditModal()" class="btn-expertflow">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Projects Details Modal -->
+  <div *ngIf="showProjectsModal && selectedCustomerForProjects" class="modal-overlay" (click)="closeProjectsModal()">
+    <div class="modal-content projects-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+      <div class="modal-header">
+        <h2>Projects for {{ selectedCustomerForProjects.name }}</h2>
+        <button (click)="closeProjectsModal()" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="getCustomerProjects(selectedCustomerForProjects.id).length === 0" style="text-align: center; padding: 2rem; color: #999;">
+          No projects found for this customer.
+        </div>
+        <div *ngIf="getCustomerProjects(selectedCustomerForProjects.id).length > 0" class="projects-list">
+          <div *ngFor="let project of getCustomerProjects(selectedCustomerForProjects.id)" class="project-detail-card">
+            <h3 style="margin: 0 0 1rem 0; color: #1976d2; font-size: 1.125rem; font-weight: 600; border-bottom: 2px solid #1976d2; padding-bottom: 0.5rem;">
+              {{ project.name }}
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+              <div>
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Project ID:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ project.id }}</span>
+              </div>
+              <div>
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ project.description || 'Not provided' }}</span>
+              </div>
+              <div>
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start Date:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(project.start_date) }}</span>
+              </div>
+              <div>
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End Date:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(project.end_date) }}</span>
+              </div>
+              <div>
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(project.allocated_time) || 'Not provided' }}</span>
+              </div>
+              <div *ngIf="project.allocated_time">
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Remaining Allocated Time:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ getRemainingAllocatedTime(project) || formatAllocatedTime(project.allocated_time) }}</span>
+              </div>
+              <div *ngIf="project.attachment">
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
+                <a [href]="'http://localhost:3000' + project.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                  <span>📎</span>
+                  <span>{{ getAttachmentFileName(project.attachment) }}</span>
+                </a>
+              </div>
+              <div *ngIf="project.status">
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ project.status | titlecase }}</span>
+              </div>
+              <!-- Custom Fields -->
+              <ng-container *ngIf="getProjectCustomFields(project)">
+                <div *ngFor="let customField of getProjectCustomFields(project) | keyvalue">
+                  <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+                  <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button (click)="closeProjectsModal()" class="btn-expertflow">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+

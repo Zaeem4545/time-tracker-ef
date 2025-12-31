@@ -1,0 +1,286 @@
+// ExpertFlow Simple Theme Styles
+
+// Colors
+$primary-blue: #1976d2;
+$text-dark: #333;
+$text-gray: #666;
+$border-color: #e0e0e0;
+$bg-light: #f5f5f5;
+$bg-white: #ffffff;
+
+// Simple Table Styles - Full Width
+.expertflow-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: $bg-white;
+  margin-top: 1rem;
+  border: 1px solid $border-color;
+
+  thead {
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: $text-dark;
+      border-bottom: 1px solid $border-color;
+      background: $bg-white;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid $border-color;
+
+      &:hover {
+        background: #f9f9f9;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 1rem;
+        font-size: 0.875rem;
+        color: $text-dark;
+
+        input, select {
+          width: 100%;
+          padding: 0.5rem;
+          border: 1px solid $border-color;
+          border-radius: 4px;
+          font-size: 0.875rem;
+
+          &:focus {
+            outline: none;
+            border-color: $primary-blue;
+          }
+        }
+
+        span {
+          color: $text-dark;
+        }
+      }
+    }
+  }
+}
+
+// Simple Button Styles
+.btn-expertflow {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &.btn-primary {
+    background: $primary-blue;
+    color: white;
+
+    &:hover {
+      background: #1565c0;
+    }
+  }
+
+  &.btn-danger {
+    background: #f44336;
+    color: white;
+
+    &:hover {
+      background: #d32f2f;
+    }
+
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  &.btn-icon {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $primary-blue;
+    color: white;
+    font-size: 0.875rem;
+
+    &:hover {
+      background: #1565c0;
+    }
+
+    &.btn-edit {
+      background: #1976d2;
+
+      &:hover {
+        background: #1565c0;
+      }
+    }
+
+    &.btn-delete {
+      background: #f44336;
+
+      &:hover {
+        background: #d32f2f;
+      }
+    }
+  }
+}
+
+// Simple Search Bar
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  .search-input {
+    flex: 1;
+    position: relative;
+
+    input {
+      width: 100%;
+      padding: 0.625rem 1rem 0.625rem 2.5rem;
+      border: 1px solid $border-color;
+      border-radius: 4px;
+      font-size: 0.875rem;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-blue;
+      }
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $text-gray;
+      font-size: 0.875rem;
+    }
+  }
+
+  .create-btn {
+    @extend .btn-expertflow;
+    @extend .btn-primary;
+    white-space: nowrap;
+  }
+}
+
+// Simple Page Container - Full Width, No Padding
+.page-container {
+  padding: 0;
+  background: $bg-light;
+  min-height: calc(100vh - 60px);
+  width: 100%;
+  max-width: 100%;
+
+  .content-card {
+    background: $bg-white;
+    border-radius: 0;
+    padding: 1.5rem;
+    border: none;
+    border-bottom: 1px solid $border-color;
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 0;
+  }
+}
+
+// Page Title in Main Content
+.page-title-main {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: $text-dark;
+  margin-bottom: 1.5rem;
+  margin-top: 0;
+
+  .arrow {
+    color: $primary-blue;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .title-text {
+    color: $text-dark;
+  }
+}
+
+// Action Buttons
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+// User row hover effect
+.user-row {
+  .role-cell {
+    .role-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      
+      .role-text {
+        display: inline-block;
+      }
+      
+      select {
+        flex: 1;
+      }
+      
+      .action-buttons {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        margin-left: auto;
+      }
+    }
+  }
+  
+  &:hover {
+    .role-cell .role-content .action-buttons {
+      opacity: 1;
+    }
+  }
+  
+  .action-buttons.edit-mode {
+    opacity: 1 !important;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+    
+    .password-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 200px;
+      
+      input {
+        width: 100%;
+      }
+      
+      .error-message {
+        color: #f44336;
+        font-size: 0.75rem;
+        margin-top: 0;
+      }
+    }
+  }
+}

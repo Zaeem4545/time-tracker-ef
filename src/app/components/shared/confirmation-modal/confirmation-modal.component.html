@@ -1,0 +1,15 @@
+<div class="confirmation-modal-overlay" *ngIf="show" (click)="onBackdropClick()">
+  <div class="confirmation-modal-content" (click)="$event.stopPropagation()">
+    <div class="confirmation-modal-header">
+      <h3>{{ data?.title || 'Confirm' }}</h3>
+    </div>
+    <div class="confirmation-modal-body">
+      <p>{{ data?.message }}</p>
+    </div>
+    <div class="confirmation-modal-footer">
+      <button (click)="onCancel()" class="btn-cancel">{{ data?.cancelText || 'Cancel' }}</button>
+      <button (click)="onConfirm()" class="btn-confirm" [ngClass]="'btn-' + (data?.type || 'warning')">{{ data?.confirmText || 'Confirm' }}</button>
+    </div>
+  </div>
+</div>
+

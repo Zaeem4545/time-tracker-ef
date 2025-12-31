@@ -1,0 +1,1417 @@
+<div class="page-container">
+  <div class="content-card">
+    <!-- All Roles View (Projects) -->
+    <div>
+        <!-- Project Selection Section for Head Managers (hidden in create mode and my projects mode) -->
+        <div *ngIf="isHeadManager && !isCreateMode && !isMyProjectsMode" style="background: #ffffff; border-radius: 4px; padding: 1.5rem; border: 1px solid #e0e0e0; margin-bottom: 1.5rem;">
+          <h3 style="color: #333; font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e0e0e0;">Select Projects</h3>
+          <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 300px; overflow-y: auto; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 4px; background: #fff;">
+              <div *ngFor="let project of projects" 
+                   class="manager-item"
+                   [class.selected]="isProjectSelected(project.id)"
+                   style="display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem; border-radius: 4px; transition: background 0.2s;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <input 
+                    type="checkbox" 
+                    [id]="'project-' + project.id"
+                    [checked]="isProjectSelected(project.id)"
+                    [disabled]="project.selected_by_head_manager_id && !isProjectSelected(project.id)"
+                    (change)="onProjectToggle(project.id, $event)"
+                    style="width: 18px; height: 18px; cursor: pointer;" />
+                  <label [for]="'project-' + project.id" style="cursor: pointer; flex: 1; font-size: 0.875rem; color: #333;">
+                    {{ project.name }} (ID: {{ project.id }})
+                    <span *ngIf="project.selected_by_head_manager_id && project.selected_by_head_manager_email && !isProjectSelected(project.id)" style="color: #999; font-size: 0.75rem; margin-left: 0.5rem;">
+                      (Selected by {{ project.selected_by_head_manager_email }})
+                    </span>
+                  </label>
+                </div>
+                <div *ngIf="getProjectSelectionError(project.id)" style="color: #c62828; font-size: 0.75rem; margin-left: 1.75rem; padding: 0.25rem 0;">
+                  {{ getProjectSelectionError(project.id) }}
+                </div>
+              </div>
+              <div *ngIf="projects.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+                No projects available.
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Projects Details Section -->
+          <div *ngIf="getSelectedProjects().length > 0" style="margin-top: 1.5rem;">
+            <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Selected Projects Details</h4>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div *ngFor="let project of getSelectedProjects()" style="background: #f9f9f9; padding: 1.5rem; border-radius: 4px; border: 1px solid #e0e0e0;">
+                <h5 style="margin-bottom: 1rem; color: #1976d2; font-size: 0.9375rem; font-weight: 600;">{{ project.name }}</h5>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                  <div>
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">ID:</label>
+                    <span style="color: #333; font-size: 0.875rem;">{{ project.id }}</span>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Name:</label>
+                    <span style="color: #333; font-size: 0.875rem;">{{ project.name }}</span>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+                    <span style="color: #333; font-size: 0.875rem;">{{ project.description || 'Not provided' }}</span>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start Date:</label>
+                    <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(project.start_date) }}</span>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End Date:</label>
+                    <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(project.end_date) }}</span>
+                  </div>
+                  <div *ngIf="project.attachment">
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
+                    <a [href]="'http://localhost:3000' + project.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                      <span>📎</span>
+                      <span>{{ getAttachmentFileName(project.attachment) }}</span>
+                    </a>
+                  </div>
+                  <div>
+                    <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned Team Lead:</label>
+                    <div *ngIf="!editingManagerAssignment[project.id]" style="display: flex; align-items: center; gap: 0.5rem;">
+                      <span style="color: #333; font-size: 0.875rem;">{{ project.manager_email || 'Not assigned' }}</span>
+                      <button (click)="startEditingManager(project.id)" class="btn-expertflow btn-icon btn-edit" title="Edit Team Lead" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">✏️</button>
+                    </div>
+                    <div *ngIf="editingManagerAssignment[project.id]" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                      <select [(ngModel)]="editProjectData[project.id].manager_id" style="padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                        <option [value]="null">Not Assigned</option>
+                        <option *ngFor="let manager of managers" [value]="manager.id">{{ manager.email || manager.name || 'Manager ' + manager.id }} (ID: {{ manager.id }})</option>
+                      </select>
+                      <div style="display: flex; gap: 0.5rem;">
+                        <button (click)="saveManagerAssignment(project.id)" class="btn-expertflow btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">💾 Save</button>
+                        <button (click)="cancelEditingManager(project.id)" class="btn-expertflow btn-icon btn-delete" title="Cancel">❌</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="getSelectedProjects().length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem; margin-top: 1.5rem;">
+            Select one or more projects from the list above to view their details.
+          </div>
+        </div>
+    
+    <!-- Search Bar with Dropdown - Top of Page -->
+    <div *ngIf="(!isCreateMode && !isHeadManager) || (isHeadManager && isCreateMode)" class="search-container-top">
+      <div class="search-bar-wrapper">
+        <span class="search-icon">🔍</span>
+        
+        <!-- Active Filters Tags -->
+        <div class="active-filters-container" *ngIf="activeFilters.length > 0 || statusFilters.length > 0 || groupBy.length > 0 || selectedManagerFilter !== null || selectedRegionFilter !== null">
+          <!-- Filter Tags -->
+          <div class="filter-tag" *ngFor="let filter of activeFilters">
+            <span class="filter-tag-text">{{ getFilterDisplayName(filter) }}</span>
+            <button class="filter-tag-remove" (click)="removeFilter(filter); $event.stopPropagation()" title="Remove filter">×</button>
+          </div>
+          
+          <!-- Status Filter Tags -->
+          <div class="filter-tag status-tag" *ngFor="let status of statusFilters">
+            <span class="status-dot-small" [ngClass]="'status-' + status"></span>
+            <span class="filter-tag-text">{{ getStatusDisplayName(status) }}</span>
+            <button class="filter-tag-remove" (click)="removeStatusFilter(status); $event.stopPropagation()" title="Remove status filter">×</button>
+          </div>
+          
+          <!-- Group By Tags -->
+          <div class="filter-tag group-by-tag" *ngFor="let group of groupBy">
+            <span class="filter-tag-text">{{ getGroupByDisplayName(group) }}</span>
+            <button class="filter-tag-remove" (click)="removeGroupBy(group); $event.stopPropagation()" title="Remove grouping">×</button>
+          </div>
+          
+          <!-- Region Filter Tag -->
+          <div class="filter-tag" *ngIf="selectedRegionFilter !== null">
+            <span class="filter-tag-text">Region: {{ selectedRegionFilter }}</span>
+            <button class="filter-tag-remove" (click)="setRegionFilter(null); $event.stopPropagation()" title="Remove region filter">×</button>
+          </div>
+          
+          <!-- Team Lead Filter Tag -->
+          <div class="filter-tag" *ngIf="selectedManagerFilter !== null">
+            <span class="filter-tag-text">Team Lead: {{ getManagerName(selectedManagerFilter) }}</span>
+            <button class="filter-tag-remove" (click)="clearManagerFilter(); $event.stopPropagation()" title="Remove team lead filter">×</button>
+          </div>
+        </div>
+        
+        <input 
+          type="text" 
+          class="search-input" 
+          [placeholder]="(activeFilters.length > 0 || groupBy.length > 0) ? '' : 'Search...'" 
+          [(ngModel)]="searchTerm"
+          (input)="onSearchInputChange()"
+          (focus)="showSearchSuggestions = true"
+          (blur)="onSearchBlur()"
+        />
+        <button class="search-dropdown-toggle" (click)="toggleSearchDropdown(); $event.stopPropagation()" [class.active]="showSearchDropdown">
+          <span>{{ showSearchDropdown ? '▲' : '▼' }}</span>
+        </button>
+      </div>
+      
+      <!-- Search Suggestions Dropdown -->
+      <div *ngIf="showSearchSuggestions && searchTerm && searchTerm.trim() !== ''" class="search-suggestions-dropdown" (click)="$event.stopPropagation()">
+        <div class="search-suggestion-item" (click)="applySearchOption('project')" [class.hovered]="selectedSearchOption === 'project'">
+          <span>Search <strong>Project</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+        <div class="search-suggestion-item" (click)="applySearchOption('region')" [class.hovered]="selectedSearchOption === 'region'">
+          <span>Search <strong>Region</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+        <div class="search-suggestion-item" (click)="applySearchOption('manager')" [class.hovered]="selectedSearchOption === 'manager'">
+          <span>► Search <strong>Project Team Lead</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+        <div class="search-suggestion-item" (click)="applySearchOption('customer')" [class.hovered]="selectedSearchOption === 'customer'">
+          <span>► Search <strong>Customer</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+        <div class="search-suggestion-item" (click)="applySearchOption('tasks')" [class.hovered]="selectedSearchOption === 'tasks'">
+          <span>► Search <strong>Tasks</strong> for: <span class="highlight-term">{{ searchTerm }}</span></span>
+        </div>
+      </div>
+      
+      <!-- Dropdown Menu -->
+      <div *ngIf="showSearchDropdown" class="search-dropdown" (click)="$event.stopPropagation()">
+        <div class="dropdown-section">
+          <div class="dropdown-header">
+            <span class="dropdown-icon">🔽</span>
+            <span class="dropdown-title">Filters</span>
+          </div>
+          <div class="dropdown-content">
+            <div class="dropdown-item" [class.active]="isFilterActive('my-projects')" (click)="applyFilter('my-projects')">
+              <span>My Projects</span>
+              <span class="checkmark" *ngIf="isFilterActive('my-projects')">✓</span>
+            </div>
+            <div class="dropdown-item" [class.active]="isFilterActive('unassigned')" (click)="applyFilter('unassigned')">
+              <span>Unassigned</span>
+              <span class="checkmark" *ngIf="isFilterActive('unassigned')">✓</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item manager-filter-item" (click)="toggleManagerFilter(); $event.stopPropagation()">
+              <span>Project Team Lead</span>
+              <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showManagerFilter" class="manager-filter-dropdown" (click)="$event.stopPropagation()">
+                <select [ngModel]="selectedManagerFilter" (ngModelChange)="setManagerFilter($event)" class="manager-select">
+                  <option [ngValue]="null">All Team Leads</option>
+                  <option *ngFor="let manager of managers" [ngValue]="manager.id">{{ manager.email || manager.name || 'Team Lead ' + manager.id }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item status-filter-item" (click)="applyStatusFilter('on-track')" [class.active]="isStatusFilterActive('on-track')">
+              <span class="status-dot status-on-track"></span>
+              <span>On Track</span>
+              <span class="checkmark" *ngIf="isStatusFilterActive('on-track')">✓</span>
+            </div>
+            <div class="dropdown-item status-filter-item" (click)="applyStatusFilter('at-risk')" [class.active]="isStatusFilterActive('at-risk')">
+              <span class="status-dot status-at-risk"></span>
+              <span>At Risk</span>
+              <span class="checkmark" *ngIf="isStatusFilterActive('at-risk')">✓</span>
+            </div>
+            <div class="dropdown-item status-filter-item" (click)="applyStatusFilter('off-track')" [class.active]="isStatusFilterActive('off-track')">
+              <span class="status-dot status-off-track"></span>
+              <span>Off Track</span>
+              <span class="checkmark" *ngIf="isStatusFilterActive('off-track')">✓</span>
+            </div>
+            <div class="dropdown-item status-filter-item" (click)="applyStatusFilter('on-hold')" [class.active]="isStatusFilterActive('on-hold')">
+              <span class="status-dot status-on-hold"></span>
+              <span>On Hold</span>
+              <span class="checkmark" *ngIf="isStatusFilterActive('on-hold')">✓</span>
+            </div>
+            <div class="dropdown-item status-filter-item" (click)="applyStatusFilter('completed')" [class.active]="isStatusFilterActive('completed')">
+              <span class="status-dot status-completed"></span>
+              <span>Completed</span>
+              <span class="checkmark" *ngIf="isStatusFilterActive('completed')">✓</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item date-filter-item" (click)="toggleStartDatePicker(); $event.stopPropagation()">
+              <span>Start Date</span>
+              <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showStartDatePicker" class="date-picker-container" (click)="$event.stopPropagation()">
+                <input 
+                  type="date" 
+                  [(ngModel)]="startDateFilter" 
+                  (change)="applyDateFilter('start')"
+                  class="date-picker-input"
+                  placeholder="Select start date"
+                />
+                <button (click)="clearStartDateFilter(); $event.stopPropagation()" class="clear-date-btn" title="Clear">×</button>
+              </div>
+            </div>
+            <div class="dropdown-item date-filter-item" (click)="toggleEndDatePicker(); $event.stopPropagation()">
+              <span>End Date</span>
+              <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showEndDatePicker" class="date-picker-container" (click)="$event.stopPropagation()">
+                <input 
+                  type="date" 
+                  [(ngModel)]="endDateFilter" 
+                  (change)="applyDateFilter('end')"
+                  class="date-picker-input"
+                  placeholder="Select end date"
+                />
+                <button (click)="clearEndDateFilter(); $event.stopPropagation()" class="clear-date-btn" title="Clear">×</button>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" [class.active]="isFilterActive('archived')" (click)="applyFilter('archived')">
+              <span>Archived</span>
+              <span class="checkmark" *ngIf="isFilterActive('archived')">✓</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dropdown-section">
+          <div class="dropdown-header">
+            <span class="dropdown-icon">📊</span>
+            <span class="dropdown-title">Group By</span>
+          </div>
+          <div class="dropdown-content">
+            <div class="dropdown-item" [class.active]="isGroupByActive('project-manager')" (click)="setGroupBy('project-manager')">
+              <span>Project Team Lead</span>
+              <span class="checkmark" *ngIf="isGroupByActive('project-manager')">✓</span>
+            </div>
+            <div class="dropdown-item" [class.active]="isGroupByActive('status')" (click)="setGroupBy('status')">
+              <span>Status</span>
+              <span class="checkmark" *ngIf="isGroupByActive('status')">✓</span>
+            </div>
+            <div class="dropdown-item manager-filter-item" [class.active]="isGroupByActive('tags') || selectedRegionFilter !== null" (click)="toggleRegionDropdown(); $event.stopPropagation()">
+              <span>Region</span>
+              <span class="dropdown-arrow">▼</span>
+              <span class="checkmark" *ngIf="isGroupByActive('tags') || selectedRegionFilter !== null">✓</span>
+              <div *ngIf="showRegionDropdown" class="manager-filter-dropdown" (click)="$event.stopPropagation()">
+                <div class="region-dropdown-header" style="padding: 0.5rem; font-weight: 600; border-bottom: 1px solid #e0e0e0; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                  Select Region:
+                </div>
+                <div class="region-option" (click)="setRegionFilter(null); $event.stopPropagation()" [class.active]="selectedRegionFilter === null" style="padding: 0.5rem; cursor: pointer; border-radius: 4px; margin-bottom: 0.25rem; display: flex; justify-content: space-between; align-items: center;">
+                  <span>All Regions</span>
+                  <span class="checkmark" *ngIf="selectedRegionFilter === null">✓</span>
+                </div>
+                <div *ngFor="let region of availableRegions" class="region-option" (click)="setRegionFilter(region); $event.stopPropagation()" [class.active]="selectedRegionFilter === region" style="padding: 0.5rem; cursor: pointer; border-radius: 4px; margin-bottom: 0.25rem; display: flex; justify-content: space-between; align-items: center;">
+                  <span>{{ region }}</span>
+                  <span class="checkmark" *ngIf="selectedRegionFilter === region">✓</span>
+                </div>
+                <div *ngIf="availableRegions.length === 0" style="padding: 0.5rem; color: #999; font-size: 0.875rem; font-style: italic;">
+                  No regions found. Add region to projects to see them here.
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-item">
+              <span>Custom Group</span>
+              <span class="dropdown-arrow">▼</span>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Create Project Section - Separate Box -->
+    <!-- Show for admin/manager/employee always, or for head manager only in create mode -->
+    <div *ngIf="(isAdmin || isManager || isEmployee) || (isHeadManager && isCreateMode)" class="content-card" style="margin-bottom: 1.5rem;">
+      <div *ngIf="!isCreateMode" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 class="page-title-main" style="margin: 0;">
+          <span class="arrow">►</span>
+          <span class="title-text">Manage Projects</span>
+        </h2>
+        <button (click)="toggleCreateProjectForm()" class="toggle-form-btn" [class.active]="showCreateProjectForm">
+          <span class="btn-icon">{{ showCreateProjectForm ? '▼' : '▶' }}</span>
+          <span class="btn-text">{{ showCreateProjectForm ? 'Hide Form' : 'Create Project' }}</span>
+        </button>
+      </div>
+      
+      <div *ngIf="isCreateMode" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 class="page-title-main" style="margin: 0;">
+          <span class="arrow">►</span>
+          <span class="title-text">Create New Project</span>
+        </h2>
+        <button (click)="toggleCreateProjectForm()" class="toggle-form-btn" [class.active]="showCreateProjectForm">
+          <span class="btn-icon">{{ showCreateProjectForm ? '▼' : '▶' }}</span>
+          <span class="btn-text">{{ showCreateProjectForm ? 'Hide Form' : 'Create Project' }}</span>
+        </button>
+      </div>
+
+      <!-- Create Project Form (Expandable) -->
+      <div *ngIf="showCreateProjectForm" style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; border: 1px solid #e0e0e0;">
+        <h3 *ngIf="!isCreateMode" style="margin-top: 0; margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Create New Project</h3>
+        <div *ngIf="createProjectError" style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
+          {{ createProjectError }}
+        </div>
+        <app-dynamic-form
+          formId="createProject"
+          [defaultFields]="projectFormFields"
+          [formData]="newProject"
+          [showAddField]="true"
+          [dynamicOptions]="getProjectDynamicOptions()"
+          (formDataChange)="onProjectFormDataChange($event)">
+        </app-dynamic-form>
+        <button (click)="createProject()" class="btn-expertflow btn-primary" style="margin-top: 1rem;">+ Create Project</button>
+      </div>
+    </div>
+
+    <table *ngIf="(!isCreateMode && !isHeadManager) || (isHeadManager && isCreateMode)" class="expertflow-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Customer</th>
+          <th>Region</th>
+          <th *ngIf="showStatusColumn">Status</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Allocated Time</th>
+          <th *ngFor="let fieldName of getAllProjectCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
+          <th class="role-cell" style="text-align: center; width: 200px; min-width: 200px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Grouped by Team Lead -->
+        <ng-container *ngIf="isGroupedByManager()">
+          <ng-container *ngFor="let groupKey of getGroupedProjectKeys()">
+            <!-- Team Lead Group Header -->
+            <tr class="group-header-row" style="background: #f5f5f5; font-weight: 600; border-top: 2px solid #17a2b8;">
+              <td [attr.colspan]="getProjectTableColumnCount()" style="padding: 0.75rem 1rem; color: #333; font-size: 0.9375rem;">
+                <span style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                  <span>👤</span>
+                  <span>{{ getManagerName(groupKey === 'unassigned' ? null : groupKey.replace('manager-', '')) }}</span>
+                  <span style="color: #999; font-weight: normal; font-size: 0.8125rem;">({{ groupedProjects[groupKey].length }} project{{ groupedProjects[groupKey].length !== 1 ? 's' : '' }})</span>
+                </span>
+              </td>
+            </tr>
+            <!-- Projects in this group -->
+            <ng-container *ngFor="let project of groupedProjects[groupKey]">
+              <tr class="user-row">
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ project.name }}</span>
+                  <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].name" placeholder="Project Name" />
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ project.description || '-' }}</span>
+                  <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].description" placeholder="Description" />
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ getCustomerName(project.customer_id, project) || '-' }}</span>
+                  <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].customer_id" (change)="onCustomerChange(project.id, editProjectData[project.id].customer_id)">
+                    <option value="">Select Customer</option>
+                    <option *ngFor="let customer of customers" [value]="customer.id.toString()">{{ customer.name }}</option>
+                  </select>
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ project.region || '-' }}</span>
+                  <span *ngIf="editingProject === project.id">{{ editProjectData[project.id].region || project.region || '-' }}</span>
+                </td>
+                <td *ngIf="showStatusColumn">
+                  <div class="status-selector" style="position: relative;">
+                    <div class="status-dropdown-trigger" (click)="projectStatusDropdownOpen = (projectStatusDropdownOpen === project.id ? null : project.id)" [class.active]="projectStatusDropdownOpen === project.id">
+                      <span class="status-dot status-{{ project.status || 'on-track' }}"></span>
+                      <span>{{ getStatusDisplayName(project.status || 'on-track') }}</span>
+                      <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="status-dropdown-menu" *ngIf="projectStatusDropdownOpen === project.id">
+                      <div class="status-option" (click)="updateProjectStatus(project, 'on-track'); projectStatusDropdownOpen = null">
+                        <span class="status-dot status-on-track"></span>
+                        <span>On Track</span>
+                      </div>
+                      <div class="status-option" (click)="updateProjectStatus(project, 'at-risk'); projectStatusDropdownOpen = null">
+                        <span class="status-dot status-at-risk"></span>
+                        <span>At Risk</span>
+                      </div>
+                      <div class="status-option" (click)="updateProjectStatus(project, 'off-track'); projectStatusDropdownOpen = null">
+                        <span class="status-dot status-off-track"></span>
+                        <span>Off Track</span>
+                      </div>
+                      <div class="status-option" (click)="updateProjectStatus(project, 'on-hold'); projectStatusDropdownOpen = null">
+                        <span class="status-dot status-on-hold"></span>
+                        <span>On Hold</span>
+                      </div>
+                      <div class="status-option" (click)="updateProjectStatus(project, 'completed'); projectStatusDropdownOpen = null">
+                        <span class="status-dot status-completed"></span>
+                        <span>Completed</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.start_date) }}</span>
+                  <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].start_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.end_date) }}</span>
+                  <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].end_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ formatAllocatedTime(project.allocated_time) || '-' }}</span>
+                  <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
+                </td>
+                <!-- Dynamic Custom Fields Columns -->
+                <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
+                  <span *ngIf="editingProject !== project.id">{{ getProjectCustomFieldValue(project, fieldName) || '-' }}</span>
+                  <input *ngIf="editingProject === project.id" type="text" [ngModel]="(editProjectData[project.id].custom_fields?.[fieldName] !== undefined && editProjectData[project.id].custom_fields?.[fieldName] !== null) ? editProjectData[project.id].custom_fields[fieldName] : getProjectCustomFieldValue(project, fieldName)" (ngModelChange)="editProjectData[project.id].custom_fields = editProjectData[project.id].custom_fields || {}; editProjectData[project.id].custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
+                </td>
+                <td class="role-cell" style="width: 200px; min-width: 200px; text-align: center;">
+                  <div class="role-content">
+                    <div *ngIf="editingProject !== project.id && !isHeadManager && !isEmployee && !isManager" class="action-buttons">
+                      <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
+                      <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                      <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
+                      <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
+                      <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                      <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                    </div>
+                    <div *ngIf="editingProject !== project.id && (isEmployee || isManager)" class="action-buttons">
+                      <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
+                      <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                      <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
+                      <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                      <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                    </div>
+                    <div *ngIf="editingProject !== project.id && isHeadManager" class="action-buttons">
+                      <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
+                      <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                      <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
+                      <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
+                      <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                      <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                    </div>
+                    <div *ngIf="editingProject === project.id" class="action-buttons edit-mode">
+                      <button (click)="saveProjectInline(project.id)" class="btn-expertflow btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">💾 Save</button>
+                      <button (click)="cancelEdit(project.id)" class="btn-expertflow btn-icon btn-delete" style="padding: 0.25rem 0.5rem;">❌</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Expandable Tasks Row -->
+              <tr *ngIf="expandedProjects.has(project.id)" class="tasks-expanded-row">
+                <td [attr.colspan]="getProjectTableColumnCount()" style="padding: 0; background: #f9f9f9;">
+                  <div style="padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                      <h3 style="margin: 0; color: #333; font-size: 1rem; font-weight: 600;">Tasks for: {{ project.name }}</h3>
+                      <button 
+                        (click)="openTaskModal(project.id)" 
+                        class="btn-expertflow btn-primary"
+                        style="padding: 0.5rem 1rem; white-space: nowrap; font-size: 0.875rem;">
+                        + New Task
+                      </button>
+                    </div>
+
+                    <!-- Tasks List for This Project -->
+                    <table class="expertflow-table" *ngIf="projectTasks[project.id] && projectTasks[project.id].length > 0" style="margin-bottom: 0;">
+                      <thead>
+                        <tr>
+                          <th>Title</th>
+                          <th>Description</th>
+                          <th *ngIf="showTaskStatusColumn">Status</th>
+                          <th>Assigned To</th>
+                          <th>Assigned By</th>
+                          <th>Due Date</th>
+                          <th>Allocated Time</th>
+                          <th *ngFor="let fieldName of getAllTaskCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let task of projectTasks[project.id]" class="user-row">
+                          <td>
+                            <span *ngIf="editingTask !== task.id">{{ task.title }}</span>
+                            <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.title" />
+                          </td>
+                          <td>
+                            <span *ngIf="editingTask !== task.id">{{ task.description || '-' }}</span>
+                            <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.description" />
+                          </td>
+                          <td *ngIf="showTaskStatusColumn">
+                            <span *ngIf="editingTask !== task.id">{{ (task.status === 'in-progress' || task.status === 'in_progress') ? 'In Progress' : (task.status | titlecase) }}</span>
+                            <select *ngIf="editingTask === task.id" [(ngModel)]="task.status">
+                              <option value="pending">Pending</option>
+                              <option value="in-progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                            </select>
+                          </td>
+                          <td>
+                            <span *ngIf="editingTask !== task.id">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
+                            <select *ngIf="editingTask === task.id && !isEmployee" [(ngModel)]="task.assigned_to">
+                              <option value="">Select Employee (Optional)</option>
+                              <option *ngFor="let employee of getEmployees(task)" [value]="employee.id">{{ employee.email }} ({{ employee.role | titlecase }})</option>
+                            </select>
+                            <span *ngIf="editingTask === task.id && isEmployee">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
+                          </td>
+                          <td>
+                            <span *ngIf="editingTask !== task.id">{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
+                            <input *ngIf="editingTask === task.id && !isEmployee" type="text" [(ngModel)]="task.assigned_by" />
+                            <span *ngIf="editingTask === task.id && isEmployee">{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
+                          </td>
+                          <td>
+                            <span *ngIf="editingTask !== task.id">{{ formatDateForDisplay(task.due_date) }}</span>
+                            <input *ngIf="editingTask === task.id" type="date" [(ngModel)]="task.due_date" />
+                          </td>
+                          <td>
+                            <span *ngIf="editingTask !== task.id">{{ formatAllocatedTime(task.allocated_time) || '-' }}</span>
+                            <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
+                          </td>
+                          <!-- Dynamic Custom Fields Columns -->
+                          <td *ngFor="let fieldName of getAllTaskCustomFieldNames()">
+                            <span *ngIf="editingTask !== task.id">{{ getTaskCustomFieldValue(task, fieldName) || '-' }}</span>
+                            <input *ngIf="editingTask === task.id" type="text" [ngModel]="getTaskCustomFieldValue(task, fieldName)" (ngModelChange)="task.custom_fields = task.custom_fields || {}; task.custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
+                          </td>
+                          <td style="text-align: center;">
+                            <div *ngIf="editingTask !== task.id" class="task-menu-container" style="position: relative; display: inline-block;">
+                              <button class="task-menu-btn" (click)="toggleTaskMenu(task.id, $event)" title="Menu">
+                                <span>⋮</span>
+                              </button>
+                              <div *ngIf="openTaskMenuId === task.id" class="task-menu-dropdown" (click)="$event.stopPropagation()">
+                                <div class="task-menu-content">
+                                  <div class="task-menu-item" (click)="viewTaskDetails(task); closeTaskMenu()">
+                                    View Details
+                                  </div>
+                                  <div class="task-menu-item" (click)="editTask(task); closeTaskMenu()">
+                                    Edit
+                                  </div>
+                                  <div *ngIf="isAdmin" class="task-menu-item" (click)="deleteTask(task); closeTaskMenu()">
+                                    Delete
+                                  </div>
+                                  <div *ngIf="task.status === 'completed'" class="task-menu-item" (click)="toggleTaskArchived(task); closeTaskMenu()">
+                                    {{ (task.archived === 1 || task.archived === true) ? 'Remove Archived' : 'Archived' }}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div *ngIf="editingTask === task.id" class="action-buttons edit-mode" style="display: flex; gap: 0.25rem; justify-content: center; align-items: center;">
+                              <button (click)="updateTask(task)" class="btn-expertflow btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">💾 Save</button>
+                              <button (click)="cancelTaskEdit(task.id)" class="btn-expertflow btn-icon btn-delete" style="padding: 0.25rem 0.5rem;">❌</button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <p *ngIf="!projectTasks[project.id] || projectTasks[project.id].length === 0" style="text-align: center; color: #666; padding: 1rem; margin: 0;">No tasks yet. Click "New Task" to add one.</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </ng-container>
+          <!-- No results message for grouped view -->
+          <tr *ngIf="getGroupedProjectKeys().length === 0" class="no-results">
+            <td [attr.colspan]="getProjectTableColumnCount()" style="text-align: center; padding: 2rem; color: #666;">
+              No projects found.
+            </td>
+          </tr>
+        </ng-container>
+        
+        <!-- Not Grouped (Default View) -->
+        <ng-container *ngIf="!isGroupedByManager()">
+          <tr *ngIf="filteredProjects.length === 0" class="no-results">
+            <td [attr.colspan]="getProjectTableColumnCount()" style="text-align: center; padding: 2rem; color: #666;">
+              No projects found.
+            </td>
+          </tr>
+          <ng-container *ngFor="let project of filteredProjects">
+          <tr class="user-row">
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ project.name }}</span>
+              <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].name" placeholder="Project Name" />
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ project.description || '-' }}</span>
+              <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].description" placeholder="Description" />
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ getCustomerName(project.customer_id) || '-' }}</span>
+              <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].customer_id" (change)="onCustomerChange(project.id, editProjectData[project.id].customer_id)">
+                <option value="">Select Customer</option>
+                <option *ngFor="let customer of customers" [value]="customer.id.toString()">{{ customer.name }}</option>
+              </select>
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ project.region || '-' }}</span>
+              <span *ngIf="editingProject === project.id">{{ editProjectData[project.id].region || project.region || '-' }}</span>
+            </td>
+            <td *ngIf="showStatusColumn">
+              <div class="status-selector" style="position: relative;">
+                <div class="status-dropdown-trigger" (click)="projectStatusDropdownOpen = (projectStatusDropdownOpen === project.id ? null : project.id)" [class.active]="projectStatusDropdownOpen === project.id">
+                  <span class="status-dot status-{{ project.status || 'on-track' }}"></span>
+                  <span>{{ getStatusDisplayName(project.status || 'on-track') }}</span>
+                  <span class="dropdown-arrow">▼</span>
+                </div>
+                <div class="status-dropdown-menu" *ngIf="projectStatusDropdownOpen === project.id">
+                  <div class="status-option" (click)="updateProjectStatus(project, 'on-track'); projectStatusDropdownOpen = null">
+                    <span class="status-dot status-on-track"></span>
+                    <span>On Track</span>
+                  </div>
+                  <div class="status-option" (click)="updateProjectStatus(project, 'at-risk'); projectStatusDropdownOpen = null">
+                    <span class="status-dot status-at-risk"></span>
+                    <span>At Risk</span>
+                  </div>
+                  <div class="status-option" (click)="updateProjectStatus(project, 'off-track'); projectStatusDropdownOpen = null">
+                    <span class="status-dot status-off-track"></span>
+                    <span>Off Track</span>
+                  </div>
+                  <div class="status-option" (click)="updateProjectStatus(project, 'on-hold'); projectStatusDropdownOpen = null">
+                    <span class="status-dot status-on-hold"></span>
+                    <span>On Hold</span>
+                  </div>
+                  <div class="status-option" (click)="updateProjectStatus(project, 'completed'); projectStatusDropdownOpen = null">
+                    <span class="status-dot status-completed"></span>
+                    <span>Completed</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.start_date) }}</span>
+              <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].start_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.end_date) }}</span>
+              <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].end_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ formatAllocatedTime(project.allocated_time) || '-' }}</span>
+              <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
+            </td>
+            <!-- Dynamic Custom Fields Columns -->
+            <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
+              <span *ngIf="editingProject !== project.id">{{ getProjectCustomFieldValue(project, fieldName) || '-' }}</span>
+              <input *ngIf="editingProject === project.id" type="text" [ngModel]="(editProjectData[project.id].custom_fields?.[fieldName] !== undefined && editProjectData[project.id].custom_fields?.[fieldName] !== null) ? editProjectData[project.id].custom_fields[fieldName] : getProjectCustomFieldValue(project, fieldName)" (ngModelChange)="editProjectData[project.id].custom_fields = editProjectData[project.id].custom_fields || {}; editProjectData[project.id].custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
+            </td>
+            <td class="role-cell" style="width: 200px; min-width: 200px; text-align: center;">
+              <div class="role-content">
+                <div *ngIf="editingProject !== project.id && !isHeadManager && !isEmployee && !isManager" class="action-buttons">
+                  <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
+                  <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                  <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
+                  <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
+                  <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                  <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                </div>
+                <div *ngIf="editingProject !== project.id && (isEmployee || isManager)" class="action-buttons">
+                  <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
+                  <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                  <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
+                  <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                  <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                </div>
+                <div *ngIf="editingProject !== project.id && isHeadManager" class="action-buttons">
+                  <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
+                  <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                  <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
+                  <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
+                  <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                  <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                </div>
+                <div *ngIf="editingProject === project.id" class="action-buttons edit-mode">
+                  <div *ngIf="editProjectError[project.id]" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; background: #ffebee; color: #c62828; border-radius: 4px; border-left: 4px solid #c62828; font-size: 0.75rem;">
+                    {{ editProjectError[project.id] }}
+                  </div>
+                  <button (click)="saveProjectInline(project.id)" class="btn-expertflow btn-primary">💾 Save</button>
+                  <button (click)="cancelEdit(project.id)" class="btn-expertflow btn-icon btn-delete">❌</button>
+                </div>
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Expandable Tasks Row -->
+          <tr *ngIf="expandedProjects.has(project.id)" class="tasks-expanded-row">
+            <td [attr.colspan]="getProjectTableColumnCount()" style="padding: 0; background: #f9f9f9;">
+              <div style="padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                  <h3 style="margin: 0; color: #333; font-size: 1rem; font-weight: 600;">Tasks for: {{ project.name }}</h3>
+                  <button 
+                    (click)="openTaskModal(project.id)" 
+                    class="btn-expertflow btn-primary"
+                    style="padding: 0.5rem 1rem; white-space: nowrap; font-size: 0.875rem;">
+                    + New Task
+                  </button>
+                </div>
+
+                <!-- Tasks List for This Project -->
+                <table class="expertflow-table" *ngIf="projectTasks[project.id] && projectTasks[project.id].length > 0" style="margin-bottom: 0;">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Description</th>
+                      <th *ngIf="showTaskStatusColumn">Status</th>
+                      <th>Assigned To</th>
+                      <th>Assigned By</th>
+                      <th>Due Date</th>
+                      <th>Allocated Time</th>
+                      <th *ngFor="let fieldName of getAllTaskCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let task of projectTasks[project.id]" class="user-row">
+                      <td>
+                        <span *ngIf="editingTask !== task.id">{{ task.title }}</span>
+                        <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.title" />
+                      </td>
+                      <td>
+                        <span *ngIf="editingTask !== task.id">{{ task.description || '-' }}</span>
+                        <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.description" />
+                      </td>
+                      <td *ngIf="showTaskStatusColumn">
+                        <span *ngIf="editingTask !== task.id">{{ task.status | titlecase }}</span>
+                        <select *ngIf="editingTask === task.id" [(ngModel)]="task.status">
+                          <option value="pending">Pending</option>
+                          <option value="in-progress">In Progress</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      </td>
+                      <td>
+                        <span *ngIf="editingTask !== task.id">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
+                        <select *ngIf="editingTask === task.id && !isEmployee" [(ngModel)]="task.assigned_to">
+                          <option value="">Select Employee (Optional)</option>
+                          <option *ngFor="let employee of getEmployees(task)" [value]="employee.id">{{ employee.email }} ({{ employee.role | titlecase }})</option>
+                        </select>
+                        <span *ngIf="editingTask === task.id && isEmployee">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
+                      </td>
+                      <td>
+                        <span *ngIf="editingTask !== task.id">{{ task.assigned_by || '-' }}</span>
+                        <input *ngIf="editingTask === task.id && !isEmployee" type="text" [(ngModel)]="task.assigned_by" />
+                        <span *ngIf="editingTask === task.id && isEmployee">{{ task.assigned_by || '-' }}</span>
+                      </td>
+                      <td>
+                        <span *ngIf="editingTask !== task.id">{{ formatDateForDisplay(task.due_date) }}</span>
+                        <input *ngIf="editingTask === task.id" type="date" [(ngModel)]="task.due_date" />
+                      </td>
+                      <td>
+                        <span *ngIf="editingTask !== task.id">{{ formatAllocatedTime(task.allocated_time) || '-' }}</span>
+                        <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
+                      </td>
+                      <!-- Dynamic Custom Fields Columns -->
+                      <td *ngFor="let fieldName of getAllTaskCustomFieldNames()">
+                        <span *ngIf="editingTask !== task.id">{{ getTaskCustomFieldValue(task, fieldName) || '-' }}</span>
+                        <input *ngIf="editingTask === task.id" type="text" [ngModel]="getTaskCustomFieldValue(task, fieldName)" (ngModelChange)="task.custom_fields = task.custom_fields || {}; task.custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
+                      </td>
+                      <td style="text-align: center;">
+                        <div *ngIf="editingTask !== task.id" class="task-menu-container" style="position: relative; display: inline-block;">
+                          <button class="task-menu-btn" (click)="toggleTaskMenu(task.id, $event)" title="Menu">
+                            <span>⋮</span>
+                          </button>
+                          <div *ngIf="openTaskMenuId === task.id" class="task-menu-dropdown" (click)="$event.stopPropagation()">
+                            <div class="task-menu-content">
+                              <div class="task-menu-item" (click)="viewTaskDetails(task); closeTaskMenu()">
+                                View Details
+                              </div>
+                              <div class="task-menu-item" (click)="editTask(task); closeTaskMenu()">
+                                Edit
+                              </div>
+                              <div *ngIf="isAdmin" class="task-menu-item" (click)="deleteTask(task); closeTaskMenu()">
+                                Delete
+                              </div>
+                              <div *ngIf="task.status === 'completed'" class="task-menu-item" (click)="toggleTaskArchived(task); closeTaskMenu()">
+                                {{ (task.archived === 1 || task.archived === true) ? 'Remove Archived' : 'Archived' }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div *ngIf="editingTask === task.id" class="action-buttons edit-mode" style="display: flex; gap: 0.25rem; justify-content: center; align-items: center;">
+                          <button (click)="updateTask(task)" class="btn-expertflow btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">💾 Save</button>
+                          <button (click)="cancelTaskEdit(task.id)" class="btn-expertflow btn-icon btn-delete" style="padding: 0.25rem 0.5rem;">❌</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p *ngIf="!projectTasks[project.id] || projectTasks[project.id].length === 0" style="text-align: center; color: #666; padding: 1rem; margin: 0;">No tasks yet. Click "New Task" to add one.</p>
+              </div>
+            </td>
+          </tr>
+          </ng-container>
+        </ng-container>
+      </tbody>
+    </table>
+
+    <!-- Project Details Modal -->
+    <div *ngIf="showProjectDetailsModal && selectedProjectForDetails" class="task-modal-overlay" (click)="closeProjectDetailsModal()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
+        <div class="task-modal-header">
+          <h3>Project Details</h3>
+          <button (click)="closeProjectDetailsModal()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Project ID:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.id }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Name:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.name }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.description || 'Not provided' }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start Date:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.start_date) }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End Date:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.end_date) }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedProjectForDetails.allocated_time) || 'Not provided' }}</span>
+            </div>
+            <div *ngIf="selectedProjectForDetails.allocated_time">
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Remaining Allocated Time:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ getRemainingAllocatedTime(selectedProjectForDetails) || formatAllocatedTime(selectedProjectForDetails.allocated_time) }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
+              <div *ngIf="selectedProjectForDetails.attachment && selectedProjectForDetails.attachment.trim() !== ''; else noAttachment">
+                <a [href]="'http://localhost:3000' + selectedProjectForDetails.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0;">
+                  <span style="font-size: 1.2rem;">📎</span>
+                  <span>{{ getAttachmentFileName(selectedProjectForDetails.attachment) }}</span>
+                  <span style="font-size: 0.75rem; color: #666; margin-left: 0.5rem;">(Click to open)</span>
+                </a>
+              </div>
+              <ng-template #noAttachment>
+                <span style="color: #999; font-size: 0.875rem; font-style: italic;">No attachment</span>
+              </ng-template>
+            </div>
+            <!-- Custom Fields displayed inline with other details -->
+            <ng-container *ngIf="getProjectCustomFields(selectedProjectForDetails)">
+              <div *ngFor="let customField of getProjectCustomFields(selectedProjectForDetails) | keyvalue">
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Comments Section -->
+          <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+            <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Comments</h4>
+            
+            <!-- Add Comment Form -->
+            <div style="margin-bottom: 1.5rem;">
+              <textarea 
+                [(ngModel)]="newComment" 
+                placeholder="Write a comment..."
+                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+                (keydown.enter)="$event.preventDefault(); addComment()"
+              ></textarea>
+              <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                <button 
+                  (click)="addComment()" 
+                  [disabled]="!newComment.trim() || loadingComments"
+                  class="btn-expertflow btn-primary"
+                  style="padding: 0.5rem 1.5rem; font-size: 0.875rem;"
+                >
+                  Post Comment
+                </button>
+              </div>
+            </div>
+
+            <!-- Comments List -->
+            <div style="max-height: 400px; overflow-y: auto;">
+              <div *ngIf="loadingComments" style="text-align: center; padding: 2rem; color: #666;">
+                Loading comments...
+              </div>
+              <div *ngIf="!loadingComments && projectComments.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+                No comments yet. Be the first to comment!
+              </div>
+              <div *ngFor="let comment of projectComments" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                  <div>
+                    <div style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                      {{ comment.user_name || getUserNameFromEmail(comment.user_email) || 'Unknown User' }}
+                    </div>
+                    <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                      {{ formatCommentDate(comment.created_at) }}
+                    </div>
+                  </div>
+                  <div *ngIf="isOwnProjectComment(comment)" style="display: flex; gap: 0.5rem;">
+                    <button 
+                      *ngIf="editingProjectCommentId !== comment.id"
+                      (click)="startEditingProjectComment(comment)"
+                      style="background: #2196F3; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
+                      title="Edit comment"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      *ngIf="editingProjectCommentId !== comment.id"
+                      (click)="deleteProjectComment(comment)"
+                      style="background: #f44336; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
+                      title="Delete comment"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="editingProjectCommentId === comment.id" style="margin-bottom: 0.5rem;">
+                  <textarea 
+                    [(ngModel)]="editingProjectCommentText"
+                    style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+                  ></textarea>
+                  <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button 
+                      (click)="cancelEditingProjectComment()"
+                      class="btn-expertflow"
+                      style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      (click)="saveProjectComment(comment)"
+                      [disabled]="!editingProjectCommentText.trim()"
+                      class="btn-expertflow btn-primary"
+                      style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="editingProjectCommentId !== comment.id" style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
+                  {{ comment.comment }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <button (click)="openTaskHistoryModal()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+            📋 Task History
+          </button>
+          <button (click)="closeProjectDetailsModal()" class="btn-expertflow">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task History Modal -->
+    <div *ngIf="showTaskHistoryModal && selectedProjectForDetails" class="task-modal-overlay" (click)="closeTaskHistoryModal()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+        <div class="task-modal-header">
+          <h3>Task History - {{ selectedProjectForDetails.name }}</h3>
+          <button (click)="closeTaskHistoryModal()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+          <div *ngIf="loadingHistory" style="text-align: center; padding: 2rem; color: #666;">
+            Loading history...
+          </div>
+          <div *ngIf="!loadingHistory && projectHistory.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+            No history available for this project yet.
+          </div>
+          <div *ngIf="!loadingHistory && projectHistory.length > 0" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div *ngFor="let historyItem of projectHistory" style="padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 4px solid #1976d2;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.2rem;">
+                      <span *ngIf="historyItem.type === 'project'">📁</span>
+                      <span *ngIf="historyItem.type === 'task'">✓</span>
+                    </span>
+                    <span style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                      <span *ngIf="historyItem.type === 'project'">Project</span>
+                      <span *ngIf="historyItem.type === 'task'">Task</span>
+                      <span *ngIf="historyItem.action === 'create'"> Created</span>
+                      <span *ngIf="historyItem.action === 'update'"> Updated</span>
+                      <span *ngIf="historyItem.action === 'delete'"> Deleted</span>
+                    </span>
+                    <span *ngIf="historyItem.type === 'task' && historyItem.task_title" style="color: #666; font-size: 0.875rem; margin-left: 0.5rem;">
+                      - {{ historyItem.task_title }}
+                    </span>
+                  </div>
+                  <div *ngIf="historyItem.action === 'update' && historyItem.field_name" style="margin-bottom: 0.5rem;">
+                    <span style="color: #666; font-size: 0.875rem;">
+                      <strong>{{ formatFieldName(historyItem.field_name) }}:</strong>
+                      <span *ngIf="historyItem.old_value !== null && historyItem.old_value !== ''" style="color: #d32f2f; text-decoration: line-through; margin-left: 0.5rem;">
+                        {{ formatHistoryValue(historyItem.field_name, historyItem.old_value) }}
+                      </span>
+                      <span style="color: #1976d2; margin-left: 0.5rem;">→</span>
+                      <span *ngIf="historyItem.new_value !== null && historyItem.new_value !== ''" style="color: #2e7d32; margin-left: 0.5rem;">
+                        {{ formatHistoryValue(historyItem.field_name, historyItem.new_value) }}
+                      </span>
+                      <span *ngIf="historyItem.old_value === null || historyItem.old_value === ''" style="color: #2e7d32; margin-left: 0.5rem;">
+                        {{ formatHistoryValue(historyItem.field_name, historyItem.new_value) }}
+                      </span>
+                    </span>
+                  </div>
+                  <div *ngIf="historyItem.action === 'delete'" style="margin-bottom: 0.5rem;">
+                    <span style="color: #d32f2f; font-size: 0.875rem;">
+                      <span *ngIf="historyItem.type === 'project'">Project was deleted</span>
+                      <span *ngIf="historyItem.type === 'task'">Task "{{ historyItem.task_title }}" was deleted</span>
+                    </span>
+                  </div>
+                  <div *ngIf="historyItem.action === 'create'" style="margin-bottom: 0.5rem;">
+                    <span style="color: #2e7d32; font-size: 0.875rem;">
+                      <span *ngIf="historyItem.type === 'project'">Project was created</span>
+                      <span *ngIf="historyItem.type === 'task'">Task "{{ historyItem.task_title }}" was created</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e0e0e0;">
+                <div style="color: #999; font-size: 0.75rem;">
+                  <span *ngIf="historyItem.changed_by_name">{{ historyItem.changed_by_name }}</span>
+                  <span *ngIf="!historyItem.changed_by_name && historyItem.changed_by_email">{{ historyItem.changed_by_email }}</span>
+                  <span *ngIf="!historyItem.changed_by_name && !historyItem.changed_by_email">Unknown User</span>
+                </div>
+                <div style="color: #999; font-size: 0.75rem;">
+                  {{ formatHistoryDate(historyItem.changed_at) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="task-modal-footer">
+          <button (click)="closeTaskHistoryModal()" class="btn-expertflow">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Project Modal -->
+    <div *ngIf="showEditProjectModal && selectedProjectForEdit" class="task-modal-overlay" (click)="closeEditProjectModal()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 600px;">
+        <div class="task-modal-header">
+          <h3>Edit Project: {{ selectedProjectForEdit.name }}</h3>
+          <button (click)="closeEditProjectModal()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body">
+          <div *ngIf="modalEditProjectError" style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
+            {{ modalEditProjectError }}
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Project Name *</label>
+              <input type="text" [(ngModel)]="modalEditProjectData.name" placeholder="Project Name" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description *</label>
+              <textarea [(ngModel)]="modalEditProjectData.description" placeholder="Description" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Customer *</label>
+              <select [(ngModel)]="modalEditProjectData.customer_id" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option [value]="null">-- Select Customer --</option>
+                <option *ngFor="let customer of customers" [value]="customer.id.toString()">
+                  {{ customer.name }}
+                </option>
+              </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Start Date</label>
+                <input type="date" [(ngModel)]="modalEditProjectData.start_date"
+                  style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+              </div>
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">End Date</label>
+                <input type="date" [(ngModel)]="modalEditProjectData.end_date"
+                  style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+              </div>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+              <select [(ngModel)]="modalEditProjectData.status"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option value="on-track">On Track</option>
+                <option value="at-risk">At Risk</option>
+                <option value="off-track">Off Track</option>
+                <option value="on-hold">On Hold</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+              <input type="text" [(ngModel)]="modalEditProjectData.allocated_time" placeholder="HH:MM:SS"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Attachment</label>
+              <input type="file" (change)="onAttachmentChange($event)" 
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+              <div *ngIf="selectedProjectForEdit && selectedProjectForEdit.attachment" style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">
+                Current: {{ getAttachmentFileName(selectedProjectForEdit.attachment) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="task-modal-footer">
+          <button (click)="saveProject()" class="btn-expertflow btn-primary">💾 Save Changes</button>
+          <button (click)="closeEditProjectModal()" class="btn-expertflow">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Creation Modal -->
+    <div *ngIf="showTaskModal && selectedProjectForTaskModal" class="task-modal-overlay" (click)="closeTaskModal()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()">
+        <div class="task-modal-header">
+          <h3>Create New Task</h3>
+          <button (click)="closeTaskModal()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body">
+          <div style="margin-bottom: 1rem; padding: 0.75rem; background: #e3f2fd; border-radius: 4px;">
+            <strong>Project:</strong> {{ getProjectName(selectedProjectForTaskModal!) }}
+          </div>
+          <app-dynamic-form
+            [formId]="'createTask_' + selectedProjectForTaskModal"
+            [defaultFields]="taskFormFields"
+            [formData]="newTask[selectedProjectForTaskModal!] || {}"
+            [showAddField]="true"
+            [dynamicOptions]="getTaskDynamicOptions(selectedProjectForTaskModal!)"
+            [hiddenFields]="isEmployee ? ['assigned_to'] : []"
+            (formDataChange)="onTaskFormDataChange(selectedProjectForTaskModal!, $event)">
+          </app-dynamic-form>
+        </div>
+        <div class="task-modal-footer">
+          <button (click)="createTask(selectedProjectForTaskModal!)" class="btn-expertflow btn-primary">+ Create Task</button>
+          <button (click)="closeTaskModal()" class="btn-expertflow">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Task Modal with Dynamic Form -->
+    <div *ngIf="showEditTaskModal && selectedTaskForEdit" class="task-modal-overlay" (click)="closeEditTaskModal()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()">
+        <div class="task-modal-header">
+          <h3>Edit Task: {{ selectedTaskForEdit.title }}</h3>
+          <button (click)="closeEditTaskModal()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body">
+          <app-dynamic-form
+            [formId]="'editTask_' + selectedTaskForEdit.id"
+            [defaultFields]="taskFormFields"
+            [formData]="editTaskData[selectedTaskForEdit.id]"
+            [showAddField]="true"
+            [dynamicOptions]="getTaskDynamicOptions(getProjectIdForTask(selectedTaskForEdit.id))"
+            [hiddenFields]="isEmployee ? ['assigned_to'] : []"
+            (formDataChange)="onEditTaskFormDataChange(selectedTaskForEdit.id, $event)">
+          </app-dynamic-form>
+        </div>
+        <div class="task-modal-footer">
+          <button (click)="saveTask(selectedTaskForEdit.id)" class="btn-expertflow btn-primary">💾 Save Changes</button>
+          <button (click)="closeEditTaskModal()" class="btn-expertflow">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Details Modal -->
+    <div *ngIf="showTaskDetailsModal && selectedTaskForDetails" class="task-modal-overlay" (click)="closeTaskDetailsModal()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
+        <div class="task-modal-header">
+          <h3>Task Details</h3>
+          <button (click)="closeTaskDetailsModal()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Task ID:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.id }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Title:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.title }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.description || 'Not provided' }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ (selectedTaskForDetails.status || 'pending') | titlecase }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned To:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ getAssignedUserName(selectedTaskForDetails.assigned_to, selectedTaskForDetails) || 'Not assigned' }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned By:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ getUserNameFromEmail(selectedTaskForDetails.assigned_by) }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Due Date:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedTaskForDetails.due_date) || 'Not set' }}</span>
+            </div>
+            <div>
+              <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
+              <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedTaskForDetails.allocated_time) || 'Not provided' }}</span>
+            </div>
+            <!-- Custom Fields displayed inline with other details -->
+            <ng-container *ngIf="getTaskCustomFields(selectedTaskForDetails)">
+              <div *ngFor="let customField of getTaskCustomFields(selectedTaskForDetails) | keyvalue">
+                <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+                <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Comments Section -->
+          <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+            <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Comments</h4>
+            
+            <!-- Add Comment Form -->
+            <div style="margin-bottom: 1.5rem;">
+              <textarea 
+                [(ngModel)]="newTaskComment" 
+                placeholder="Write a comment..."
+                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+                (keydown.enter)="$event.preventDefault(); addTaskComment()"
+              ></textarea>
+              <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+                <button 
+                  (click)="addTaskComment()" 
+                  [disabled]="!newTaskComment.trim() || loadingTaskComments"
+                  class="btn-expertflow btn-primary"
+                  style="padding: 0.5rem 1.5rem; font-size: 0.875rem;"
+                >
+                  Post Comment
+                </button>
+              </div>
+            </div>
+
+            <!-- Comments List -->
+            <div style="max-height: 400px; overflow-y: auto;">
+              <div *ngIf="loadingTaskComments" style="text-align: center; padding: 2rem; color: #666;">
+                Loading comments...
+              </div>
+              <div *ngIf="!loadingTaskComments && taskComments.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+                No comments yet. Be the first to comment!
+              </div>
+              <div *ngFor="let comment of taskComments" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                  <div>
+                    <div style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                      {{ comment.user_name || comment.user_email || 'Unknown User' }}
+                    </div>
+                    <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                      {{ formatCommentDate(comment.created_at) }}
+                    </div>
+                  </div>
+                  <div *ngIf="isOwnTaskComment(comment)" style="display: flex; gap: 0.5rem;">
+                    <button 
+                      *ngIf="editingTaskCommentId !== comment.id"
+                      (click)="startEditingTaskComment(comment)"
+                      style="background: #2196F3; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
+                      title="Edit comment"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      *ngIf="editingTaskCommentId !== comment.id"
+                      (click)="deleteTaskComment(comment)"
+                      style="background: #f44336; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
+                      title="Delete comment"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="editingTaskCommentId === comment.id" style="margin-bottom: 0.5rem;">
+                  <textarea 
+                    [(ngModel)]="editingTaskCommentText"
+                    style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+                  ></textarea>
+                  <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button 
+                      (click)="cancelEditingTaskComment()"
+                      class="btn-expertflow"
+                      style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      (click)="saveTaskComment(comment)"
+                      [disabled]="!editingTaskCommentText.trim()"
+                      class="btn-expertflow btn-primary"
+                      style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+                <div *ngIf="editingTaskCommentId !== comment.id" style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
+                  {{ comment.comment }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+          <button (click)="openTaskHistoryModalForTask()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+            📋 Task History
+          </button>
+          <button (click)="closeTaskDetailsModal()" class="btn-expertflow">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task History Modal (for individual task) -->
+    <div *ngIf="showTaskHistoryModalForTask && selectedTaskForHistory" class="task-modal-overlay" (click)="closeTaskHistoryModalForTask()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+        <div class="task-modal-header">
+          <h3>Task History - {{ selectedTaskForHistory.title }}</h3>
+          <button (click)="closeTaskHistoryModalForTask()" class="task-modal-close">×</button>
+        </div>
+        <div class="task-modal-body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+          <div *ngIf="loadingTaskHistory" style="text-align: center; padding: 2rem; color: #666;">
+            Loading history...
+          </div>
+          <div *ngIf="!loadingTaskHistory && taskHistory.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+            No history available for this task yet.
+          </div>
+          <div *ngIf="!loadingTaskHistory && taskHistory.length > 0" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div *ngFor="let historyItem of taskHistory" style="padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 4px solid #1976d2;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.2rem;">✓</span>
+                    <span style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                      Task
+                      <span *ngIf="historyItem.action === 'create'"> Created</span>
+                      <span *ngIf="historyItem.action === 'update'"> Updated</span>
+                      <span *ngIf="historyItem.action === 'delete'"> Deleted</span>
+                    </span>
+                  </div>
+                  <div *ngIf="historyItem.action === 'update' && historyItem.field_name" style="margin-bottom: 0.5rem;">
+                    <span style="color: #666; font-size: 0.875rem;">
+                      <strong>{{ formatFieldName(historyItem.field_name) }}:</strong>
+                      <span *ngIf="historyItem.old_value !== null && historyItem.old_value !== ''" style="color: #d32f2f; text-decoration: line-through; margin-left: 0.5rem;">
+                        {{ formatHistoryValue(historyItem.field_name, historyItem.old_value) }}
+                      </span>
+                      <span style="color: #1976d2; margin-left: 0.5rem;">→</span>
+                      <span *ngIf="historyItem.new_value !== null && historyItem.new_value !== ''" style="color: #2e7d32; margin-left: 0.5rem;">
+                        {{ formatHistoryValue(historyItem.field_name, historyItem.new_value) }}
+                      </span>
+                      <span *ngIf="historyItem.old_value === null || historyItem.old_value === ''" style="color: #2e7d32; margin-left: 0.5rem;">
+                        {{ formatHistoryValue(historyItem.field_name, historyItem.new_value) }}
+                      </span>
+                    </span>
+                  </div>
+                  <div *ngIf="historyItem.action === 'delete'" style="margin-bottom: 0.5rem;">
+                    <span style="color: #d32f2f; font-size: 0.875rem;">
+                      Task "{{ historyItem.task_title }}" was deleted
+                    </span>
+                  </div>
+                  <div *ngIf="historyItem.action === 'create'" style="margin-bottom: 0.5rem;">
+                    <span style="color: #2e7d32; font-size: 0.875rem;">
+                      Task "{{ historyItem.task_title }}" was created
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e0e0e0;">
+                <div style="color: #999; font-size: 0.75rem;">
+                  <span *ngIf="historyItem.changed_by_name">{{ historyItem.changed_by_name }}</span>
+                  <span *ngIf="!historyItem.changed_by_name && historyItem.changed_by_email">{{ historyItem.changed_by_email }}</span>
+                  <span *ngIf="!historyItem.changed_by_name && !historyItem.changed_by_email">Unknown User</span>
+                </div>
+                <div style="color: #999; font-size: 0.75rem;">
+                  {{ formatHistoryDate(historyItem.changed_at) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="task-modal-footer">
+          <button (click)="closeTaskHistoryModalForTask()" class="btn-expertflow">Close</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
