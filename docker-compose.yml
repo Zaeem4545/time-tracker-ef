@@ -33,8 +33,23 @@ services:
       - "80:80"
     depends_on:
       - db
+      - backend
     environment:
       # Optional: any other frontend env vars
+      NODE_ENV: production
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: time-tracking-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      # Ensure backend reads DB config from env if needed
       NODE_ENV: production
 
 volumes:
