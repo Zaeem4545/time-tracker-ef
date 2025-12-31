@@ -5,9 +5,10 @@ require('dotenv').config(); // 🔹 Load .env variables
 
 
 
-console.log('🔹 Database configuration:',process.env.DB_HOST);
+const resolvedHost = process.env.DB_HOST || 'db';
+console.log('🔹 Database configuration - DB_HOST:', resolvedHost);
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
+  host: resolvedHost,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'time_tracking',

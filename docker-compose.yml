@@ -51,6 +51,11 @@ services:
     environment:
       # Ensure backend reads DB config from env if needed
       NODE_ENV: production
+      DB_HOST: db
+      DB_USER: tt_user
+      DB_PASSWORD: tt_password
+      DB_NAME: time_tracking
+      DB_PORT: 3306
 
 volumes:
   db_data:
