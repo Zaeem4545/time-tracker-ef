@@ -4,6 +4,12 @@ import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 
+const buildApi = (path: string) => {
+  const base = (environment.apiBase || '').replace(/\/+$|\s+/g, '');
+  const prefix = base.endsWith('/api') ? base : (base === '' ? '/api' : `${base}/api`);
+  return `${prefix}/${path.replace(/^\/+/, '')}`;
+};
+
 export interface Notification {
   id: number;
   user_id: number;
@@ -17,7 +23,7 @@ export interface Notification {
   providedIn: 'root'
 })
 export class NotificationService {
-  private apiUrl = `${environment.apiBase}/api/notifications`;
+  private apiUrl = buildApi('notifications');
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

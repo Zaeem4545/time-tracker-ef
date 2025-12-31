@@ -4,11 +4,17 @@ import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+const buildApi = (path: string) => {
+  const base = (environment.apiBase || '').replace(/\/+$|\s+/g, '');
+  const prefix = base.endsWith('/api') ? base : (base === '' ? '/api' : `${base}/api`);
+  return `${prefix}/${path.replace(/^\/+/, '')}`;
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class ProjectService {
-  private apiUrl = `${environment.apiBase}/api/projects`;
+  private apiUrl = buildApi('projects');
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 

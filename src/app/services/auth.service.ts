@@ -3,11 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+const buildApi = (path: string) => {
+  const base = (environment.apiBase || '').replace(/\/+$|\s+/g, '');
+  const prefix = base.endsWith('/api') ? base : (base === '' ? '/api' : `${base}/api`);
+  return `${prefix}/${path.replace(/^\/+/, '')}`;
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = `${environment.apiBase}/api/auth`;
+  private apiUrl = buildApi('auth');
   private tokenKey = 'token';
   private roleKey = 'role';
   userRole: string | null = null;

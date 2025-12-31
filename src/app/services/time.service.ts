@@ -4,12 +4,18 @@ import { AuthService } from './auth.service';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+const buildApi = (path: string) => {
+  const base = (environment.apiBase || '').replace(/\/+$|\s+/g, '');
+  const prefix = base.endsWith('/api') ? base : (base === '' ? '/api' : `${base}/api`);
+  return `${prefix}/${path.replace(/^\/+/, '')}`;
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class TimeService {
   // apiBase should be the backend root URL (e.g., 'http://localhost:3000')
-  private apiUrl = `${environment.apiBase}/api/time-entries`;
+  private apiUrl = buildApi('time-entries');
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
