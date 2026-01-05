@@ -255,6 +255,10 @@
               <span>Archived</span>
               <span class="checkmark" *ngIf="isFilterActive('archived')">✓</span>
             </div>
+            <div class="dropdown-item" [class.active]="isFilterActive('maintenance')" (click)="applyFilter('maintenance')">
+              <span>Maintenance</span>
+              <span class="checkmark" *ngIf="isFilterActive('maintenance')">✓</span>
+            </div>
           </div>
         </div>
         
