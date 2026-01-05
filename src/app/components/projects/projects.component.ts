@@ -749,7 +749,7 @@ export class ProjectsComponent implements OnInit {
       'at-risk': 'At Risk',
       'off-track': 'Off Track',
       'on-hold': 'On Hold',
-      'completed': 'Completed'
+      'completed': 'Completed',
     };
     return statusNames[statusType] || statusType;
   }
