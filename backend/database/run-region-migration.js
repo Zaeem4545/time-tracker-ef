@@ -1,15 +1,36 @@
 const db = require('../config/db');
-const fs = require('fs');
-const path = require('path');
 
 async function runMigration() {
   try {
-    const sql = fs.readFileSync(path.join(__dirname, 'add_region_to_projects.sql'), 'utf8');
-    await db.query(sql);
-    console.log('Migration completed: region column added to projects table');
+    console.log('🔧 Checking if region column exists in projects table...');
+    
+    // Check if column exists
+    const [columns] = await db.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'projects' 
+        AND COLUMN_NAME = 'region'
+    `);
+    
+    if (columns.length > 0) {
+      console.log('✅ Region column already exists in projects table');
+      process.exit(0);
+      return;
+    }
+    
+    console.log('📝 Adding region column to projects table...');
+    
+    // Add region column
+    await db.query(`
+      ALTER TABLE projects 
+      ADD COLUMN region VARCHAR(255) NULL
+    `);
+    
+    console.log('✅ Migration completed: region column added to projects table');
     process.exit(0);
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error('❌ Migration failed:', error);
     process.exit(1);
   }
 }

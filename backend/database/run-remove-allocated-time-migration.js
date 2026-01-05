@@ -1,41 +1,37 @@
-const mysql = require('mysql2/promise');
-const fs = require('fs');
-const path = require('path');
+const db = require('../config/db');
 
 async function runMigration() {
-  let connection;
-  
   try {
-    // Read database config from db.js
-    const dbConfig = require('../config/db');
+    console.log('🔧 Checking if allocated_time column exists in projects table...');
     
-    // Create connection
-    connection = await mysql.createConnection({
-      host: dbConfig.config.host,
-      user: dbConfig.config.user,
-      password: dbConfig.config.password,
-      database: dbConfig.config.database,
-      multipleStatements: true
-    });
+    // Check if column exists
+    const [columns] = await db.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'projects' 
+        AND COLUMN_NAME = 'allocated_time'
+    `);
     
-    console.log('Connected to database');
-    
-    // Read SQL file
-    const sqlPath = path.join(__dirname, 'remove_allocated_time_from_projects.sql');
-    const sql = fs.readFileSync(sqlPath, 'utf8');
-    
-    // Execute migration
-    await connection.query(sql);
-    console.log('Migration completed successfully: Removed allocated_time column from projects table');
-    
-  } catch (error) {
-    console.error('Migration failed:', error);
-    process.exit(1);
-  } finally {
-    if (connection) {
-      await connection.end();
-      console.log('Database connection closed');
+    if (columns.length === 0) {
+      console.log('✅ allocated_time column does not exist in projects table (already removed)');
+      process.exit(0);
+      return;
     }
+    
+    console.log('📝 Removing allocated_time column from projects table...');
+    
+    // Remove allocated_time column
+    await db.query(`
+      ALTER TABLE projects 
+      DROP COLUMN allocated_time
+    `);
+    
+    console.log('✅ Migration completed successfully: Removed allocated_time column from projects table');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    process.exit(1);
   }
 }
 
