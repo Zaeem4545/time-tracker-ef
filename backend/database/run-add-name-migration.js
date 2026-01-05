@@ -1,38 +1,37 @@
-const mysql = require('mysql2/promise');
-const fs = require('fs');
-const path = require('path');
+const db = require('../config/db');
 
 async function runMigration() {
-  let connection;
-  
   try {
-    // Create connection
-    connection = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'time_tracking'
-    });
-
-    console.log('Connected to database');
-
-    // Read SQL file
-    const sqlFile = path.join(__dirname, 'add_name_to_users.sql');
-    const sql = fs.readFileSync(sqlFile, 'utf8');
-
-    // Execute migration
-    console.log('Running migration: add_name_to_users.sql');
-    await connection.query(sql);
+    console.log('🔧 Checking if name column exists in users table...');
     
-    console.log('Migration completed successfully!');
-  } catch (error) {
-    console.error('Migration failed:', error);
-    process.exit(1);
-  } finally {
-    if (connection) {
-      await connection.end();
-      console.log('Database connection closed');
+    // Check if column exists
+    const [columns] = await db.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'users' 
+        AND COLUMN_NAME = 'name'
+    `);
+    
+    if (columns.length > 0) {
+      console.log('✅ Name column already exists in users table');
+      process.exit(0);
+      return;
     }
+    
+    console.log('📝 Adding name column to users table...');
+    
+    // Add name column
+    await db.query(`
+      ALTER TABLE users 
+      ADD COLUMN name VARCHAR(255) NOT NULL DEFAULT ''
+    `);
+    
+    console.log('✅ Migration completed successfully: name column added to users table');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    process.exit(1);
   }
 }
 
