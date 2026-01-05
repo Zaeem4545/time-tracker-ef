@@ -9,10 +9,12 @@ services:
       MYSQL_DATABASE: time_tracking
       MYSQL_USER: tt_user
       MYSQL_PASSWORD: tt_password
+    ports:
+      - "3306:3306" # Added so SQL Workbench works
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "tt_user", "-ptt_password"] # Added user/pass to fix those "Access Denied" logs
       interval: 10s
       timeout: 5s
       retries: 3
@@ -27,8 +29,8 @@ services:
         API_URL: "/api"
     container_name: time-tracking-frontend
     restart: unless-stopped
-    expose:
-      - "80"
+    ports:
+      - "4200:80" # Changed from expose to ports
     depends_on:
       - db
       - backend
@@ -43,8 +45,8 @@ services:
       dockerfile: Dockerfile
     container_name: time-tracking-backend
     restart: unless-stopped
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000" # Changed from expose to ports
     depends_on:
       - db
     environment:
