@@ -131,7 +131,7 @@ async function createProject(req, res) {
         // Don't fail the project creation if customer update fails
       }
     }
-    
+    const creatorEmail = req.user.email;
     // Notify admin, manager, and head manager if project is created by an employee
     if (creatorRole === 'employee') {
       try {
@@ -155,6 +155,7 @@ async function createProject(req, res) {
     } else {
       // For non-employees, notify all admins (existing behavior)
       try {
+        
         const adminMessage = `New project "${name}" has been created by ${creatorEmail}`;
         await Notification.notifyAllAdmins(adminMessage, 'project_created');
         console.log(`Admin notification sent: ${adminMessage}`);
