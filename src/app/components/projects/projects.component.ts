@@ -762,6 +762,7 @@ export class ProjectsComponent implements OnInit {
       'unassigned': 'Unassigned',
       'timesheets-over-100': 'Timesheets > 100%',
       'archived': 'Archived',
+      'maintenance': 'Maintenance',
       'on-track': 'On Track',
       'at-risk': 'At Risk',
       'off-track': 'Off Track',
@@ -918,6 +919,12 @@ export class ProjectsComponent implements OnInit {
       filtered = filtered.filter((p: any) => !(p.archived === 1 || p.archived === true));
     }
 
+    // Hide maintenance projects by default (only show when maintenance filter is selected)
+    const hasMaintenanceFilter = this.activeFilters.includes('maintenance');
+    if (!hasMaintenanceFilter) {
+      filtered = filtered.filter((p: any) => (p.status || 'on-track') !== 'maintenance');
+    }
+
     // Apply active filters (multiple selection)
     this.activeFilters.forEach(filterType => {
       if (filterType === 'my-projects') {
@@ -930,6 +937,9 @@ export class ProjectsComponent implements OnInit {
       } else if (filterType === 'archived') {
         // Filter to show only archived projects
         filtered = filtered.filter((p: any) => p.archived === 1 || p.archived === true);
+      } else if (filterType === 'maintenance') {
+        // Filter to show only maintenance projects
+        filtered = filtered.filter((p: any) => (p.status || 'on-track') === 'maintenance');
       } else if (filterType === 'my-favorites') {
         // Filter to show only favorite projects (if favorites are implemented)
         // For now, this can be a placeholder or you can implement favorites logic
