@@ -9,6 +9,8 @@ services:
       MYSQL_DATABASE: time_tracking
       MYSQL_USER: tt_user
       MYSQL_PASSWORD: tt_password
+      ports:
+    - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
