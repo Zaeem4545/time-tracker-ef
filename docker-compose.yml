@@ -5,10 +5,10 @@ services:
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: time
       MYSQL_DATABASE: time_tracking
       MYSQL_USER: tt_user
-      MYSQL_PASSWORD: tt_password
+      MYSQL_PASSWORD: root
       ports:
     - "3306:3306"
     volumes:
