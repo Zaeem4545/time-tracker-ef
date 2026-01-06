@@ -1498,6 +1498,8 @@ export class ProjectsComponent implements OnInit {
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
           this.modalEditProjectError = '';
+          // Load comments and history for edit modal
+          this.loadProjectComments(fullProject.id);
         } else {
           // Fallback to current project data
           this.selectedProjectForEdit = project;
@@ -1513,6 +1515,8 @@ export class ProjectsComponent implements OnInit {
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
           this.modalEditProjectError = '';
+          // Load comments and history for edit modal
+          this.loadProjectComments(project.id);
         }
       },
       error: (err) => {
@@ -1532,6 +1536,8 @@ export class ProjectsComponent implements OnInit {
         this.selectedAttachmentFile = null;
         this.showEditProjectModal = true;
         this.modalEditProjectError = '';
+        // Load comments and history for edit modal
+        this.loadProjectComments(project.id);
       }
     });
   }
@@ -2328,9 +2334,11 @@ export class ProjectsComponent implements OnInit {
   }
 
   openTaskHistoryModal() {
-    if (!this.selectedProjectForDetails) return;
+    // Support both view details and edit modal
+    const projectId = this.selectedProjectForDetails?.id || this.selectedProjectForEdit?.id;
+    if (!projectId) return;
     this.showTaskHistoryModal = true;
-    this.loadProjectHistory(this.selectedProjectForDetails.id);
+    this.loadProjectHistory(projectId);
   }
 
   closeTaskHistoryModal() {
@@ -2478,11 +2486,13 @@ export class ProjectsComponent implements OnInit {
   }
 
   addComment() {
-    if (!this.selectedProjectForDetails || !this.newComment.trim()) {
+    // Support both view details and edit modal
+    const project = this.selectedProjectForDetails || this.selectedProjectForEdit;
+    if (!project || !this.newComment.trim()) {
       return;
     }
 
-    const projectId = this.selectedProjectForDetails.id;
+    const projectId = project.id;
     this.adminService.createProjectComment(projectId, this.newComment.trim()).subscribe({
       next: (response: any) => {
         if (response.success && response.comment) {
@@ -2678,6 +2688,9 @@ export class ProjectsComponent implements OnInit {
       this.loadTeamMembers();
     }
     
+    // Load comments and history for edit modal
+    this.loadTaskComments(task.id);
+    
     // Get custom fields from task
     const customFields = this.getTaskCustomFields(task) || {};
     const allCustomFieldNames = this.getAllTaskCustomFieldNames();
@@ -2749,10 +2762,12 @@ export class ProjectsComponent implements OnInit {
   }
 
   openTaskHistoryModalForTask() {
-    if (!this.selectedTaskForDetails) return;
-    this.selectedTaskForHistory = this.selectedTaskForDetails;
+    // Support both view details and edit modal
+    const task = this.selectedTaskForDetails || this.selectedTaskForEdit;
+    if (!task) return;
+    this.selectedTaskForHistory = task;
     this.showTaskHistoryModalForTask = true;
-    this.loadTaskHistory(this.selectedTaskForDetails.id);
+    this.loadTaskHistory(task.id);
   }
 
   closeTaskHistoryModalForTask() {
@@ -2797,11 +2812,13 @@ export class ProjectsComponent implements OnInit {
   }
 
   addTaskComment() {
-    if (!this.selectedTaskForDetails || !this.newTaskComment.trim()) {
+    // Support both view details and edit modal
+    const task = this.selectedTaskForDetails || this.selectedTaskForEdit;
+    if (!task || !this.newTaskComment.trim()) {
       return;
     }
 
-    const taskId = this.selectedTaskForDetails.id;
+    const taskId = task.id;
     this.adminService.createTaskComment(taskId, this.newTaskComment.trim()).subscribe({
       next: (response: any) => {
         if (response.success && response.comment) {
