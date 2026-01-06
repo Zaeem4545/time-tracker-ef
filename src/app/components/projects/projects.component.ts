@@ -3364,4 +3364,41 @@ export class ProjectsComponent implements OnInit {
   navigateToMaintenance(project: any): void {
     this.router.navigate(['/maintenance'], { queryParams: { projectId: project.id } });
   }
+
+  // Toggle project maintenance status (remove from maintenance)
+  toggleProjectMaintenance(project: any): void {
+    // Change status from maintenance to on-track
+    const dataToSend: any = {
+      name: project.name,
+      description: project.description || '',
+      status: 'on-track', // Change from maintenance to on-track
+      start_date: project.start_date || null,
+      end_date: project.end_date || null,
+      manager_id: project.manager_id || null,
+      customer_id: project.customer_id || null,
+      region: project.region || null,
+      allocated_time: project.allocated_time || null,
+      archived: project.archived || false
+    };
+    
+    // Include custom_fields if they exist
+    const customFields = this.getProjectCustomFields(project);
+    if (customFields && Object.keys(customFields).length > 0) {
+      dataToSend.custom_fields = customFields;
+    }
+    
+    this.adminService.updateProject(project.id, dataToSend).subscribe({
+      next: () => {
+        // Update local project status for immediate UI feedback
+        project.status = 'on-track';
+        // Reload to ensure consistency
+        this.loadProjects();
+        this.toastService.show('Project removed from maintenance', 'success');
+      },
+      error: (err) => {
+        const errorMessage = err?.error?.message || err?.message || 'Failed to remove from maintenance';
+        this.toastService.show('Error removing from maintenance: ' + errorMessage, 'error');
+      }
+    });
+  }
 }
