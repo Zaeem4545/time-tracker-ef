@@ -25,8 +25,14 @@ app.use(cors({
     'http://localhost',                // Direct localhost
     'http://host.docker.internal:4200', // Docker dev
     'http://host.docker.internal',      // Docker direct
+    'https://projects.expertflow.com',  // Production FQDN (HTTPS)
+    'http://projects.expertflow.com',   // Production FQDN (HTTP fallback)
+    'https://192.168.2.60:4200',       // Direct IP access (HTTPS)
+    'http://192.168.2.60:4200',        // Direct IP access (HTTP)
     /localhost/,                       // Any localhost variant
-    /host\.docker\.internal/           // Any host.docker.internal variant
+    /host\.docker\.internal/,           // Any host.docker.internal variant
+    /projects\.expertflow\.com/,        // Any projects.expertflow.com variant
+    /192\.168\.\d+\.\d+/               // Any 192.168.x.x IP
   ]
 })); // allow Angular frontend
 app.use(express.json());

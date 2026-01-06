@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
-  // This will be injected by Docker build arg
-  apiBase: 'http://host.docker.internal:3000'
+  // Production FQDN - API calls will be proxied through nginx
+  // Using relative path '/api' so it works with https://projects.expertflow.com/
+  apiBase: '/api'
 };

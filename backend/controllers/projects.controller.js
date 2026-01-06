@@ -175,7 +175,7 @@ async function createProject(req, res) {
 // Update project - UPDATE
 async function updateProject(req, res) {
   try {
-    const { id } = req.params;
+  const { id } = req.params;
     const { name, description, start_date, end_date, manager_id, status, custom_fields, archived, customer_id, region, allocated_time, attachment } = req.body;
     if (!name) {
       return res.status(400).json({ success: false, message: 'Project name is required' });
@@ -483,7 +483,7 @@ async function updateProject(req, res) {
       }
     }
     
-    res.json({ success: true, message: 'Project updated successfully' });
+  res.json({ success: true, message: 'Project updated successfully' });
   } catch (error) {
     console.error('Error updating project:', error);
     res.status(500).json({ success: false, message: 'Failed to update project' });
@@ -493,7 +493,7 @@ async function updateProject(req, res) {
 // Delete project - DELETE
 async function deleteProject(req, res) {
   try {
-    const { id } = req.params;
+  const { id } = req.params;
     
     // Get project details before deletion (including customer_id)
     const [projectRows] = await db.query('SELECT name, customer_id FROM projects WHERE id = ?', [id]);
@@ -537,7 +537,7 @@ async function deleteProject(req, res) {
       // Don't fail the request if notification creation fails
     }
     
-    res.json({ success: true, message: 'Project deleted successfully' });
+  res.json({ success: true, message: 'Project deleted successfully' });
   } catch (error) {
     console.error('Error deleting project:', error);
     res.status(500).json({ success: false, message: 'Failed to delete project' });
