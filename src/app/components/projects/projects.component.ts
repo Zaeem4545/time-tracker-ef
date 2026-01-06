@@ -750,6 +750,7 @@ export class ProjectsComponent implements OnInit {
       'off-track': 'Off Track',
       'on-hold': 'On Hold',
       'completed': 'Completed',
+      'maintenance': 'Maintenance',
     };
     return statusNames[statusType] || statusType;
   }
@@ -3357,5 +3358,10 @@ export class ProjectsComponent implements OnInit {
         this.toastService.show('Error updating manager assignment: ' + (err.error?.message || 'Unknown error'), 'error');
       }
     });
+  }
+
+  // Navigate to maintenance page
+  navigateToMaintenance(project: any): void {
+    this.router.navigate(['/maintenance'], { queryParams: { projectId: project.id } });
   }
 }

@@ -14,6 +14,7 @@ import { TeamDetailsComponent } from './components/team-details/team-details.com
 import { EmployeeDetailsComponent } from './components/employee-details/employee-details.component';
 import { CustomerDetailsComponent } from './components/customer-details/customer-details.component';
 import { CreateTeamComponent } from './components/create-team/create-team.component';
+import { MaintenanceComponent } from './components/maintenance/maintenance.component';
 import { RoleGuard } from './guards/role.guard';
 
 const routes: Routes = [
@@ -28,6 +29,7 @@ const routes: Routes = [
   { path: 'create-team', component: CreateTeamComponent, canActivate: [RoleGuard], data: { roles: ['admin', 'head manager'] } },
   { path: 'employee-details', component: EmployeeDetailsComponent, canActivate: [RoleGuard], data: { roles: ['manager'] } },
   { path: 'customer-details', component: CustomerDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'maintenance', component: MaintenanceComponent, canActivate: [AuthGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'manager', component: ManagerDashboardComponent, canActivate: [RoleGuard], data: { roles: ['manager'] } },
   { path: 'head-manager', component: HeadManagerDashboardComponent, canActivate: [RoleGuard], data: { roles: ['head manager'] } },

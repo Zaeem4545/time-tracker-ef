@@ -1,0 +1,60 @@
+<div class="page-container">
+  <div class="content-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2 class="page-title-main">
+        <span class="arrow">►</span>
+        <span class="title-text">Maintenance</span>
+      </h2>
+      <button (click)="goBack()" class="btn-expertflow btn-primary">← Back to Projects</button>
+    </div>
+
+    <div *ngIf="loading" style="text-align: center; padding: 3rem; color: #666;">
+      Loading project details...
+    </div>
+
+    <div *ngIf="!loading && project" style="background: #f9f9f9; padding: 2rem; border-radius: 8px; border: 1px solid #e0e0e0;">
+      <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #333; font-size: 1.25rem; font-weight: 600;">
+        Project: {{ project.name }}
+      </h3>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Project ID:</label>
+          <span style="color: #333; font-size: 0.9375rem;">{{ project.id }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Description:</label>
+          <span style="color: #333; font-size: 0.9375rem;">{{ project.description || 'Not provided' }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Status:</label>
+          <span style="color: #333; font-size: 0.9375rem;">
+            <span class="status-dot status-maintenance"></span>
+            Maintenance
+          </span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">Start Date:</label>
+          <span style="color: #333; font-size: 0.9375rem;">{{ project.start_date || 'Not set' }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.5rem;">End Date:</label>
+          <span style="color: #333; font-size: 0.9375rem;">{{ project.end_date || 'Not set' }}</span>
+        </div>
+      </div>
+
+      <div style="background: #fff; padding: 1.5rem; border-radius: 8px; border: 1px solid #e0e0e0;">
+        <h4 style="margin-top: 0; margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Maintenance Information</h4>
+        <p style="color: #666; font-size: 0.9375rem; line-height: 1.6;">
+          This project is currently in maintenance mode. Use this page to manage maintenance tasks, updates, and related activities.
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !project" style="text-align: center; padding: 3rem; color: #999;">
+      <p style="font-size: 1rem; margin-bottom: 1rem;">Project not found.</p>
+      <button (click)="goBack()" class="btn-expertflow btn-primary">← Back to Projects</button>
+    </div>
+  </div>
+</div>
+

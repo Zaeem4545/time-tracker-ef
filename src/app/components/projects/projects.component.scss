@@ -728,6 +728,10 @@
   &.status-completed {
     background-color: #9c27b0;
   }
+
+  &.status-maintenance {
+    background-color: #607d8b;
+  }
 }
 
 .status-dot-small {
@@ -756,6 +760,10 @@
 
   &.status-completed {
     background-color: #9c27b0;
+  }
+
+  &.status-maintenance {
+    background-color: #607d8b;
   }
 }
 

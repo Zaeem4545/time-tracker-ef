@@ -28,6 +28,7 @@ import { ToastNotificationComponent } from './components/shared/toast-notificati
 import { ConfirmationModalComponent } from './components/shared/confirmation-modal/confirmation-modal.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DynamicFormComponent } from './components/shared/dynamic-form/dynamic-form.component';
+import { MaintenanceComponent } from './components/maintenance/maintenance.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { DynamicFormComponent } from './components/shared/dynamic-form/dynamic-f
     CreateTeamComponent,
     ToastNotificationComponent,
     ConfirmationModalComponent,
-    DynamicFormComponent
+    DynamicFormComponent,
+    MaintenanceComponent
   ],
   imports: [
     BrowserModule,
