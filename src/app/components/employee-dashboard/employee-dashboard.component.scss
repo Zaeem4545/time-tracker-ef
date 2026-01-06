@@ -322,6 +322,11 @@
   color: #666;
 }
 
+.status-maintenance {
+  background: #eceff1;
+  color: #607d8b;
+}
+
 // Status dots
 .status-dot.status-on-track {
   background: #1976d2;
@@ -341,6 +346,10 @@
 
 .status-dot.status-in-progress {
   background: #1976d2;
+}
+
+.status-dot.status-maintenance {
+  background: #607d8b;
 }
 
 .empty-state {

@@ -80,7 +80,8 @@ export class DashboardComponent implements OnInit {
     { value: 'at-risk', label: 'At Risk' },
     { value: 'off-track', label: 'Off Track' },
     { value: 'on-hold', label: 'On Hold' },
-    { value: 'completed', label: 'Completed' }
+    { value: 'completed', label: 'Completed' },
+    { value: 'maintenance', label: 'Maintenance' }
   ];
 
   // Task status options
@@ -396,6 +397,8 @@ export class DashboardComponent implements OnInit {
       return 'status-completed';
     } else if (statusLower.includes('on-hold') || statusLower.includes('on hold')) {
       return 'status-on-hold';
+    } else if (statusLower.includes('maintenance')) {
+      return 'status-maintenance';
     }
     return 'status-default';
   }
