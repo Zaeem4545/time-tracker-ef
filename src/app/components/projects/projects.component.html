@@ -903,7 +903,7 @@
     </div>
 
     <!-- Task History Modal -->
-    <div *ngIf="showTaskHistoryModal && (selectedProjectForDetails || selectedProjectForEdit)" class="task-modal-overlay" (click)="closeTaskHistoryModal()">
+    <div *ngIf="showTaskHistoryModal && (selectedProjectForDetails || selectedProjectForEdit)" class="task-modal-overlay task-history-modal-overlay" (click)="closeTaskHistoryModal()">
       <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
         <div class="task-modal-header">
           <h3>Task History - {{ (selectedProjectForDetails || selectedProjectForEdit)?.name }}</h3>
@@ -1364,7 +1364,7 @@
     </div>
 
     <!-- Task History Modal (for individual task) -->
-    <div *ngIf="showTaskHistoryModalForTask && selectedTaskForHistory" class="task-modal-overlay" (click)="closeTaskHistoryModalForTask()">
+    <div *ngIf="showTaskHistoryModalForTask && selectedTaskForHistory" class="task-modal-overlay task-history-modal-overlay" (click)="closeTaskHistoryModalForTask()">
       <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
         <div class="task-modal-header">
           <h3>Task History - {{ selectedTaskForHistory.title }}</h3>

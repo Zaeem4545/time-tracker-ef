@@ -640,6 +640,11 @@
   z-index: 2000;
 }
 
+// History Modal Overlay - Higher z-index to appear above edit modals
+.task-history-modal-overlay {
+  z-index: 3000;
+}
+
 .task-modal-content {
   background: white;
   border-radius: 8px;
