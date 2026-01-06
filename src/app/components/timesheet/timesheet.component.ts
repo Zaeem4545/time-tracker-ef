@@ -55,7 +55,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   
   // Inline time cell editing
   editingCell: { activityKey: string; dateKey: string } | null = null;
-  editingCellTime: string = ''; // Time in HH:MM format
+  editingCellTime: string = ''; // Time in HH:MM:SS format
   
   // Individual activity timers
   activeActivityTimers: { [key: string]: { startTime: Date; elapsedTime: number; interval: any } } = {};
@@ -68,7 +68,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     date: '',
     task_name: '',
     task_id: null, // Add task_id for dropdown selection
-    time_spent: '00:00',
+    time_spent: '00:00:00',
     description: ''
   };
   users: any[] = [];
@@ -478,27 +478,23 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     return 0;
   }
 
-  formatTimeHHMM(seconds: number): string {
-    // Formats as HH:MM (for editing)
-    if (!seconds || seconds === 0) return '0:00';
+  formatTimeHHMMSS(seconds: number): string {
+    // Formats as HH:MM:SS (for editing)
+    if (!seconds || seconds === 0) return '0:00:00';
     
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
     
-    return `${hours}:${String(minutes).padStart(2, '0')}`;
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 
-  parseTimeHHMM(timeStr: string): number {
-    // Converts HH:MM format to seconds
+  parseTimeHHMMSS(timeStr: string): number {
+    // Converts HH:MM:SS or HH:MM format to seconds
     if (!timeStr || timeStr.trim() === '') return 0;
     
-    const parts = timeStr.trim().split(':');
-    if (parts.length !== 2) return 0;
-    
-    const hours = parseInt(parts[0]) || 0;
-    const minutes = parseInt(parts[1]) || 0;
-    
-    return (hours * 3600) + (minutes * 60);
+    // Use existing timeToSeconds function which handles both formats
+    return this.timeToSeconds(timeStr.trim());
   }
 
   // Inline cell editing methods
@@ -515,7 +511,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     const currentTime = this.getTimeForDay(activity, day);
     
     this.editingCell = { activityKey, dateKey };
-    this.editingCellTime = this.formatTimeHHMM(currentTime);
+    this.editingCellTime = this.formatTimeHHMMSS(currentTime);
   }
 
   cancelCellEdit() {
@@ -526,7 +522,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   saveCellTime(activity: ActivityRow, day: WeekDay) {
     if (!this.editingCell) return;
     
-    const timeInSeconds = this.parseTimeHHMM(this.editingCellTime);
+    const timeInSeconds = this.parseTimeHHMMSS(this.editingCellTime);
     const dateKey = this.formatDateKey(day.date);
     
     // Find all time entries for this activity and day
@@ -1150,7 +1146,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         date: dateStr,
         task_name: '',
         task_id: null,
-        time_spent: '00:00',
+        time_spent: '00:00:00',
         description: ''
       };
     }
@@ -1284,30 +1280,25 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Parse time spent (HH:MM format) - remove any spaces and validate
+    // Parse time spent (HH:MM:SS format) - remove any spaces and validate
     let timeStr = this.newTimeEntry.time_spent.trim();
     
     // Remove AM/PM if present
     timeStr = timeStr.replace(/\s*(AM|PM|am|pm)\s*/i, '');
     
-    // Remove seconds if present (HH:MM:SS -> HH:MM)
-    if (timeStr.split(':').length === 3) {
-      const parts = timeStr.split(':');
-      timeStr = `${parts[0]}:${parts[1]}`;
-    }
+    // Validate HH:MM:SS format (also accept HH:MM for backward compatibility)
+    const timePatternHHMMSS = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+    const timePatternHHMM = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     
-    // Validate HH:MM format
-    const timePattern = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timePattern.test(timeStr)) {
-      alert('Invalid time format. Please use HH:MM format (e.g., 02:45)');
+    if (!timePatternHHMMSS.test(timeStr) && !timePatternHHMM.test(timeStr)) {
+      alert('Invalid time format. Please use HH:MM:SS format (e.g., 02:45:30) or HH:MM format (e.g., 02:45)');
       return;
     }
     
-    const timeParts = timeStr.split(':');
-    const hours = parseInt(timeParts[0]) || 0;
-    const minutes = parseInt(timeParts[1]) || 0;
+    // Convert to seconds using timeToSeconds (handles both HH:MM and HH:MM:SS)
+    const timeInSeconds = this.timeToSeconds(timeStr);
     
-    if (hours === 0 && minutes === 0) {
+    if (timeInSeconds === 0) {
       alert('Time spent must be greater than 0');
       return;
     }
@@ -1334,7 +1325,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       this.adminService.createTask(taskData).subscribe({
         next: (taskResponse) => {
           // Task created successfully, now create time entry
-          this.createTimeEntryAfterTask(projectId, taskName, currentUserId, hours, minutes);
+          this.createTimeEntryAfterTask(projectId, taskName, currentUserId, timeInSeconds);
         },
         error: (err) => {
           alert('Error creating task: ' + (err.error?.message || 'Unknown error'));
@@ -1342,18 +1333,18 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       });
     } else {
       // Task exists, just create time entry
-      this.createTimeEntryAfterTask(projectId, taskName, currentUserId, hours, minutes);
+      this.createTimeEntryAfterTask(projectId, taskName, currentUserId, timeInSeconds);
     }
   }
 
-  createTimeEntryAfterTask(projectId: number, taskName: string, userId: number, hours: number, minutes: number) {
+  createTimeEntryAfterTask(projectId: number, taskName: string, userId: number, timeInSeconds: number) {
     // Calculate start_time and end_time from date and time_spent
     const selectedDate = new Date(this.newTimeEntry.date);
     selectedDate.setHours(9, 0, 0, 0); // Set to 9 AM as start time
     const startTime = selectedDate.toISOString();
     
-    // Calculate end time by adding time spent
-    const timeSpentMs = (hours * 60 + minutes) * 60 * 1000;
+    // Calculate end time by adding time spent (in seconds)
+    const timeSpentMs = timeInSeconds * 1000;
     const endTime = new Date(selectedDate.getTime() + timeSpentMs).toISOString();
     
     // Validate dates
@@ -1427,7 +1418,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       date: dateStr,
       task_name: '',
       task_id: null,
-      time_spent: '00:00',
+      time_spent: '00:00:00',
       description: ''
     };
   }
