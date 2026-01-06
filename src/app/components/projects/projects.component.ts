@@ -1480,6 +1480,10 @@ export class ProjectsComponent implements OnInit {
   
   // Open edit project modal
   openEditProjectModal(project: any): void {
+    // Ensure history modal is closed when opening edit modal
+    this.showTaskHistoryModal = false;
+    this.projectHistory = [];
+    
     // Load full project details and open edit modal
     this.adminService.getProjects().subscribe({
       next: (projects) => {
@@ -1498,7 +1502,7 @@ export class ProjectsComponent implements OnInit {
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
           this.modalEditProjectError = '';
-          // Load comments and history for edit modal
+          // Load comments for edit modal (don't load history automatically)
           this.loadProjectComments(fullProject.id);
         } else {
           // Fallback to current project data
@@ -1515,7 +1519,7 @@ export class ProjectsComponent implements OnInit {
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
           this.modalEditProjectError = '';
-          // Load comments and history for edit modal
+          // Load comments for edit modal (don't load history automatically)
           this.loadProjectComments(project.id);
         }
       },
@@ -1536,7 +1540,7 @@ export class ProjectsComponent implements OnInit {
         this.selectedAttachmentFile = null;
         this.showEditProjectModal = true;
         this.modalEditProjectError = '';
-        // Load comments and history for edit modal
+        // Load comments for edit modal (don't load history automatically)
         this.loadProjectComments(project.id);
       }
     });
@@ -1549,6 +1553,14 @@ export class ProjectsComponent implements OnInit {
     this.modalEditProjectData = {};
     this.modalEditProjectError = '';
     this.selectedAttachmentFile = null;
+    // Close history modal if open
+    this.showTaskHistoryModal = false;
+    this.projectHistory = [];
+    // Clear comments
+    this.projectComments = [];
+    this.newComment = '';
+    this.editingProjectCommentId = null;
+    this.editingProjectCommentText = '';
   }
   
   getAttachmentFileName(attachmentPath: string): string {
@@ -2680,6 +2692,10 @@ export class ProjectsComponent implements OnInit {
   }
 
   openEditTaskModal(task: any): void {
+    // Ensure history modal is closed when opening edit modal
+    this.showTaskHistoryModalForTask = false;
+    this.taskHistory = [];
+    
     this.selectedTaskForEdit = task;
     this.showEditTaskModal = true;
     
@@ -2688,7 +2704,7 @@ export class ProjectsComponent implements OnInit {
       this.loadTeamMembers();
     }
     
-    // Load comments and history for edit modal
+    // Load comments for edit modal (don't load history automatically)
     this.loadTaskComments(task.id);
     
     // Get custom fields from task
@@ -2742,6 +2758,15 @@ export class ProjectsComponent implements OnInit {
   closeEditTaskModal(): void {
     this.showEditTaskModal = false;
     this.selectedTaskForEdit = null;
+    // Close history modal if open
+    this.showTaskHistoryModalForTask = false;
+    this.taskHistory = [];
+    this.selectedTaskForHistory = null;
+    // Clear comments
+    this.taskComments = [];
+    this.newTaskComment = '';
+    this.editingTaskCommentId = null;
+    this.editingTaskCommentText = '';
   }
 
   viewTaskDetails(task: any) {
