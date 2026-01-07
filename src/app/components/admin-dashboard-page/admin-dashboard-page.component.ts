@@ -18,6 +18,10 @@ export class AdminDashboardPageComponent implements OnInit {
   recentProjects: any[] = [];
   recentTasks: any[] = [];
 
+  // Current admin info
+  currentAdminId: number | null = null;
+  currentAdminEmail: string | null = null;
+
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
   taskStatusDropdownOpen: number | null = null;
@@ -45,6 +49,8 @@ export class AdminDashboardPageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.currentAdminId = this.authService.getUserId();
+    this.currentAdminEmail = this.authService.getEmail();
     this.loadDashboardData();
   }
 
@@ -57,10 +63,24 @@ export class AdminDashboardPageComponent implements OnInit {
   loadProjects(): void {
     this.adminService.getProjects().subscribe({
       next: (projects) => {
-        this.totalProjects = projects.length;
-        this.myProjects = 0; // Admin sees all projects, so "My Projects" is 0 or could be total
+        // Filter projects: created by admin OR assigned to admin (manager_id)
+        const adminProjects = projects.filter((project: any) => {
+          // Check if project is created by admin
+          const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
+                                    project.created_by === this.currentAdminId ||
+                                    project.created_by_id === this.currentAdminId;
+          
+          // Check if project is assigned to admin (manager_id)
+          const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          
+          return isCreatedByAdmin || isAssignedToAdmin;
+        });
+
+        this.totalProjects = adminProjects.length;
+        this.myProjects = adminProjects.filter((p: any) => p.manager_id === this.currentAdminId).length;
+        
         // Get 5 most recent projects
-        this.recentProjects = projects
+        this.recentProjects = adminProjects
           .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
           .slice(0, 5);
       },
@@ -71,23 +91,45 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   loadTasks(): void {
+    // First get admin's projects to filter tasks from
     this.adminService.getProjects().subscribe({
-      next: (projects) => {
-        const allTasks: any[] = [];
-        let loadedProjects = 0;
+      next: (allProjects) => {
+        // Filter projects: created by admin OR assigned to admin
+        const adminProjects = allProjects.filter((project: any) => {
+          const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
+                                    project.created_by === this.currentAdminId ||
+                                    project.created_by_id === this.currentAdminId;
+          const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          return isCreatedByAdmin || isAssignedToAdmin;
+        });
 
-        if (projects.length === 0) {
+        if (adminProjects.length === 0) {
           this.totalTasks = 0;
           this.recentTasks = [];
           return;
         }
 
-        projects.forEach((project: any) => {
+        const allTasks: any[] = [];
+        let loadedProjects = 0;
+
+        adminProjects.forEach((project: any) => {
           this.adminService.getTasks(project.id).subscribe({
             next: (tasks) => {
-              allTasks.push(...tasks);
+              // Filter tasks: created by admin OR assigned by admin OR assigned to admin
+              const adminTasks = tasks.filter((task: any) => {
+                const isCreatedByAdmin = task.created_by === this.currentAdminEmail || 
+                                         task.created_by === this.currentAdminId ||
+                                         task.created_by_id === this.currentAdminId;
+                const isAssignedByAdmin = task.assigned_by === this.currentAdminEmail;
+                const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
+                
+                return isCreatedByAdmin || isAssignedByAdmin || isAssignedToAdmin;
+              });
+
+              allTasks.push(...adminTasks);
               loadedProjects++;
-              if (loadedProjects === projects.length) {
+              
+              if (loadedProjects === adminProjects.length) {
                 this.totalTasks = allTasks.length;
                 // Get 5 most recent tasks
                 this.recentTasks = allTasks
@@ -98,7 +140,7 @@ export class AdminDashboardPageComponent implements OnInit {
             error: (err) => {
               console.error(`Error loading tasks for project ${project.id}:`, err);
               loadedProjects++;
-              if (loadedProjects === projects.length) {
+              if (loadedProjects === adminProjects.length) {
                 this.totalTasks = allTasks.length;
                 this.recentTasks = allTasks
                   .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
@@ -117,7 +159,11 @@ export class AdminDashboardPageComponent implements OnInit {
   loadTimeEntries(): void {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
-        this.totalTimeEntries = entries.length || 0;
+        // Filter time entries: only those created by admin
+        const adminTimeEntries = entries.filter((entry: any) => {
+          return entry.user_id === this.currentAdminId;
+        });
+        this.totalTimeEntries = adminTimeEntries.length || 0;
       },
       error: (err) => {
         console.error('Error loading time entries:', err);
