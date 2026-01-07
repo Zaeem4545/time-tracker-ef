@@ -10,6 +10,7 @@ console.log('  Host:', dbConfig.host);
 console.log('  Database:', dbConfig.database);
 console.log('  User:', dbConfig.user);
 console.log('  Port:', dbConfig.port);
+console.log('  Has Password:', !!dbConfig.password);
 
 const pool = mysql.createPool({
   host: dbConfig.host,
