@@ -43,7 +43,7 @@
         <select 
           *ngIf="field.type === 'select'"
           [required]="field.required || false"
-          [ngModel]="getFieldValue(field.id)"
+          [ngModel]="formData[field.id] || formData[field.name] || ''"
           (ngModelChange)="onFieldChange(field.id, $event)"
           class="form-input">
           <option value="">{{ field.placeholder || 'Select...' }}</option>

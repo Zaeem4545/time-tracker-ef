@@ -42,12 +42,30 @@ export class DynamicFormComponent implements OnInit, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     // When formData changes, ensure select fields have string values
     if (changes['formData'] && this.formData) {
-      // Convert customer_id to string if it's a number
-      if (this.formData.customer_id !== undefined && this.formData.customer_id !== null && this.formData.customer_id !== '') {
-        if (typeof this.formData.customer_id === 'number') {
-          this.formData.customer_id = this.formData.customer_id.toString();
+      // Convert all select field values to strings
+      this.fields.forEach(field => {
+        if (field.type === 'select' && this.formData[field.id] !== undefined) {
+          const value = this.formData[field.id];
+          if (value !== null && value !== undefined && value !== '') {
+            if (typeof value === 'number') {
+              this.formData[field.id] = value.toString();
+            } else {
+              this.formData[field.id] = String(value);
+            }
+          }
+          // Also update by name if different
+          if (field.name && field.name !== field.id && this.formData[field.name] !== undefined) {
+            const nameValue = this.formData[field.name];
+            if (nameValue !== null && nameValue !== undefined && nameValue !== '') {
+              if (typeof nameValue === 'number') {
+                this.formData[field.name] = nameValue.toString();
+              } else {
+                this.formData[field.name] = String(nameValue);
+              }
+            }
+          }
         }
-      }
+      });
     }
     
     // When dynamicOptions changes, reload fields to update select options
@@ -90,8 +108,22 @@ export class DynamicFormComponent implements OnInit, OnChanges {
   }
 
   onFieldChange(fieldId: string, value: any): void {
-    this.formData[fieldId] = value;
-    this.formDataChange.emit(this.formData);
+    const field = this.fields.find(f => f.id === fieldId);
+    
+    // For select fields, ensure value is stored as string to match option values
+    let processedValue = value;
+    if (field && field.type === 'select') {
+      processedValue = value === null || value === undefined || value === '' ? '' : String(value);
+    }
+    
+    // Update both by id and by name if they differ
+    this.formData[fieldId] = processedValue;
+    if (field && field.name && field.name !== fieldId) {
+      this.formData[field.name] = processedValue;
+    }
+    
+    // Emit the updated formData
+    this.formDataChange.emit({ ...this.formData });
   }
 
   onFileChange(fieldId: string, event: Event): void {
@@ -124,16 +156,21 @@ export class DynamicFormComponent implements OnInit, OnChanges {
   }
 
   getFieldValue(fieldId: string): any {
-    const value = this.formData[fieldId];
+    // Check both fieldId and field name to find the value
+    const value = this.formData[fieldId] !== undefined ? this.formData[fieldId] : 
+                  (this.formData && this.fields.find(f => f.id === fieldId)?.name ? 
+                   this.formData[this.fields.find(f => f.id === fieldId)!.name] : undefined);
+    
     // For select fields, convert null/undefined to empty string, and numbers to strings
-    if (value === null || value === undefined) {
+    if (value === null || value === undefined || value === '') {
       return '';
     }
     // If it's a number, convert to string for select dropdowns
     if (typeof value === 'number') {
       return value.toString();
     }
-    return value || '';
+    // Ensure it's a string for select dropdowns
+    return String(value);
   }
 
   getFieldOptions(field: DynamicField): { value: string; label: string }[] {
