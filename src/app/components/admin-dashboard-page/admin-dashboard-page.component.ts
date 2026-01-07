@@ -63,17 +63,22 @@ export class AdminDashboardPageComponent implements OnInit {
   loadProjects(): void {
     this.adminService.getProjects().subscribe({
       next: (projects) => {
-        // Filter projects: created by admin OR assigned to admin (manager_id)
+        // Filter projects: created by admin OR assigned to admin (manager_id) OR all projects (since admin can create projects)
+        // Since projects don't have created_by field, we show all projects for admin
+        // But filter to show projects where admin is manager OR projects without a manager (likely created by admin)
         const adminProjects = projects.filter((project: any) => {
-          // Check if project is created by admin
+          // Check if project is assigned to admin (manager_id)
+          const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          
+          // Check if project is created by admin (no manager assigned, likely created by admin)
+          const isLikelyCreatedByAdmin = !project.manager_id || project.manager_id === null;
+          
+          // Also check if there's a created_by field (for backward compatibility)
           const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
                                     project.created_by === this.currentAdminId ||
                                     project.created_by_id === this.currentAdminId;
           
-          // Check if project is assigned to admin (manager_id)
-          const isAssignedToAdmin = project.manager_id === this.currentAdminId;
-          
-          return isCreatedByAdmin || isAssignedToAdmin;
+          return isCreatedByAdmin || isAssignedToAdmin || isLikelyCreatedByAdmin;
         });
 
         this.totalProjects = adminProjects.length;
@@ -94,13 +99,14 @@ export class AdminDashboardPageComponent implements OnInit {
     // First get admin's projects to filter tasks from
     this.adminService.getProjects().subscribe({
       next: (allProjects) => {
-        // Filter projects: created by admin OR assigned to admin
+        // Filter projects: created by admin OR assigned to admin OR projects without manager (likely created by admin)
         const adminProjects = allProjects.filter((project: any) => {
           const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
                                     project.created_by === this.currentAdminId ||
                                     project.created_by_id === this.currentAdminId;
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
-          return isCreatedByAdmin || isAssignedToAdmin;
+          const isLikelyCreatedByAdmin = !project.manager_id || project.manager_id === null;
+          return isCreatedByAdmin || isAssignedToAdmin || isLikelyCreatedByAdmin;
         });
 
         if (adminProjects.length === 0) {
@@ -160,13 +166,14 @@ export class AdminDashboardPageComponent implements OnInit {
     // First get admin's projects to filter time entries
     this.adminService.getProjects().subscribe({
       next: (allProjects) => {
-        // Filter projects: created by admin OR assigned to admin
+        // Filter projects: created by admin OR assigned to admin OR projects without manager (likely created by admin)
         const adminProjects = allProjects.filter((project: any) => {
           const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
                                     project.created_by === this.currentAdminId ||
                                     project.created_by_id === this.currentAdminId;
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
-          return isCreatedByAdmin || isAssignedToAdmin;
+          const isLikelyCreatedByAdmin = !project.manager_id || project.manager_id === null;
+          return isCreatedByAdmin || isAssignedToAdmin || isLikelyCreatedByAdmin;
         });
 
         const adminProjectIds = adminProjects.map((p: any) => p.id);
