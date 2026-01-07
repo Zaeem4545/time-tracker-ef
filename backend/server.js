@@ -115,6 +115,22 @@ function testDatabaseConnection() {
       dbConnectionRetries++;
       console.error(`❌ Database connection failed (attempt ${dbConnectionRetries}/${maxDbRetries}):`, err.message);
       
+      // Provide helpful error messages
+      if (err.code === 'ER_ACCESS_DENIED_ERROR') {
+        console.error('   🔍 Access denied - Possible causes:');
+        console.error('      1. Password mismatch between DB_PASSWORD and MYSQL_PASSWORD');
+        console.error('      2. User does not exist or has wrong permissions');
+        console.error('      3. Database volume was created with different credentials');
+        console.error('');
+        console.error('   💡 Solutions:');
+        console.error('      Option A: Run fix script: docker exec time-tracking-backend node /app/scripts/fix-db-user.js');
+        console.error('      Option B: Reset database volume: docker-compose down -v && docker-compose up -d');
+        console.error('      Option C: Ensure DB_PASSWORD matches MYSQL_PASSWORD in your .env or docker-compose.yml');
+      } else if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+        console.error('   🔍 Connection refused - Database might not be ready yet');
+        console.error('      Wait a few seconds for the database to start...');
+      }
+      
       if (dbConnectionRetries < maxDbRetries) {
         console.log(`   Retrying in ${dbRetryDelay / 1000} seconds...`);
         setTimeout(testDatabaseConnection, dbRetryDelay);

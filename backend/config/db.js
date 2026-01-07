@@ -34,6 +34,18 @@ if (dbConfig.host === 'db' && dbConfig.user === 'root') {
   console.warn('   Consider setting DB_USER=tt_user to match docker-compose.yml defaults.');
 }
 
+// Log password status for debugging (without showing the password)
+if (dbConfig.host === 'db') {
+  const hasPassword = !!dbConfig.password;
+  const passwordSource = process.env.DB_PASSWORD ? 'environment variable' : 'default';
+  console.log(`  Password: ${hasPassword ? '***set***' : 'not set'} (${passwordSource})`);
+  
+  // Warn if password might not match
+  if (!process.env.DB_PASSWORD && !process.env.MYSQL_PASSWORD) {
+    console.warn('  ⚠️  Using default password. Ensure MYSQL_PASSWORD matches DB_PASSWORD.');
+  }
+}
+
 const pool = mysql.createPool({
   host: dbConfig.host,
   user: dbConfig.user,
