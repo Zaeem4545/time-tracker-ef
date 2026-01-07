@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
-  // This will be injected by Docker build arg
-  apiBase: 'http://host.docker.internal:3000'
+  // Default value - will be overridden at runtime via config.json in Docker
+  // For local production builds, this can be set manually
+  apiBase: '/api'
 };
