@@ -19,6 +19,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private routeTitles: { [key: string]: string } = {
     '/dashboard': 'Dashboard',
+    '/admin-dashboard': 'Admin Dashboard',
     '/admin': 'Create User',
     '/manager': 'Add Employee',
     '/head-manager': 'Select Team Leads',

@@ -1,0 +1,124 @@
+<div class="dashboard-container">
+  <!-- Summary Metrics Section -->
+  <div class="summary-metrics">
+    <div class="metric-card">
+      <div class="metric-icon projects-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 4H4C2.9 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V8C22 6.9 21.1 6 20 6H12L10 4Z" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value">{{ totalProjects }}</div>
+        <div class="metric-label">Total Projects</div>
+        <div class="metric-sublabel">My Projects: {{ myProjects }}</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon tasks-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 11L12 14L22 4" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M21 12V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value">{{ totalTasks }}</div>
+        <div class="metric-label">Total Tasks</div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon time-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="#9c27b0" stroke-width="2"/>
+          <path d="M12 6V12L16 14" stroke="#9c27b0" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <div class="metric-value">{{ totalTimeEntries }}</div>
+        <div class="metric-label">Time Entries</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects Section -->
+  <div class="section-container">
+    <h3 class="section-title">Projects</h3>
+    <div class="projects-grid">
+      <div class="project-card" *ngFor="let project of recentProjects">
+        <div class="card-header">
+          <h4 class="card-title">{{ project.name }}</h4>
+          <span class="card-date" *ngIf="project.end_date">{{ formatDate(project.end_date) }}</span>
+        </div>
+        <p class="card-description">{{ project.description || 'No description' }}</p>
+        <div class="card-footer">
+          <div class="status-dropdown-container">
+            <button 
+              class="status-change-btn" 
+              (click)="toggleProjectStatusDropdown(project.id, $event)"
+              [class.active]="projectStatusDropdownOpen === project.id">
+              <span class="status-badge" [ngClass]="getStatusClass(project.status)">
+                {{ getStatusDisplayName(project.status || 'on-track') }}
+              </span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="status-dropdown-menu" *ngIf="projectStatusDropdownOpen === project.id">
+              <div 
+                class="status-option" 
+                *ngFor="let option of projectStatusOptions"
+                (click)="updateProjectStatus(project, option.value)"
+                [class.active]="(project.status || 'on-track') === option.value">
+                <span class="status-dot" [ngClass]="'status-' + option.value"></span>
+                <span>{{ option.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="recentProjects.length === 0">
+        <p>No projects found</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks Section -->
+  <div class="section-container">
+    <h3 class="section-title">Tasks</h3>
+    <div class="tasks-grid">
+      <div class="task-card" *ngFor="let task of recentTasks">
+        <div class="card-header">
+          <h4 class="card-title">{{ task.title }}</h4>
+          <span class="card-date" *ngIf="task.due_date">{{ formatDate(task.due_date) }}</span>
+        </div>
+        <p class="card-description">{{ task.description || 'No description' }}</p>
+        <div class="card-footer">
+          <div class="status-dropdown-container">
+            <button 
+              class="status-change-btn" 
+              (click)="toggleTaskStatusDropdown(task.id, $event)"
+              [class.active]="taskStatusDropdownOpen === task.id">
+              <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+                {{ getStatusDisplayName(task.status || 'pending') }}
+              </span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="status-dropdown-menu" *ngIf="taskStatusDropdownOpen === task.id">
+              <div 
+                class="status-option" 
+                *ngFor="let option of taskStatusOptions"
+                (click)="updateTaskStatus(task, option.value)"
+                [class.active]="(task.status || 'pending') === option.value || (task.status === 'in_progress' && option.value === 'in-progress')">
+                <span class="status-dot" [ngClass]="'status-' + option.value"></span>
+                <span>{{ option.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="recentTasks.length === 0">
+        <p>No tasks found</p>
+      </div>
+    </div>
+  </div>
+</div>
+
