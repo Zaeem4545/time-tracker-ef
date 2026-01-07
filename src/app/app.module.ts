@@ -29,6 +29,7 @@ import { ConfirmationModalComponent } from './components/shared/confirmation-mod
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DynamicFormComponent } from './components/shared/dynamic-form/dynamic-form.component';
 import { MaintenanceComponent } from './components/maintenance/maintenance.component';
+import { AdminDashboardPageComponent } from './components/admin-dashboard-page/admin-dashboard-page.component';
 
 @NgModule({
   declarations: [
@@ -53,7 +54,8 @@ import { MaintenanceComponent } from './components/maintenance/maintenance.compo
     ToastNotificationComponent,
     ConfirmationModalComponent,
     DynamicFormComponent,
-    MaintenanceComponent
+    MaintenanceComponent,
+    AdminDashboardPageComponent
   ],
   imports: [
     BrowserModule,

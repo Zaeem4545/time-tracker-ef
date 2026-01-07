@@ -55,6 +55,7 @@ export class SidebarComponent implements OnInit {
       );
     } else if (role === 'admin') {
       this.menuItems.push(
+        { label: 'Admin Dashboard', route: '/admin-dashboard', icon: '📊', active: false },
         { label: 'Create User', route: '/admin', icon: '👥', active: false }
       );
     } else if (role === 'employee') {

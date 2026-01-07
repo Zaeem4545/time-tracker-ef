@@ -15,6 +15,7 @@ import { EmployeeDetailsComponent } from './components/employee-details/employee
 import { CustomerDetailsComponent } from './components/customer-details/customer-details.component';
 import { CreateTeamComponent } from './components/create-team/create-team.component';
 import { MaintenanceComponent } from './components/maintenance/maintenance.component';
+import { AdminDashboardPageComponent } from './components/admin-dashboard-page/admin-dashboard-page.component';
 import { RoleGuard } from './guards/role.guard';
 
 const routes: Routes = [
@@ -33,6 +34,7 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'manager', component: ManagerDashboardComponent, canActivate: [RoleGuard], data: { roles: ['manager'] } },
   { path: 'head-manager', component: HeadManagerDashboardComponent, canActivate: [RoleGuard], data: { roles: ['head manager'] } },
+  { path: 'admin-dashboard', component: AdminDashboardPageComponent, canActivate: [RoleGuard], data: { roles: ['admin'] } },
   { path: 'admin', component: AdminDashboardComponent, canActivate: [RoleGuard], data: { roles: ['admin'] } },
   { path: '', redirectTo: 'login', pathMatch: 'full' }
 ];
