@@ -38,7 +38,7 @@ export class ProjectsComponent implements OnInit {
   availableRegions: string[] = []; // Available regions from projects and tasks
   users: any[] = [];
   newProject: any = {};
-  showCreateProjectForm: boolean = false;
+  showCreateProjectModal: boolean = false;
   createProjectError: string = ''; // Error message for create form
   customers: any[] = []; // Store customer data
   projectFormFields: DynamicField[] = [
@@ -1300,9 +1300,19 @@ export class ProjectsComponent implements OnInit {
     return `${year}-${monthStr}-${dayStr}`;
   }
   
-  toggleCreateProjectForm() {
-    this.showCreateProjectForm = !this.showCreateProjectForm;
-    this.createProjectError = ''; // Clear error when toggling form
+  openCreateProjectModal() {
+    this.newProject = {};
+    this.createProjectError = '';
+    this.showCreateProjectModal = true;
+  }
+
+  closeCreateProjectModal() {
+    this.showCreateProjectModal = false;
+    this.newProject = {};
+    this.createProjectError = '';
+    if (this.newProject.attachment) {
+      this.newProject.attachment = null;
+    }
   }
 
   // Validate dates: start_date should not be greater than end_date
@@ -1341,15 +1351,18 @@ export class ProjectsComponent implements OnInit {
     // Clear previous error
     this.createProjectError = '';
     
-    // Get form config to validate required fields
-    const config = this.dynamicFormService.getFormConfig('createProject');
-    if (config) {
-      for (const field of config.fields) {
-        if (field.required && (!this.newProject[field.id] || this.newProject[field.id].toString().trim() === '')) {
-          this.createProjectError = `${field.label} is required`;
-          return;
-        }
-      }
+    // Validate required fields
+    if (!this.newProject.name || this.newProject.name.trim() === '') {
+      this.createProjectError = 'Project name is required';
+      return;
+    }
+    if (!this.newProject.description || this.newProject.description.trim() === '') {
+      this.createProjectError = 'Description is required';
+      return;
+    }
+    if (!this.newProject.customer_id || this.newProject.customer_id === '' || this.newProject.customer_id === null) {
+      this.createProjectError = 'Customer is required';
+      return;
     }
     
     // Validate dates if they exist
@@ -1361,77 +1374,30 @@ export class ProjectsComponent implements OnInit {
       }
     }
     
-    // Build project data from dynamic form
-    const projectData: any = {};
-    const customFields: any = {};
-    const standardFields = ['name', 'description', 'start_date', 'end_date', 'customer_id', 'region', 'allocated_time', 'attachment'];
-    let attachmentFile: File | null = null;
-    
-    if (config) {
-      for (const field of config.fields) {
-        const value = this.newProject[field.id];
-        if (value !== undefined && value !== null && value !== '') {
-          // Handle file uploads separately
-          if (field.type === 'file' && value instanceof File) {
-            attachmentFile = value;
-            // Don't add file object to projectData, we'll upload it separately
-          } else {
-            const trimmedValue = typeof value === 'string' ? value.trim() : value;
-            // Separate standard fields from custom fields
-            if (standardFields.includes(field.name)) {
-              // Convert customer_id to number if it's a string
-              if (field.name === 'customer_id' && typeof trimmedValue === 'string') {
-                projectData[field.name] = trimmedValue ? parseInt(trimmedValue) : null;
-              } else {
-                projectData[field.name] = trimmedValue;
-              }
-            } else {
-              // This is a custom field
-              customFields[field.name] = trimmedValue;
-            }
-          }
-        } else if (field.type === 'date') {
-          if (standardFields.includes(field.name)) {
-            projectData[field.name] = null;
-          }
-        } else if (field.name === 'customer_id') {
-          // Handle empty customer_id
-          projectData[field.name] = null;
-        }
-      }
-    }
+    // Build project data
+    const projectData: any = {
+      name: this.newProject.name.trim(),
+      description: this.newProject.description.trim(),
+      customer_id: typeof this.newProject.customer_id === 'string' ? parseInt(this.newProject.customer_id) : this.newProject.customer_id,
+      start_date: this.newProject.start_date || null,
+      end_date: this.newProject.end_date || null,
+      status: this.newProject.status || 'on-track',
+      allocated_time: this.newProject.allocated_time || null
+    };
     
     // Auto-populate region from customer if not provided
-    if (!projectData.region && projectData.customer_id) {
-      const customerIdNum = typeof projectData.customer_id === 'string' ? parseInt(projectData.customer_id) : projectData.customer_id;
-      const selectedCustomer = this.customers.find(c => c.id === customerIdNum);
+    if (!this.newProject.region && projectData.customer_id) {
+      const selectedCustomer = this.customers.find(c => c.id === projectData.customer_id);
       if (selectedCustomer && selectedCustomer.region) {
         projectData.region = selectedCustomer.region;
       }
-    }
-    
-    // Add custom_fields if any exist
-    if (Object.keys(customFields).length > 0) {
-      projectData.custom_fields = customFields;
-    }
-    
-    // Ensure required fields are present
-    if (!projectData.name) {
-      this.createProjectError = 'Project name is required';
-      return;
-    }
-    if (!projectData.description) {
-      this.createProjectError = 'Description is required';
-      return;
-    }
-    if (!projectData.customer_id || projectData.customer_id === '' || projectData.customer_id === null) {
-      this.createProjectError = 'Customer is required';
-      return;
+    } else if (this.newProject.region) {
+      projectData.region = this.newProject.region;
     }
     
     // Upload file first if attachment exists
-    if (attachmentFile) {
-      this.adminService.uploadFile(attachmentFile).subscribe({
+    if (this.newProject.attachment && this.newProject.attachment instanceof File) {
+      this.adminService.uploadFile(this.newProject.attachment).subscribe({
         next: (uploadResponse) => {
           if (uploadResponse.success && uploadResponse.file) {
             projectData.attachment = uploadResponse.file.path;
@@ -1457,7 +1423,7 @@ export class ProjectsComponent implements OnInit {
         this.toastService.show('Project created successfully', 'success');
         this.newProject = {};
         this.createProjectError = '';
-        this.showCreateProjectForm = false;
+        this.showCreateProjectModal = false;
         // Reload customers first, then projects to ensure customer names are available
         this.adminService.getCustomers().subscribe({
           next: (customers) => {
@@ -1573,6 +1539,13 @@ export class ProjectsComponent implements OnInit {
     const file = event.target.files[0];
     if (file) {
       this.selectedAttachmentFile = file;
+    }
+  }
+
+  onCreateAttachmentChange(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.newProject.attachment = file;
     }
   }
 
