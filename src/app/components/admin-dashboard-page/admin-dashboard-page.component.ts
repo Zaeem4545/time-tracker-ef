@@ -157,17 +157,148 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   loadTimeEntries(): void {
-    this.adminService.getTimeEntries().subscribe({
-      next: (entries) => {
-        // Filter time entries: only those created by admin
-        const adminTimeEntries = entries.filter((entry: any) => {
-          return entry.user_id === this.currentAdminId;
+    // First get admin's projects to filter time entries
+    this.adminService.getProjects().subscribe({
+      next: (allProjects) => {
+        // Filter projects: created by admin OR assigned to admin
+        const adminProjects = allProjects.filter((project: any) => {
+          const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
+                                    project.created_by === this.currentAdminId ||
+                                    project.created_by_id === this.currentAdminId;
+          const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          return isCreatedByAdmin || isAssignedToAdmin;
         });
-        this.totalTimeEntries = adminTimeEntries.length || 0;
+
+        const adminProjectIds = adminProjects.map((p: any) => p.id);
+
+        // Get admin's tasks from those projects
+        const adminTaskNames = new Set<string>();
+        let loadedProjects = 0;
+
+        if (adminProjectIds.length === 0) {
+          // No admin projects, so only show entries where admin logged time
+          this.adminService.getTimeEntries().subscribe({
+            next: (entries) => {
+              const adminTimeEntries = entries.filter((entry: any) => {
+                return entry.user_id === this.currentAdminId;
+              });
+              this.totalTimeEntries = adminTimeEntries.length || 0;
+            },
+            error: (err) => {
+              console.error('Error loading time entries:', err);
+              this.totalTimeEntries = 0;
+            }
+          });
+          return;
+        }
+
+        adminProjects.forEach((project: any) => {
+          this.adminService.getTasks(project.id).subscribe({
+            next: (tasks) => {
+              // Filter tasks: created by admin OR assigned by admin OR assigned to admin
+              const adminTasks = tasks.filter((task: any) => {
+                const isCreatedByAdmin = task.created_by === this.currentAdminEmail || 
+                                         task.created_by === this.currentAdminId ||
+                                         task.created_by_id === this.currentAdminId;
+                const isAssignedByAdmin = task.assigned_by === this.currentAdminEmail;
+                const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
+                return isCreatedByAdmin || isAssignedByAdmin || isAssignedToAdmin;
+              });
+
+              adminTasks.forEach((task: any) => {
+                if (task.title) {
+                  adminTaskNames.add(task.title);
+                }
+              });
+
+              loadedProjects++;
+              
+              if (loadedProjects === adminProjects.length) {
+                // Now filter time entries
+                this.adminService.getTimeEntries().subscribe({
+                  next: (entries) => {
+                    // Filter time entries:
+                    // 1. Worked by admin (user_id === adminId)
+                    // 2. For admin's projects
+                    // 3. For admin's tasks
+                    const adminTimeEntries = entries.filter((entry: any) => {
+                      // Worked by admin
+                      if (entry.user_id === this.currentAdminId) {
+                        return true;
+                      }
+                      
+                      // For admin's projects
+                      if (adminProjectIds.includes(entry.project_id)) {
+                        // If task name matches admin's tasks, include it
+                        if (entry.task_name && adminTaskNames.has(entry.task_name)) {
+                          return true;
+                        }
+                        // If no task name but it's admin's project, include it
+                        if (!entry.task_name) {
+                          return true;
+                        }
+                      }
+                      
+                      return false;
+                    });
+                    
+                    this.totalTimeEntries = adminTimeEntries.length || 0;
+                  },
+                  error: (err) => {
+                    console.error('Error loading time entries:', err);
+                    this.totalTimeEntries = 0;
+                  }
+                });
+              }
+            },
+            error: (err) => {
+              console.error(`Error loading tasks for project ${project.id}:`, err);
+              loadedProjects++;
+              if (loadedProjects === adminProjects.length) {
+                // Still filter time entries even if some tasks failed to load
+                this.adminService.getTimeEntries().subscribe({
+                  next: (entries) => {
+                    const adminTimeEntries = entries.filter((entry: any) => {
+                      if (entry.user_id === this.currentAdminId) {
+                        return true;
+                      }
+                      if (adminProjectIds.includes(entry.project_id)) {
+                        if (entry.task_name && adminTaskNames.has(entry.task_name)) {
+                          return true;
+                        }
+                        if (!entry.task_name) {
+                          return true;
+                        }
+                      }
+                      return false;
+                    });
+                    this.totalTimeEntries = adminTimeEntries.length || 0;
+                  },
+                  error: (err) => {
+                    console.error('Error loading time entries:', err);
+                    this.totalTimeEntries = 0;
+                  }
+                });
+              }
+            }
+          });
+        });
       },
       error: (err) => {
-        console.error('Error loading time entries:', err);
-        this.totalTimeEntries = 0;
+        console.error('Error loading projects for time entries:', err);
+        // Fallback: only show entries where admin logged time
+        this.adminService.getTimeEntries().subscribe({
+          next: (entries) => {
+            const adminTimeEntries = entries.filter((entry: any) => {
+              return entry.user_id === this.currentAdminId;
+            });
+            this.totalTimeEntries = adminTimeEntries.length || 0;
+          },
+          error: (err2) => {
+            console.error('Error loading time entries:', err2);
+            this.totalTimeEntries = 0;
+          }
+        });
       }
     });
   }
