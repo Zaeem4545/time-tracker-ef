@@ -20,6 +20,14 @@ export class DashboardComponent implements OnInit {
   recentProjects: any[] = [];
   recentTasks: any[] = [];
   
+  // All data for modals
+  allProjects: any[] = [];
+  allTasks: any[] = [];
+  
+  // List modals
+  showProjectsModal: boolean = false;
+  showTasksModal: boolean = false;
+  
   // Modal states
   showProjectDetailsModal: boolean = false;
   selectedProjectForDetails: any | null = null;
@@ -351,6 +359,9 @@ export class DashboardComponent implements OnInit {
           loadedProjects++;
           
           if (loadedProjects === projectIds.length) {
+            // Store all tasks for modal
+            this.allTasks = allTasks;
+            
             this.totalTasks = allTasks.length;
             // Get 5 most recent tasks
             this.recentTasks = allTasks
@@ -362,6 +373,9 @@ export class DashboardComponent implements OnInit {
           console.error(`Error loading tasks for project ${projectId}:`, err);
           loadedProjects++;
           if (loadedProjects === projectIds.length) {
+            // Store all tasks for modal
+            this.allTasks = allTasks;
+            
             this.totalTasks = allTasks.length;
             this.recentTasks = allTasks
               .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
@@ -1275,5 +1289,26 @@ export class DashboardComponent implements OnInit {
       this.projectStatusDropdownOpen = null;
       this.taskStatusDropdownOpen = null;
     }
+  }
+
+  // List modal methods
+  openProjectsModal(): void {
+    this.showProjectsModal = true;
+  }
+
+  closeProjectsModal(): void {
+    this.showProjectsModal = false;
+  }
+
+  openTasksModal(): void {
+    this.showTasksModal = true;
+  }
+
+  closeTasksModal(): void {
+    this.showTasksModal = false;
+  }
+
+  goToTimesheet(): void {
+    this.router.navigate(['/timesheet']);
   }
 }

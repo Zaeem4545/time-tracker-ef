@@ -2,7 +2,7 @@
 <div class="dashboard-container" *ngIf="isManager">
   <!-- Summary Metrics Section -->
   <div class="summary-metrics">
-    <div class="metric-card">
+    <div class="metric-card" (click)="openProjectsModal()" style="cursor: pointer;">
       <div class="metric-icon projects-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M10 4H4C2.9 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V8C22 6.9 21.1 6 20 6H12L10 4Z" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <div class="metric-card">
+    <div class="metric-card" (click)="openTasksModal()" style="cursor: pointer;">
       <div class="metric-icon tasks-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M9 11L12 14L22 4" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -28,7 +28,7 @@
       </div>
     </div>
 
-    <div class="metric-card">
+    <div class="metric-card" (click)="goToTimesheet()" style="cursor: pointer;">
       <div class="metric-icon time-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="10" stroke="#9c27b0" stroke-width="2"/>

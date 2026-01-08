@@ -1,4 +1,5 @@
 import { Component, OnInit, HostListener } from '@angular/core';
+import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -17,6 +18,14 @@ export class AdminDashboardPageComponent implements OnInit {
   // Recent data
   recentProjects: any[] = [];
   recentTasks: any[] = [];
+  
+  // All data for modals
+  allProjects: any[] = [];
+  allTasks: any[] = [];
+  
+  // Modal states
+  showProjectsModal: boolean = false;
+  showTasksModal: boolean = false;
 
   // Current admin info
   currentAdminId: number | null = null;
@@ -45,7 +54,8 @@ export class AdminDashboardPageComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -95,6 +105,9 @@ export class AdminDashboardPageComponent implements OnInit {
               return isAssignedToAdmin || isHeadManager || isCreatedByAdmin || hasWorkedOn;
             });
 
+            // Store all projects for modal
+            this.allProjects = adminProjects;
+            
             this.totalProjects = adminProjects.length;
             this.myProjects = adminProjects.filter((p: any) => p.manager_id === this.currentAdminId).length;
             
@@ -197,6 +210,9 @@ export class AdminDashboardPageComponent implements OnInit {
               loadedProjects++;
               
               if (loadedProjects === adminProjects.length) {
+                // Store all tasks for modal
+                this.allTasks = allTasks;
+                
                 this.totalTasks = allTasks.length;
                 // Get 5 most recent tasks
                 this.recentTasks = allTasks
@@ -537,5 +553,26 @@ export class AdminDashboardPageComponent implements OnInit {
       this.projectStatusDropdownOpen = null;
       this.taskStatusDropdownOpen = null;
     }
+  }
+
+  // Modal methods
+  openProjectsModal(): void {
+    this.showProjectsModal = true;
+  }
+
+  closeProjectsModal(): void {
+    this.showProjectsModal = false;
+  }
+
+  openTasksModal(): void {
+    this.showTasksModal = true;
+  }
+
+  closeTasksModal(): void {
+    this.showTasksModal = false;
+  }
+
+  goToTimesheet(): void {
+    this.router.navigate(['/timesheet']);
   }
 }
