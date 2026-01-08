@@ -13,6 +13,7 @@ import { AuthService } from '../../services/auth.service';
 export class HeadManagerDashboardComponent implements OnInit {
   private currentUserId: number | null = null;
   private currentUserEmail: string | null = null;
+  users: any[] = [];
 
   // Dashboard properties
   totalProjects: number = 0;
