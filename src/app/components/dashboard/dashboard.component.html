@@ -590,3 +590,61 @@
 
 <!-- Employee Dashboard -->
 <app-employee-dashboard *ngIf="isEmployee"></app-employee-dashboard>
+
+<!-- Projects Modal -->
+<div *ngIf="showProjectsModal" class="task-modal-overlay" (click)="closeProjectsModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+    <div class="task-modal-header">
+      <h3>All Projects ({{ allProjects.length }})</h3>
+      <button (click)="closeProjectsModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div *ngIf="allProjects.length === 0" class="empty-state" style="padding: 2rem; text-align: center; color: #999;">
+        <p>No projects found</p>
+      </div>
+      <div *ngIf="allProjects.length > 0" class="projects-list">
+        <div class="project-card" *ngFor="let project of allProjects" style="margin-bottom: 1rem;">
+          <div class="card-header">
+            <h4 class="card-title">{{ project.name }}</h4>
+            <span class="card-date" *ngIf="project.end_date">{{ formatDate(project.end_date) }}</span>
+          </div>
+          <p class="card-description">{{ project.description || 'No description' }}</p>
+          <div class="card-footer">
+            <span class="status-badge" [ngClass]="getStatusClass(project.status)">
+              {{ getStatusDisplayName(project.status || 'on-track') }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tasks Modal -->
+<div *ngIf="showTasksModal" class="task-modal-overlay" (click)="closeTasksModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+    <div class="task-modal-header">
+      <h3>All Tasks ({{ allTasks.length }})</h3>
+      <button (click)="closeTasksModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div *ngIf="allTasks.length === 0" class="empty-state" style="padding: 2rem; text-align: center; color: #999;">
+        <p>No tasks found</p>
+      </div>
+      <div *ngIf="allTasks.length > 0" class="tasks-list">
+        <div class="task-card" *ngFor="let task of allTasks" style="margin-bottom: 1rem;">
+          <div class="card-header">
+            <h4 class="card-title">{{ task.title }}</h4>
+            <span class="card-date" *ngIf="task.due_date">{{ formatDate(task.due_date) }}</span>
+          </div>
+          <p class="card-description">{{ task.description || 'No description' }}</p>
+          <div class="card-footer">
+            <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+              {{ getStatusDisplayName(task.status || 'pending') }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -176,6 +176,7 @@ export class DashboardComponent implements OnInit {
         if (projects.length === 0) {
           this.totalProjects = 0;
           this.myProjects = 0;
+          this.allProjects = [];
           this.recentProjects = [];
           return;
         }
@@ -233,6 +234,9 @@ export class DashboardComponent implements OnInit {
   }
 
   updateProjectMetrics(managerProjects: any[]): void {
+    // Store all projects for modal
+    this.allProjects = managerProjects;
+    
     // Update total projects count to show only projects manager can work on
     this.totalProjects = managerProjects.length;
     
@@ -263,6 +267,7 @@ export class DashboardComponent implements OnInit {
 
         if (projects.length === 0) {
           this.totalTasks = 0;
+          this.allTasks = [];
           this.recentTasks = [];
           return;
         }
@@ -316,6 +321,7 @@ export class DashboardComponent implements OnInit {
   loadTasksFromProjects(projectIds: number[], managerEmail: string): void {
     if (projectIds.length === 0) {
       this.totalTasks = 0;
+      this.allTasks = [];
       this.recentTasks = [];
       return;
     }
