@@ -48,6 +48,13 @@
     </div>
   </div>
 
+  <!-- Welcome Message Overlay -->
+  <div *ngIf="showWelcomeMessage" class="welcome-overlay">
+    <div class="welcome-message">
+      <h2 class="welcome-text">Welcome {{ welcomeName }}</h2>
+    </div>
+  </div>
+
   <!-- Right Section: Branding -->
   <div class="login-right" style="background-image: url('assets/1742173347793.jpg');">
     <div class="branding-overlay"></div>
