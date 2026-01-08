@@ -822,8 +822,8 @@ export class AdminDashboardPageComponent implements OnInit {
     }
 
     this.adminService.updateProject(this.selectedProjectForEdit.id, formData).subscribe({
-      next: (response) => {
-        if (response.success) {
+      next: (response: any) => {
+        if (response && response.success) {
           // Reload dashboard data
           this.loadDashboardData();
           // Update the project in recentProjects
@@ -833,7 +833,7 @@ export class AdminDashboardPageComponent implements OnInit {
           }
           this.closeEditProjectModal();
         } else {
-          alert('Failed to update project: ' + (response.message || 'Unknown error'));
+          alert('Failed to update project: ' + ((response && response.message) || 'Unknown error'));
         }
       },
       error: (err) => {
@@ -860,8 +860,8 @@ export class AdminDashboardPageComponent implements OnInit {
     };
 
     this.adminService.updateTask(this.selectedTaskForEdit.id, updateData).subscribe({
-      next: (response) => {
-        if (response.success) {
+      next: (response: any) => {
+        if (response && response.success) {
           // Reload dashboard data
           this.loadDashboardData();
           // Update the task in recentTasks
@@ -871,7 +871,7 @@ export class AdminDashboardPageComponent implements OnInit {
           }
           this.closeEditTaskModal();
         } else {
-          alert('Failed to update task: ' + (response.message || 'Unknown error'));
+          alert('Failed to update task: ' + ((response && response.message) || 'Unknown error'));
         }
       },
       error: (err) => {

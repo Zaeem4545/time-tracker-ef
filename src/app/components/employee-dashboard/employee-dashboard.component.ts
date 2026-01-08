@@ -567,17 +567,16 @@ export class EmployeeDashboardComponent implements OnInit {
     };
 
     this.adminService.updateProject(this.selectedProjectForEdit.id, updateData).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.loadProjects();
-          this.loadTasks();
+      next: (response: any) => {
+        if (response && response.success) {
+          this.loadProjects(); // This will automatically call loadEmployeeTasks()
           const index = this.recentProjects.findIndex(p => p.id === this.selectedProjectForEdit.id);
           if (index !== -1) {
             this.recentProjects[index] = { ...this.recentProjects[index], ...updateData };
           }
           this.closeEditProjectModal();
         } else {
-          alert('Failed to update project: ' + (response.message || 'Unknown error'));
+          alert('Failed to update project: ' + ((response && response.message) || 'Unknown error'));
         }
       },
       error: (err) => {
@@ -604,17 +603,16 @@ export class EmployeeDashboardComponent implements OnInit {
     };
 
     this.adminService.updateTask(this.selectedTaskForEdit.id, updateData).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.loadProjects();
-          this.loadTasks();
+      next: (response: any) => {
+        if (response && response.success) {
+          this.loadEmployeeTasks(); // Reload tasks
           const index = this.recentTasks.findIndex(t => t.id === this.selectedTaskForEdit.id);
           if (index !== -1) {
             this.recentTasks[index] = { ...this.recentTasks[index], ...updateData };
           }
           this.closeEditTaskModal();
         } else {
-          alert('Failed to update task: ' + (response.message || 'Unknown error'));
+          alert('Failed to update task: ' + ((response && response.message) || 'Unknown error'));
         }
       },
       error: (err) => {
