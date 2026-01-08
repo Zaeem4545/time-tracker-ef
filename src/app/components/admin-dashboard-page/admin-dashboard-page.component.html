@@ -298,12 +298,12 @@
 
 <!-- Edit Project Modal -->
 <div *ngIf="showEditProjectModal && selectedProjectForEdit" class="task-modal-overlay" (click)="closeEditProjectModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
     <div class="task-modal-header">
       <h3>Edit Project: {{ selectedProjectForEdit.name }}</h3>
       <button (click)="closeEditProjectModal()" class="task-modal-close">×</button>
     </div>
-    <div class="task-modal-body">
+    <div class="task-modal-body" style="flex: 1; overflow-y: auto;">
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <div>
           <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Project Name *</label>
@@ -345,10 +345,105 @@
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
       </div>
+
+      <!-- Comments Section -->
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+        <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Comments</h4>
+        
+        <!-- Add Comment Form -->
+        <div style="margin-bottom: 1.5rem;">
+          <textarea 
+            [(ngModel)]="newComment" 
+            placeholder="Write a comment..."
+            style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+          ></textarea>
+          <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+            <button 
+              (click)="addComment()" 
+              [disabled]="!newComment.trim() || loadingComments"
+              class="btn-expertflow btn-primary"
+              style="padding: 0.5rem 1.5rem; font-size: 0.875rem;"
+            >
+              Post Comment
+            </button>
+          </div>
+        </div>
+
+        <!-- Comments List -->
+        <div style="max-height: 400px; overflow-y: auto;">
+          <div *ngIf="loadingComments" style="text-align: center; padding: 2rem; color: #666;">
+            Loading comments...
+          </div>
+          <div *ngIf="!loadingComments && projectComments.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+            No comments yet. Be the first to comment!
+          </div>
+          <div *ngFor="let comment of projectComments" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+              <div>
+                <div style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                  {{ comment.user_name || getUserNameFromEmail(comment.user_email) || 'Unknown User' }}
+                </div>
+                <div style="color: #999; font-size: 0.75rem; margin-top: 0.25rem;">
+                  {{ formatCommentDate(comment.created_at) }}
+                </div>
+              </div>
+              <div *ngIf="isOwnProjectComment(comment)" style="display: flex; gap: 0.5rem;">
+                <button 
+                  *ngIf="editingProjectCommentId !== comment.id"
+                  (click)="startEditingProjectComment(comment)"
+                  style="background: #2196F3; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
+                  title="Edit comment"
+                >
+                  ✏️
+                </button>
+                <button 
+                  *ngIf="editingProjectCommentId !== comment.id"
+                  (click)="deleteProjectComment(comment)"
+                  style="background: #f44336; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
+                  title="Delete comment"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+            <div *ngIf="editingProjectCommentId === comment.id" style="margin-bottom: 0.5rem;">
+              <textarea 
+                [(ngModel)]="editingProjectCommentText"
+                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
+              ></textarea>
+              <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
+                <button 
+                  (click)="cancelEditingProjectComment()"
+                  class="btn-expertflow"
+                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                >
+                  Cancel
+                </button>
+                <button 
+                  (click)="saveProjectComment(comment)"
+                  [disabled]="!editingProjectCommentText.trim()"
+                  class="btn-expertflow btn-primary"
+                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+            <div *ngIf="editingProjectCommentId !== comment.id" style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
+              {{ comment.comment }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="task-modal-footer">
-      <button (click)="saveProject()" class="btn-expertflow btn-primary">💾 Save Changes</button>
-      <button (click)="closeEditProjectModal()" class="btn-expertflow">Cancel</button>
+    <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0; background: #fff; flex-shrink: 0;">
+      <button (click)="openProjectHistoryModal()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+        📋 Project History
+      </button>
+      <div style="display: flex; gap: 0.5rem;">
+        <button (click)="saveProject()" class="btn-expertflow btn-primary">💾 Save Changes</button>
+        <button (click)="closeEditProjectModal()" class="btn-expertflow">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
@@ -396,12 +491,12 @@
 
 <!-- Edit Task Modal -->
 <div *ngIf="showEditTaskModal && selectedTaskForEdit" class="task-modal-overlay" (click)="closeEditTaskModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
     <div class="task-modal-header">
       <h3>Edit Task: {{ selectedTaskForEdit.title }}</h3>
       <button (click)="closeEditTaskModal()" class="task-modal-close">×</button>
     </div>
-    <div class="task-modal-body">
+    <div class="task-modal-body" style="flex: 1; overflow-y: auto;">
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <div>
           <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Task Title *</label>
@@ -434,9 +529,141 @@
         </div>
       </div>
     </div>
+    <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0; background: #fff; flex-shrink: 0;">
+      <button (click)="openTaskHistoryModal()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+        📋 Task History
+      </button>
+      <div style="display: flex; gap: 0.5rem;">
+        <button (click)="saveTask()" class="btn-expertflow btn-primary">💾 Save Changes</button>
+        <button (click)="closeEditTaskModal()" class="btn-expertflow">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Project History Modal -->
+<div *ngIf="showProjectHistoryModal && selectedProjectForEdit" class="task-modal-overlay task-history-modal-overlay" (click)="closeProjectHistoryModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+    <div class="task-modal-header">
+      <h3>Project History - {{ selectedProjectForEdit?.name }}</h3>
+      <button (click)="closeProjectHistoryModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+      <div *ngIf="loadingHistory" style="text-align: center; padding: 2rem; color: #666;">
+        Loading history...
+      </div>
+      <div *ngIf="!loadingHistory && projectHistory.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+        No history available for this project yet.
+      </div>
+      <div *ngIf="!loadingHistory && projectHistory.length > 0" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div *ngFor="let historyItem of projectHistory" style="padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 4px solid #1976d2;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">
+                  <span *ngIf="historyItem.type === 'project'">📁</span>
+                  <span *ngIf="historyItem.type === 'task'">✓</span>
+                </span>
+                <span style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                  <span *ngIf="historyItem.type === 'project'">Project</span>
+                  <span *ngIf="historyItem.type === 'task'">Task</span>
+                  <span *ngIf="historyItem.action === 'create'"> Created</span>
+                  <span *ngIf="historyItem.action === 'update'"> Updated</span>
+                  <span *ngIf="historyItem.action === 'delete'"> Deleted</span>
+                </span>
+                <span *ngIf="historyItem.type === 'task' && historyItem.task_title" style="color: #666; font-size: 0.875rem; margin-left: 0.5rem;">
+                  - {{ historyItem.task_title }}
+                </span>
+              </div>
+              <div *ngIf="historyItem.action === 'update' && historyItem.field_name" style="margin-bottom: 0.5rem;">
+                <span style="color: #666; font-size: 0.875rem;">
+                  <strong>{{ formatFieldName(historyItem.field_name) }}:</strong>
+                  <span *ngIf="historyItem.old_value !== null && historyItem.old_value !== ''" style="color: #d32f2f; text-decoration: line-through; margin-left: 0.5rem;">
+                    {{ formatHistoryValue(historyItem.field_name, historyItem.old_value) }}
+                  </span>
+                  <span style="color: #1976d2; margin-left: 0.5rem;">→</span>
+                  <span *ngIf="historyItem.new_value !== null && historyItem.new_value !== ''" style="color: #2e7d32; margin-left: 0.5rem;">
+                    {{ formatHistoryValue(historyItem.field_name, historyItem.new_value) }}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e0e0e0;">
+            <div style="color: #999; font-size: 0.75rem;">
+              <span *ngIf="historyItem.changed_by_name">{{ historyItem.changed_by_name }}</span>
+              <span *ngIf="!historyItem.changed_by_name && historyItem.changed_by_email">{{ historyItem.changed_by_email }}</span>
+              <span *ngIf="!historyItem.changed_by_name && !historyItem.changed_by_email">Unknown User</span>
+            </div>
+            <div style="color: #999; font-size: 0.75rem;">
+              {{ formatHistoryDate(historyItem.changed_at) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="task-modal-footer">
-      <button (click)="saveTask()" class="btn-expertflow btn-primary">💾 Save Changes</button>
-      <button (click)="closeEditTaskModal()" class="btn-expertflow">Cancel</button>
+      <button (click)="closeProjectHistoryModal()" class="btn-expertflow">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task History Modal -->
+<div *ngIf="showTaskHistoryModal && selectedTaskForEdit" class="task-modal-overlay task-history-modal-overlay" (click)="closeTaskHistoryModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+    <div class="task-modal-header">
+      <h3>Task History - {{ selectedTaskForEdit?.title }}</h3>
+      <button (click)="closeTaskHistoryModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body" style="max-height: calc(90vh - 120px); overflow-y: auto;">
+      <div *ngIf="loadingTaskHistory" style="text-align: center; padding: 2rem; color: #666;">
+        Loading history...
+      </div>
+      <div *ngIf="!loadingTaskHistory && taskHistory.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+        No history available for this task yet.
+      </div>
+      <div *ngIf="!loadingTaskHistory && taskHistory.length > 0" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div *ngFor="let historyItem of taskHistory" style="padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 4px solid #1976d2;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">✓</span>
+                <span style="font-weight: 600; color: #333; font-size: 0.875rem;">
+                  Task
+                  <span *ngIf="historyItem.action === 'create'"> Created</span>
+                  <span *ngIf="historyItem.action === 'update'"> Updated</span>
+                  <span *ngIf="historyItem.action === 'delete'"> Deleted</span>
+                </span>
+              </div>
+              <div *ngIf="historyItem.action === 'update' && historyItem.field_name" style="margin-bottom: 0.5rem;">
+                <span style="color: #666; font-size: 0.875rem;">
+                  <strong>{{ formatFieldName(historyItem.field_name) }}:</strong>
+                  <span *ngIf="historyItem.old_value !== null && historyItem.old_value !== ''" style="color: #d32f2f; text-decoration: line-through; margin-left: 0.5rem;">
+                    {{ formatHistoryValue(historyItem.field_name, historyItem.old_value) }}
+                  </span>
+                  <span style="color: #1976d2; margin-left: 0.5rem;">→</span>
+                  <span *ngIf="historyItem.new_value !== null && historyItem.new_value !== ''" style="color: #2e7d32; margin-left: 0.5rem;">
+                    {{ formatHistoryValue(historyItem.field_name, historyItem.new_value) }}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #e0e0e0;">
+            <div style="color: #999; font-size: 0.75rem;">
+              <span *ngIf="historyItem.changed_by_name">{{ historyItem.changed_by_name }}</span>
+              <span *ngIf="!historyItem.changed_by_name && historyItem.changed_by_email">{{ historyItem.changed_by_email }}</span>
+              <span *ngIf="!historyItem.changed_by_name && !historyItem.changed_by_email">Unknown User</span>
+            </div>
+            <div style="color: #999; font-size: 0.75rem;">
+              {{ formatHistoryDate(historyItem.changed_at) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="task-modal-footer">
+      <button (click)="closeTaskHistoryModal()" class="btn-expertflow">Close</button>
     </div>
   </div>
 </div>

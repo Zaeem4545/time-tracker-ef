@@ -41,6 +41,25 @@ export class AdminDashboardPageComponent implements OnInit {
   modalEditProjectData: any = {};
   modalEditTaskData: any = {};
   selectedAttachmentFile: File | null = null;
+  
+  // Comments
+  projectComments: any[] = [];
+  taskComments: any[] = [];
+  newComment: string = '';
+  newTaskComment: string = '';
+  loadingComments: boolean = false;
+  editingProjectCommentId: number | null = null;
+  editingProjectCommentText: string = '';
+  editingTaskCommentId: number | null = null;
+  editingTaskCommentText: string = '';
+  
+  // History
+  showProjectHistoryModal: boolean = false;
+  showTaskHistoryModal: boolean = false;
+  projectHistory: any[] = [];
+  taskHistory: any[] = [];
+  loadingHistory: boolean = false;
+  loadingTaskHistory: boolean = false;
 
   // Current admin info
   currentAdminId: number | null = null;
@@ -712,6 +731,8 @@ export class AdminDashboardPageComponent implements OnInit {
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
+          // Load comments for edit modal
+          this.loadProjectComments(fullProject.id);
         } else {
           // Fallback to current project data
           this.selectedProjectForEdit = project;
@@ -726,6 +747,8 @@ export class AdminDashboardPageComponent implements OnInit {
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
+          // Load comments for edit modal
+          this.loadProjectComments(project.id);
         }
       },
       error: (err) => {
@@ -743,6 +766,8 @@ export class AdminDashboardPageComponent implements OnInit {
         };
         this.selectedAttachmentFile = null;
         this.showEditProjectModal = true;
+        // Load comments for edit modal
+        this.loadProjectComments(project.id);
       }
     });
   }
@@ -752,6 +777,14 @@ export class AdminDashboardPageComponent implements OnInit {
     this.selectedProjectForEdit = null;
     this.modalEditProjectData = {};
     this.selectedAttachmentFile = null;
+    // Clear comments
+    this.projectComments = [];
+    this.newComment = '';
+    this.editingProjectCommentId = null;
+    this.editingProjectCommentText = '';
+    // Close history modal if open
+    this.showProjectHistoryModal = false;
+    this.projectHistory = [];
   }
 
   viewTaskDetails(task: any): void {
@@ -774,12 +807,22 @@ export class AdminDashboardPageComponent implements OnInit {
       allocated_time: task.allocated_time || ''
     };
     this.showEditTaskModal = true;
+    // Load task comments
+    this.loadTaskComments(task.id);
   }
 
   closeEditTaskModal(): void {
     this.showEditTaskModal = false;
     this.selectedTaskForEdit = null;
     this.modalEditTaskData = {};
+    // Clear comments
+    this.taskComments = [];
+    this.newTaskComment = '';
+    this.editingTaskCommentId = null;
+    this.editingTaskCommentText = '';
+    // Close history modal if open
+    this.showTaskHistoryModal = false;
+    this.taskHistory = [];
   }
 
   extractDateOnly(dateString: string | null | undefined): string {
@@ -886,5 +929,206 @@ export class AdminDashboardPageComponent implements OnInit {
     if (file) {
       this.selectedAttachmentFile = file;
     }
+  }
+
+  // Comments methods
+  loadProjectComments(projectId: number): void {
+    this.loadingComments = true;
+    this.adminService.getProjectComments(projectId).subscribe({
+      next: (response: any) => {
+        this.projectComments = response.comments || [];
+        this.loadingComments = false;
+      },
+      error: (err) => {
+        console.error('Error loading comments:', err);
+        this.projectComments = [];
+        this.loadingComments = false;
+      }
+    });
+  }
+
+  addComment(): void {
+    const project = this.selectedProjectForEdit;
+    if (!project || !this.newComment.trim()) return;
+    
+    this.adminService.createProjectComment(project.id, this.newComment.trim()).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.comment) {
+          this.projectComments.unshift(response.comment);
+          this.newComment = '';
+        }
+      },
+      error: (err) => {
+        console.error('Error adding comment:', err);
+        alert('Failed to add comment. Please try again.');
+      }
+    });
+  }
+
+  isOwnProjectComment(comment: any): boolean {
+    const currentUserEmail = this.authService.getEmail();
+    const currentUserId = this.authService.getUserId();
+    return comment.user_email === currentUserEmail || comment.user_id === currentUserId;
+  }
+
+  startEditingProjectComment(comment: any): void {
+    if (!this.isOwnProjectComment(comment)) return;
+    this.editingProjectCommentId = comment.id;
+    this.editingProjectCommentText = comment.comment;
+  }
+
+  cancelEditingProjectComment(): void {
+    this.editingProjectCommentId = null;
+    this.editingProjectCommentText = '';
+  }
+
+  saveProjectComment(comment: any): void {
+    const project = this.selectedProjectForEdit;
+    if (!project || !this.editingProjectCommentText.trim()) return;
+    
+    this.adminService.updateProjectComment(project.id, comment.id, this.editingProjectCommentText.trim()).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.comment) {
+          const index = this.projectComments.findIndex(c => c.id === comment.id);
+          if (index !== -1) {
+            this.projectComments[index] = response.comment;
+          }
+          this.cancelEditingProjectComment();
+        }
+      },
+      error: (err) => {
+        console.error('Error updating comment:', err);
+        alert('Failed to update comment. Please try again.');
+      }
+    });
+  }
+
+  deleteProjectComment(comment: any): void {
+    const project = this.selectedProjectForEdit;
+    if (!project || !this.isOwnProjectComment(comment)) return;
+    
+    if (confirm('Are you sure you want to delete this comment?')) {
+      this.adminService.deleteProjectComment(project.id, comment.id).subscribe({
+        next: (response: any) => {
+          if (response && response.success) {
+            this.projectComments = this.projectComments.filter(c => c.id !== comment.id);
+          }
+        },
+        error: (err) => {
+          console.error('Error deleting comment:', err);
+          alert('Failed to delete comment. Please try again.');
+        }
+      });
+    }
+  }
+
+  formatCommentDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getUserNameFromEmail(email: string): string {
+    if (!email) return '';
+    return email.split('@')[0];
+  }
+
+  // Task comments
+  loadTaskComments(taskId: number): void {
+    // Task comments might use a different endpoint, adjust as needed
+    this.loadingComments = true;
+    // For now, we'll use project comments endpoint if task comments don't exist
+    // You may need to add getTaskComments to adminService
+    this.loadingComments = false;
+  }
+
+  addTaskComment(): void {
+    // Implement if task comments are supported
+  }
+
+  // History methods
+  openProjectHistoryModal(): void {
+    const project = this.selectedProjectForEdit;
+    if (!project) return;
+    this.showProjectHistoryModal = true;
+    this.loadProjectHistory(project.id);
+  }
+
+  closeProjectHistoryModal(): void {
+    this.showProjectHistoryModal = false;
+    this.projectHistory = [];
+  }
+
+  loadProjectHistory(projectId: number): void {
+    this.loadingHistory = true;
+    this.adminService.getProjectHistory(projectId).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.projectHistory = response.history || [];
+        }
+        this.loadingHistory = false;
+      },
+      error: (err) => {
+        console.error('Error loading project history:', err);
+        this.projectHistory = [];
+        this.loadingHistory = false;
+      }
+    });
+  }
+
+  openTaskHistoryModal(): void {
+    const task = this.selectedTaskForEdit;
+    if (!task) return;
+    this.showTaskHistoryModal = true;
+    this.loadTaskHistory(task.id);
+  }
+
+  closeTaskHistoryModal(): void {
+    this.showTaskHistoryModal = false;
+    this.taskHistory = [];
+  }
+
+  loadTaskHistory(taskId: number): void {
+    this.loadingTaskHistory = true;
+    this.adminService.getTaskHistory(taskId).subscribe({
+      next: (response: any) => {
+        if (response && response.success) {
+          this.taskHistory = response.history || [];
+        }
+        this.loadingTaskHistory = false;
+      },
+      error: (err) => {
+        console.error('Error loading task history:', err);
+        this.taskHistory = [];
+        this.loadingTaskHistory = false;
+      }
+    });
+  }
+
+  formatHistoryDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  formatFieldName(fieldName: string): string {
+    return fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  formatHistoryValue(fieldName: string, value: any): string {
+    if (value === null || value === undefined || value === '') return '';
+    return String(value);
   }
 }
