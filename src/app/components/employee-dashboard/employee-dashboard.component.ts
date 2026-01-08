@@ -35,6 +35,18 @@ export class EmployeeDashboardComponent implements OnInit {
   showTasksModal: boolean = false;
   showTimeEntriesModal: boolean = false;
   
+  // Project/Task view/edit modals
+  showProjectDetailsModal: boolean = false;
+  showEditProjectModal: boolean = false;
+  showTaskDetailsModal: boolean = false;
+  showEditTaskModal: boolean = false;
+  selectedProjectForDetails: any | null = null;
+  selectedProjectForEdit: any | null = null;
+  selectedTaskForDetails: any | null = null;
+  selectedTaskForEdit: any | null = null;
+  modalEditProjectData: any = {};
+  modalEditTaskData: any = {};
+  
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
   taskStatusDropdownOpen: number | null = null;
@@ -471,43 +483,145 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   viewProjectDetails(project: any): void {
-    // Navigate to projects page and open project details
-    this.router.navigate(['/projects'], { 
-      queryParams: { viewProject: project.id },
-      state: { project: project }
-    });
+    this.selectedProjectForDetails = project;
+    this.showProjectDetailsModal = true;
+  }
+
+  closeProjectDetailsModal(): void {
+    this.showProjectDetailsModal = false;
+    this.selectedProjectForDetails = null;
   }
 
   editProject(project: any): void {
-    // Navigate to projects page and open edit modal
-    this.router.navigate(['/projects'], { 
-      queryParams: { editProject: project.id },
-      state: { project: project }
-    });
+    this.selectedProjectForEdit = project;
+    this.modalEditProjectData = {
+      name: project.name || '',
+      description: project.description || '',
+      status: project.status || 'on-track',
+      start_date: this.extractDateOnly(project.start_date) || '',
+      end_date: this.extractDateOnly(project.end_date) || '',
+      allocated_time: project.allocated_time || ''
+    };
+    this.showEditProjectModal = true;
+  }
+
+  closeEditProjectModal(): void {
+    this.showEditProjectModal = false;
+    this.selectedProjectForEdit = null;
+    this.modalEditProjectData = {};
   }
 
   viewTaskDetails(task: any): void {
-    // Navigate to projects page and open task details
-    if (task.project_id) {
-      this.router.navigate(['/projects'], { 
-        queryParams: { viewTask: task.id, projectId: task.project_id },
-        state: { task: task }
-      });
-    } else {
-      this.router.navigate(['/projects']);
-    }
+    this.selectedTaskForDetails = task;
+    this.showTaskDetailsModal = true;
+  }
+
+  closeTaskDetailsModal(): void {
+    this.showTaskDetailsModal = false;
+    this.selectedTaskForDetails = null;
   }
 
   editTask(task: any): void {
-    // Navigate to projects page and open task edit
-    if (task.project_id) {
-      this.router.navigate(['/projects'], { 
-        queryParams: { editTask: task.id, projectId: task.project_id },
-        state: { task: task }
-      });
-    } else {
-      this.router.navigate(['/projects']);
+    this.selectedTaskForEdit = task;
+    this.modalEditTaskData = {
+      title: task.title || '',
+      description: task.description || '',
+      status: task.status || 'pending',
+      due_date: this.extractDateOnly(task.due_date) || '',
+      allocated_time: task.allocated_time || ''
+    };
+    this.showEditTaskModal = true;
+  }
+
+  closeEditTaskModal(): void {
+    this.showEditTaskModal = false;
+    this.selectedTaskForEdit = null;
+    this.modalEditTaskData = {};
+  }
+
+  extractDateOnly(dateString: string | null | undefined): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  saveProject(): void {
+    if (!this.selectedProjectForEdit) return;
+    
+    if (!this.modalEditProjectData.name || !this.modalEditProjectData.description) {
+      alert('Please fill in all required fields');
+      return;
     }
+
+    const updateData: any = {
+      name: this.modalEditProjectData.name,
+      description: this.modalEditProjectData.description,
+      status: this.modalEditProjectData.status,
+      start_date: this.modalEditProjectData.start_date || null,
+      end_date: this.modalEditProjectData.end_date || null,
+      allocated_time: this.modalEditProjectData.allocated_time || null
+    };
+
+    this.adminService.updateProject(this.selectedProjectForEdit.id, updateData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.loadProjects();
+          this.loadTasks();
+          const index = this.recentProjects.findIndex(p => p.id === this.selectedProjectForEdit.id);
+          if (index !== -1) {
+            this.recentProjects[index] = { ...this.recentProjects[index], ...updateData };
+          }
+          this.closeEditProjectModal();
+        } else {
+          alert('Failed to update project: ' + (response.message || 'Unknown error'));
+        }
+      },
+      error: (err) => {
+        console.error('Error updating project:', err);
+        alert('Error updating project: ' + (err.error?.message || err.message || 'Unknown error'));
+      }
+    });
+  }
+
+  saveTask(): void {
+    if (!this.selectedTaskForEdit) return;
+    
+    if (!this.modalEditTaskData.title) {
+      alert('Please fill in the task title');
+      return;
+    }
+
+    const updateData: any = {
+      title: this.modalEditTaskData.title,
+      description: this.modalEditTaskData.description || '',
+      status: this.modalEditTaskData.status,
+      due_date: this.modalEditTaskData.due_date || null,
+      allocated_time: this.modalEditTaskData.allocated_time || null
+    };
+
+    this.adminService.updateTask(this.selectedTaskForEdit.id, updateData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.loadProjects();
+          this.loadTasks();
+          const index = this.recentTasks.findIndex(t => t.id === this.selectedTaskForEdit.id);
+          if (index !== -1) {
+            this.recentTasks[index] = { ...this.recentTasks[index], ...updateData };
+          }
+          this.closeEditTaskModal();
+        } else {
+          alert('Failed to update task: ' + (response.message || 'Unknown error'));
+        }
+      },
+      error: (err) => {
+        console.error('Error updating task:', err);
+        alert('Error updating task: ' + (err.error?.message || err.message || 'Unknown error'));
+      }
+    });
   }
 
   @HostListener('document:click', ['$event'])

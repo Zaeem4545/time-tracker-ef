@@ -251,3 +251,193 @@
   </div>
 </div>
 
+<!-- Project Details Modal -->
+<div *ngIf="showProjectDetailsModal && selectedProjectForDetails" class="task-modal-overlay" (click)="closeProjectDetailsModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
+    <div class="task-modal-header">
+      <h3>Project Details</h3>
+      <button (click)="closeProjectDetailsModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Project ID:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.id }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Name:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.name }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.description || 'Not provided' }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedProjectForDetails.status || 'on-track') }}</span>
+        </div>
+        <div *ngIf="selectedProjectForDetails.start_date">
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start Date:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDate(selectedProjectForDetails.start_date) }}</span>
+        </div>
+        <div *ngIf="selectedProjectForDetails.end_date">
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End Date:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDate(selectedProjectForDetails.end_date) }}</span>
+        </div>
+        <div *ngIf="selectedProjectForDetails.allocated_time">
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.allocated_time }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-modal-footer">
+      <button (click)="closeProjectDetailsModal()" class="btn-expertflow">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div *ngIf="showEditProjectModal && selectedProjectForEdit" class="task-modal-overlay" (click)="closeEditProjectModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+    <div class="task-modal-header">
+      <h3>Edit Project: {{ selectedProjectForEdit.name }}</h3>
+      <button (click)="closeEditProjectModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Project Name *</label>
+          <input type="text" [(ngModel)]="modalEditProjectData.name" placeholder="Project Name" required
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description *</label>
+          <textarea [(ngModel)]="modalEditProjectData.description" placeholder="Description" required
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Start Date</label>
+            <input type="date" [(ngModel)]="modalEditProjectData.start_date"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">End Date</label>
+            <input type="date" [(ngModel)]="modalEditProjectData.end_date"
+              style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+          </div>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+          <select [(ngModel)]="modalEditProjectData.status"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+            <option value="on-track">On Track</option>
+            <option value="at-risk">At Risk</option>
+            <option value="off-track">Off Track</option>
+            <option value="on-hold">On Hold</option>
+            <option value="completed">Completed</option>
+            <option value="maintenance">Maintenance</option>
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+          <input type="text" [(ngModel)]="modalEditProjectData.allocated_time" placeholder="HH:MM:SS"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+        </div>
+      </div>
+    </div>
+    <div class="task-modal-footer">
+      <button (click)="saveProject()" class="btn-expertflow btn-primary">💾 Save Changes</button>
+      <button (click)="closeEditProjectModal()" class="btn-expertflow">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Details Modal -->
+<div *ngIf="showTaskDetailsModal && selectedTaskForDetails" class="task-modal-overlay" (click)="closeTaskDetailsModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
+    <div class="task-modal-header">
+      <h3>Task Details</h3>
+      <button (click)="closeTaskDetailsModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Task ID:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.id }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Title:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.title }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.description || 'Not provided' }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedTaskForDetails.status || 'pending') }}</span>
+        </div>
+        <div *ngIf="selectedTaskForDetails.due_date">
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Due Date:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDate(selectedTaskForDetails.due_date) }}</span>
+        </div>
+        <div *ngIf="selectedTaskForDetails.allocated_time">
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.allocated_time }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-modal-footer">
+      <button (click)="closeTaskDetailsModal()" class="btn-expertflow">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div *ngIf="showEditTaskModal && selectedTaskForEdit" class="task-modal-overlay" (click)="closeEditTaskModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+    <div class="task-modal-header">
+      <h3>Edit Task: {{ selectedTaskForEdit.title }}</h3>
+      <button (click)="closeEditTaskModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Task Title *</label>
+          <input type="text" [(ngModel)]="modalEditTaskData.title" placeholder="Task Title" required
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description</label>
+          <textarea [(ngModel)]="modalEditTaskData.description" placeholder="Task Description"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+          <select [(ngModel)]="modalEditTaskData.status"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Due Date</label>
+          <input type="date" [(ngModel)]="modalEditTaskData.due_date"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+          <input type="text" [(ngModel)]="modalEditTaskData.allocated_time" placeholder="HH:MM:SS"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+        </div>
+      </div>
+    </div>
+    <div class="task-modal-footer">
+      <button (click)="saveTask()" class="btn-expertflow btn-primary">💾 Save Changes</button>
+      <button (click)="closeEditTaskModal()" class="btn-expertflow">Cancel</button>
+    </div>
+  </div>
+</div>
+
