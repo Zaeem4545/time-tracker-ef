@@ -1131,4 +1131,141 @@ export class AdminDashboardPageComponent implements OnInit {
     if (value === null || value === undefined || value === '') return '';
     return String(value);
   }
+
+  formatAllocatedTime(allocatedTime: any): string {
+    if (!allocatedTime) return '';
+    
+    // If it's already in HH:MM:SS format, return as is
+    if (typeof allocatedTime === 'string' && allocatedTime.includes(':')) {
+      return allocatedTime;
+    }
+    
+    // If it's a number (decimal hours), convert to HH:MM:SS
+    if (typeof allocatedTime === 'number') {
+      const totalSeconds = Math.round(allocatedTime * 3600);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    return allocatedTime ? String(allocatedTime) : '';
+  }
+
+  formatDateForDisplay(date: any): string {
+    if (!date) return '-';
+    
+    // Extract date part if it's a datetime string
+    let dateStr = date;
+    if (typeof date === 'string') {
+      if (date.includes('T')) {
+        dateStr = date.split('T')[0];
+      } else if (date.includes(' ')) {
+        dateStr = date.split(' ')[0];
+      }
+    }
+    
+    // Parse the date
+    const d = new Date(dateStr + 'T00:00:00'); // Add time to avoid timezone issues
+    if (isNaN(d.getTime())) return dateStr; // Return original if invalid
+    
+    // Format as "MMM DD, YYYY" (e.g., "Jan 15, 2024")
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+    
+    return `${month} ${day}, ${year}`;
+  }
+
+  timeToSeconds(timeStr: string): number {
+    if (!timeStr || typeof timeStr !== 'string') return 0;
+    const parts = timeStr.split(':');
+    if (parts.length === 3) {
+      const hours = parseInt(parts[0]) || 0;
+      const minutes = parseInt(parts[1]) || 0;
+      const seconds = parseInt(parts[2]) || 0;
+      return hours * 3600 + minutes * 60 + seconds;
+    } else if (parts.length === 2) {
+      const hours = parseInt(parts[0]) || 0;
+      const minutes = parseInt(parts[1]) || 0;
+      return hours * 3600 + minutes * 60;
+    }
+    return 0;
+  }
+
+  secondsToTime(totalSeconds: number): string {
+    if (!totalSeconds || totalSeconds < 0) return '00:00:00';
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+
+  getRemainingAllocatedTime(project: any): string {
+    if (!project || !project.allocated_time) return '';
+    
+    const projectSeconds = this.timeToSeconds(project.allocated_time);
+    if (projectSeconds === 0) return '';
+    
+    // Get all tasks for this project - we need to load them
+    // For now, return empty or calculate if we have tasks
+    return '';
+  }
+
+  getAttachmentFileName(attachmentPath: string): string {
+    if (!attachmentPath) return '';
+    const parts = attachmentPath.split('/');
+    return parts[parts.length - 1] || attachmentPath;
+  }
+
+  getProjectCustomFields(project: any): any {
+    if (!project) return null;
+    
+    // Standard fields that should not be shown as custom fields
+    const standardFields = ['id', 'name', 'description', 'status', 'start_date', 'end_date', 
+                           'allocated_time', 'attachment', 'manager_id', 'head_manager_id', 
+                           'customer_id', 'created_at', 'updated_at', 'archived', 'created_by'];
+    
+    const customFields: any = {};
+    for (const key in project) {
+      if (project.hasOwnProperty(key) && !standardFields.includes(key) && project[key] !== null && project[key] !== undefined && project[key] !== '') {
+        customFields[key] = project[key];
+      }
+    }
+    
+    return Object.keys(customFields).length > 0 ? customFields : null;
+  }
+
+  formatCustomFieldKey(key: any): string {
+    if (!key) return '';
+    return String(key).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  getTaskCustomFields(task: any): any {
+    if (!task) return null;
+    
+    // Standard fields that should not be shown as custom fields
+    const standardFields = ['id', 'title', 'description', 'status', 'due_date', 'allocated_time',
+                           'assigned_to', 'assigned_by', 'project_id', 'created_at', 'updated_at'];
+    
+    const customFields: any = {};
+    for (const key in task) {
+      if (task.hasOwnProperty(key) && !standardFields.includes(key) && task[key] !== null && task[key] !== undefined && task[key] !== '') {
+        customFields[key] = task[key];
+      }
+    }
+    
+    return Object.keys(customFields).length > 0 ? customFields : null;
+  }
+
+  getAssignedUserName(userId: any, task: any): string {
+    if (!userId) return 'Not assigned';
+    // Try to get from users list if available
+    // For now, return the ID or email if available
+    if (task && task.assigned_to_email) {
+      return task.assigned_to_email;
+    }
+    return `User ${userId}`;
+  }
 }

@@ -183,19 +183,23 @@
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
           <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedProjectForDetails.status || 'on-track') }}</span>
         </div>
-        <div *ngIf="selectedProjectForDetails.start_date">
+        <div>
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start Date:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatDate(selectedProjectForDetails.start_date) }}</span>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.start_date) || 'Not set' }}</span>
         </div>
-        <div *ngIf="selectedProjectForDetails.end_date">
+        <div>
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End Date:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatDate(selectedProjectForDetails.end_date) }}</span>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.end_date) || 'Not set' }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedProjectForDetails.allocated_time) || 'Not provided' }}</span>
         </div>
         <div *ngIf="selectedProjectForDetails.allocated_time">
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.allocated_time }}</span>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Remaining Allocated Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getRemainingAllocatedTime(selectedProjectForDetails) || formatAllocatedTime(selectedProjectForDetails.allocated_time) }}</span>
         </div>
-          <div>
+        <div>
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
           <div *ngIf="selectedProjectForDetails.attachment && selectedProjectForDetails.attachment.trim() !== ''; else noAttachment">
             <a [href]="selectedProjectForDetails.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0;">
@@ -208,6 +212,12 @@
             <span style="color: #999; font-size: 0.875rem; font-style: italic;">No attachment</span>
           </ng-template>
         </div>
+        <ng-container *ngIf="getProjectCustomFields(selectedProjectForDetails)">
+          <div *ngFor="let customField of getProjectCustomFields(selectedProjectForDetails) | keyvalue">
+            <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+            <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
+          </div>
+        </ng-container>
       </div>
 
       <!-- Comments Section -->
@@ -335,14 +345,28 @@
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
           <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedTaskForDetails.status || 'pending') }}</span>
         </div>
-        <div *ngIf="selectedTaskForDetails.due_date">
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned To:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getAssignedUserName(selectedTaskForDetails.assigned_to, selectedTaskForDetails) || 'Not assigned' }}</span>
+        </div>
+        <div>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned By:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getUserNameFromEmail(selectedTaskForDetails.assigned_by) || 'Not assigned' }}</span>
+        </div>
+        <div>
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Due Date:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatDate(selectedTaskForDetails.due_date) }}</span>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedTaskForDetails.due_date) || 'Not set' }}</span>
         </div>
-        <div *ngIf="selectedTaskForDetails.allocated_time">
+        <div>
           <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.allocated_time }}</span>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedTaskForDetails.allocated_time) || 'Not provided' }}</span>
         </div>
+        <ng-container *ngIf="getTaskCustomFields(selectedTaskForDetails)">
+          <div *ngFor="let customField of getTaskCustomFields(selectedTaskForDetails) | keyvalue">
+            <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+            <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
+          </div>
+        </ng-container>
       </div>
 
       <!-- Comments Section -->
