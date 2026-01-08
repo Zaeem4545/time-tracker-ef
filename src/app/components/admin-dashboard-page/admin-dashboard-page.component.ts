@@ -1270,4 +1270,98 @@ export class AdminDashboardPageComponent implements OnInit {
     }
     return `User ${userId}`;
   }
+
+  loadUsers(): void {
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        this.users = users || [];
+      },
+      error: (err) => {
+        console.error('Error loading users:', err);
+        this.users = [];
+      }
+    });
+  }
+
+  getAssignedByName(assignedBy: any): string {
+    if (!assignedBy) return 'Unknown';
+    
+    // If it's an email, try to find user by email
+    if (typeof assignedBy === 'string' && assignedBy.includes('@')) {
+      const user = this.users.find(u => u.email === assignedBy);
+      return user ? (user.name || assignedBy.split('@')[0]) : assignedBy.split('@')[0];
+    }
+    
+    // If it's a user ID, try to find user by ID
+    if (typeof assignedBy === 'number') {
+      const user = this.users.find(u => u.id === assignedBy);
+      return user ? (user.name || user.email || `User ${assignedBy}`) : `User ${assignedBy}`;
+    }
+    
+    return String(assignedBy);
+  }
+
+  getTaskTypeLabel(task: any): string {
+    // Check if created by current user
+    const isCreatedByCurrentUser = task.created_by === this.currentAdminEmail || 
+                                   task.created_by === this.currentAdminId ||
+                                   task.created_by_id === this.currentAdminId;
+    
+    if (isCreatedByCurrentUser) {
+      return 'Created by me';
+    } else if (task.assigned_by) {
+      // Get the name of the user who assigned it
+      const assignedByName = this.getAssignedByName(task.assigned_by);
+      return `Assigned by ${assignedByName}`;
+    }
+    return 'Not Assigned';
+  }
+
+  getTaskTypeClass(task: any): string {
+    const isCreatedByCurrentUser = task.created_by === this.currentAdminEmail || 
+                                   task.created_by === this.currentAdminId ||
+                                   task.created_by_id === this.currentAdminId;
+    
+    if (isCreatedByCurrentUser) {
+      return 'task-type-created';
+    } else if (task.assigned_by) {
+      return 'task-type-assigned';
+    }
+    return 'task-type-not-assigned';
+  }
+
+  getProjectTypeLabel(project: any): string {
+    // Check if created by current user
+    const isCreatedByCurrentUser = project.created_by === this.currentAdminEmail || 
+                                   project.created_by === this.currentAdminId ||
+                                   project.created_by_id === this.currentAdminId;
+    
+    if (isCreatedByCurrentUser) {
+      return 'Created by me';
+    } else if (project.manager_id && project.manager_id !== this.currentAdminId) {
+      // Get manager name
+      const manager = this.users.find(u => u.id === project.manager_id);
+      const managerName = manager ? (manager.name || manager.email || `User ${project.manager_id}`) : `User ${project.manager_id}`;
+      return `Assigned by ${managerName}`;
+    } else if (project.head_manager_id && project.head_manager_id !== this.currentAdminId) {
+      // Get head manager name
+      const headManager = this.users.find(u => u.id === project.head_manager_id);
+      const headManagerName = headManager ? (headManager.name || headManager.email || `User ${project.head_manager_id}`) : `User ${project.head_manager_id}`;
+      return `Assigned by ${headManagerName}`;
+    }
+    return 'Not Assigned';
+  }
+
+  getProjectTypeClass(project: any): string {
+    const isCreatedByCurrentUser = project.created_by === this.currentAdminEmail || 
+                                   project.created_by === this.currentAdminId ||
+                                   project.created_by_id === this.currentAdminId;
+    
+    if (isCreatedByCurrentUser) {
+      return 'task-type-created';
+    } else if (project.manager_id || project.head_manager_id) {
+      return 'task-type-assigned';
+    }
+    return 'task-type-not-assigned';
+  }
 }

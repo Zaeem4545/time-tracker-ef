@@ -13,7 +13,6 @@ import { AuthService } from '../../services/auth.service';
 export class HeadManagerDashboardComponent implements OnInit {
   private currentUserId: number | null = null;
   private currentUserEmail: string | null = null;
-  users: any[] = [];
 
   // Dashboard properties
   totalProjects: number = 0;
@@ -106,6 +105,18 @@ export class HeadManagerDashboardComponent implements OnInit {
       error: (err) => {
         console.error('Error loading users:', err);
         this.managers = [];
+      }
+    });
+  }
+
+  loadUsers(): void {
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        this.users = users || [];
+      },
+      error: (err) => {
+        console.error('Error loading users:', err);
+        this.users = [];
       }
     });
   }
@@ -703,7 +714,6 @@ export class HeadManagerDashboardComponent implements OnInit {
   // Dropdown options
   customers: any[] = [];
   managers: any[] = [];
-  users: any[] = [];
   
   // Comments
   projectComments: any[] = [];
