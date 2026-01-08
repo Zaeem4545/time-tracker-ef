@@ -32,7 +32,7 @@ async function initDatabase() {
 }
 
 async function createAdminUser() {
-  const email = 'zaeemahmad1212@gmail.com';
+  const email = 'zaeem.ahmad@expertflow.com';
   const password = '123';
   const adminRole = 'Admin';
   
