@@ -101,7 +101,23 @@
   <div class="section-container">
     <h3 class="section-title">Tasks</h3>
     <div class="tasks-grid">
-      <div class="task-card" *ngFor="let task of recentTasks">
+      <div class="task-card" *ngFor="let task of recentTasks" style="position: relative;">
+        <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10;">
+          <button 
+            (click)="viewTaskDetails(task)" 
+            class="btn-circle-icon" 
+            title="View Details"
+            style="width: 28px; height: 28px; border-radius: 50%; background: #1976d2; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            👁️
+          </button>
+          <button 
+            (click)="editTask(task)" 
+            class="btn-circle-icon" 
+            title="Edit"
+            style="width: 28px; height: 28px; border-radius: 50%; background: #ff9800; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            ✏️
+          </button>
+        </div>
         <div class="card-header">
           <h4 class="card-title">{{ task.title }}</h4>
           <span class="card-date" *ngIf="task.due_date">{{ formatDate(task.due_date) }}</span>
@@ -111,43 +127,25 @@
           {{ getTaskTypeLabel(task) }}
         </div>
         <div class="card-footer">
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <div class="status-dropdown-container">
-              <button 
-                class="status-change-btn" 
-                (click)="toggleTaskStatusDropdown(task.id, $event)"
-                [class.active]="taskStatusDropdownOpen === task.id">
-                <span class="status-badge" [ngClass]="getStatusClass(task.status)">
-                  {{ getStatusDisplayName(task.status || 'pending') }}
-                </span>
-                <span class="dropdown-arrow">▼</span>
-              </button>
-              <div class="status-dropdown-menu" *ngIf="taskStatusDropdownOpen === task.id">
-                <div 
-                  class="status-option" 
-                  *ngFor="let option of taskStatusOptions"
-                  (click)="updateTaskStatus(task, option.value)"
-                  [class.active]="(task.status || 'pending') === option.value || (task.status === 'in_progress' && option.value === 'in-progress')">
-                  <span class="status-dot" [ngClass]="'status-' + option.value"></span>
-                  <span>{{ option.label }}</span>
-                </div>
+          <div class="status-dropdown-container">
+            <button 
+              class="status-change-btn" 
+              (click)="toggleTaskStatusDropdown(task.id, $event)"
+              [class.active]="taskStatusDropdownOpen === task.id">
+              <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+                {{ getStatusDisplayName(task.status || 'pending') }}
+              </span>
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="status-dropdown-menu" *ngIf="taskStatusDropdownOpen === task.id">
+              <div 
+                class="status-option" 
+                *ngFor="let option of taskStatusOptions"
+                (click)="updateTaskStatus(task, option.value)"
+                [class.active]="(task.status || 'pending') === option.value || (task.status === 'in_progress' && option.value === 'in-progress')">
+                <span class="status-dot" [ngClass]="'status-' + option.value"></span>
+                <span>{{ option.label }}</span>
               </div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button 
-                (click)="viewTaskDetails(task)" 
-                class="btn-small-icon" 
-                title="View Details"
-                style="background: #1976d2; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
-                👁️
-              </button>
-              <button 
-                (click)="editTask(task)" 
-                class="btn-small-icon" 
-                title="Edit"
-                style="background: #ff9800; color: white; border: none; border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
-                ✏️
-              </button>
             </div>
           </div>
         </div>
