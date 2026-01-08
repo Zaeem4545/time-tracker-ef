@@ -41,7 +41,7 @@ export class RoleGuard implements CanActivate {
       } else if (roleLower === 'head manager') {
         this.router.navigate(['/head-manager']);
       } else if (roleLower === 'admin') {
-        this.router.navigate(['/admin']);
+        this.router.navigate(['/admin-dashboard']);
       } else {
         this.router.navigate(['/login']);
       }

@@ -172,8 +172,14 @@ async function createProject(req, res) {
       }
     }
 
+    // If manager_id is not provided and user is admin, set manager_id to creator
+    let managerIdToSet = req.body.manager_id || null;
+    if (!managerIdToSet && creatorRole === "admin") {
+      managerIdToSet = req.user.id; // Auto-assign admin as manager if not specified
+    }
+
     const [result] = await db.query(
-  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   [
     name.trim(),
     description.trim(),
@@ -185,6 +191,7 @@ async function createProject(req, res) {
     normalizedCustomerId,
     projectRegion,
     allocated_time || null,
+    managerIdToSet,
   ]
 );
 

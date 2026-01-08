@@ -110,7 +110,7 @@ export class DashboardComponent implements OnInit {
 
     // Redirect admin to admin dashboard if they access /dashboard
     if (this.isAdmin) {
-      this.router.navigate(['/admin']);
+      this.router.navigate(['/admin-dashboard']);
       return;
     }
 

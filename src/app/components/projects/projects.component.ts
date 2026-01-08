@@ -1676,16 +1676,40 @@ export class ProjectsComponent implements OnInit {
     this.adminService.updateProject(projectId, updateData).subscribe({
       next: () => {
         this.toastService.show('Project updated successfully', 'success');
-        this.closeEditProjectModal();
+        // Don't close modal - keep it open for further edits
+        // Clear any previous errors
+        this.modalEditProjectError = '';
         // Reload customers first, then projects to ensure customer names are available
         this.adminService.getCustomers().subscribe({
           next: (customers) => {
             this.customers = customers || [];
             this.loadProjects();
+            // Update the project data in the modal to reflect changes
+            // Use setTimeout to ensure projects are loaded first
+            setTimeout(() => {
+              if (this.selectedProjectForEdit) {
+                const updatedProject = this.projects.find(p => p.id === projectId);
+                if (updatedProject && typeof updatedProject === 'object') {
+                  this.selectedProjectForEdit = Object.assign({}, updatedProject);
+                  // Reload comments to ensure they're up to date
+                  this.loadProjectComments(projectId);
+                }
+              }
+            }, 500);
           },
           error: (err) => {
             console.error('Error loading customers:', err);
             this.loadProjects(); // Still load projects even if customers fail
+            // Update the project data in the modal to reflect changes
+            setTimeout(() => {
+              if (this.selectedProjectForEdit) {
+                const updatedProject = this.projects.find(p => p.id === projectId);
+                if (updatedProject && typeof updatedProject === 'object') {
+                  this.selectedProjectForEdit = Object.assign({}, updatedProject);
+                  this.loadProjectComments(projectId);
+                }
+              }
+            }, 500);
           }
         });
       },
@@ -2969,12 +2993,39 @@ export class ProjectsComponent implements OnInit {
     this.adminService.updateTask(taskId, updateData).subscribe({
       next: () => {
         this.toastService.show('Task updated successfully', 'success');
-        this.closeEditTaskModal();
+        // Don't close modal - keep it open for further edits
         // Reload tasks to ensure consistency
         if (this.isEmployee) {
           this.loadEmployeeTasks();
+          // Update the task data in the modal to reflect changes
+          setTimeout(() => {
+            if (this.selectedTaskForEdit) {
+              // Find updated task from employee tasks
+              let updatedTask: any = null;
+              Object.keys(this.projectTasks).forEach(pid => {
+                const task = this.projectTasks[parseInt(pid)].find(t => t.id === taskId);
+                if (task) {
+                  updatedTask = task;
+                }
+              });
+              if (updatedTask && typeof updatedTask === 'object') {
+                this.selectedTaskForEdit = Object.assign({}, updatedTask);
+                this.loadTaskComments(taskId);
+              }
+            }
+          }, 500);
         } else {
           this.loadTasks(projectId);
+          // Update the task data in the modal to reflect changes
+          setTimeout(() => {
+            if (this.selectedTaskForEdit) {
+              const updatedTask = this.projectTasks[projectId]?.find(t => t.id === taskId);
+              if (updatedTask && typeof updatedTask === 'object') {
+                this.selectedTaskForEdit = Object.assign({}, updatedTask);
+                this.loadTaskComments(taskId);
+              }
+            }
+          }, 500);
         }
       },
       error: (err) => {

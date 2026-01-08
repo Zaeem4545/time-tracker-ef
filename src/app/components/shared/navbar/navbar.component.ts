@@ -16,7 +16,7 @@ export class NavbarComponent {
     
     // Navigate to role-specific dashboard
     if (roleLower === 'admin') {
-      this.router.navigate(['/admin']);
+      this.router.navigate(['/admin-dashboard']);
     } else if (roleLower === 'head manager') {
       this.router.navigate(['/head-manager']);
     } else if (roleLower === 'manager') {

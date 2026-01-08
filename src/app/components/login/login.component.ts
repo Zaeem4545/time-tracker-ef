@@ -42,7 +42,7 @@ export class LoginComponent implements AfterViewInit {
         let targetRoute = '/dashboard';
         
         if (role === 'admin') {
-          targetRoute = '/admin';
+          targetRoute = '/admin-dashboard';
         } else if (role === 'head manager') {
           targetRoute = '/dashboard';
         } else if (role === 'manager') {
@@ -120,7 +120,7 @@ export class LoginComponent implements AfterViewInit {
           let targetRoute = '/dashboard';
           
           if (role === 'admin') {
-            targetRoute = '/admin';
+            targetRoute = '/admin-dashboard';
           } else if (role === 'head manager') {
             targetRoute = '/dashboard';
           } else if (role === 'manager') {
