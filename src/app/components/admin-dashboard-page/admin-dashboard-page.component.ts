@@ -557,6 +557,7 @@ export class AdminDashboardPageComponent implements OnInit {
 
   // Modal methods
   openProjectsModal(): void {
+    console.log('Opening projects modal, total projects:', this.allProjects.length);
     this.showProjectsModal = true;
   }
 
@@ -565,6 +566,7 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   openTasksModal(): void {
+    console.log('Opening tasks modal, total tasks:', this.allTasks.length);
     this.showTasksModal = true;
   }
 
