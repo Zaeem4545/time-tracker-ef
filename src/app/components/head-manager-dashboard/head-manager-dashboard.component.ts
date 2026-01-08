@@ -21,6 +21,16 @@ export class HeadManagerDashboardComponent implements OnInit {
   recentProjects: any[] = [];
   recentTasks: any[] = [];
   
+  // All data for modals
+  allProjects: any[] = [];
+  allTasks: any[] = [];
+  allTimeEntries: any[] = [];
+  
+  // Modal states
+  showProjectsModal: boolean = false;
+  showTasksModal: boolean = false;
+  showTimeEntriesModal: boolean = false;
+  
   // Track projects and tasks worked on by head manager
   workedOnProjectIds: Set<number> = new Set();
   workedOnTaskNames: Set<string> = new Set();
@@ -429,6 +439,12 @@ export class HeadManagerDashboardComponent implements OnInit {
           }
         });
         
+        // Store all time entries for modal, sorted by date (newest first)
+        this.allTimeEntries = headManagerEntries.sort((a: any, b: any) => {
+          const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+          const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+          return dateB - dateA; // Newest first
+        });
         this.totalTimeEntries = headManagerEntries.length;
       },
       error: (err) => {
@@ -1283,6 +1299,15 @@ export class HeadManagerDashboardComponent implements OnInit {
       this.projectStatusDropdownOpen = null;
       this.taskStatusDropdownOpen = null;
     }
+  }
+
+  openTimeEntriesModal(): void {
+    console.log('Opening time entries modal, total entries:', this.allTimeEntries.length);
+    this.showTimeEntriesModal = true;
+  }
+
+  closeTimeEntriesModal(): void {
+    this.showTimeEntriesModal = false;
   }
 }
 

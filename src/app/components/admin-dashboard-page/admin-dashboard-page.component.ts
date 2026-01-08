@@ -22,10 +22,12 @@ export class AdminDashboardPageComponent implements OnInit {
   // All data for modals
   allProjects: any[] = [];
   allTasks: any[] = [];
+  allTimeEntries: any[] = [];
   
   // Modal states
   showProjectsModal: boolean = false;
   showTasksModal: boolean = false;
+  showTimeEntriesModal: boolean = false;
 
   // Current admin info
   currentAdminId: number | null = null;
@@ -321,16 +323,19 @@ export class AdminDashboardPageComponent implements OnInit {
         let loadedProjects = 0;
 
         if (adminProjectIds.length === 0) {
-          // No admin projects, so only show entries where admin logged time
+              // No admin projects, so only show entries where admin logged time
           this.adminService.getTimeEntries().subscribe({
             next: (entries) => {
               const adminTimeEntries = entries.filter((entry: any) => {
                 return entry.user_id === this.currentAdminId;
               });
+              // Store all time entries for modal
+              this.allTimeEntries = adminTimeEntries;
               this.totalTimeEntries = adminTimeEntries.length || 0;
             },
             error: (err) => {
               console.error('Error loading time entries:', err);
+              this.allTimeEntries = [];
               this.totalTimeEntries = 0;
             }
           });
@@ -387,6 +392,12 @@ export class AdminDashboardPageComponent implements OnInit {
                       return false;
                     });
                     
+                    // Store all time entries for modal, sorted by date (newest first)
+                    this.allTimeEntries = adminTimeEntries.sort((a: any, b: any) => {
+                      const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+                      const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+                      return dateB - dateA; // Newest first
+                    });
                     this.totalTimeEntries = adminTimeEntries.length || 0;
                   },
                   error: (err) => {
@@ -417,6 +428,12 @@ export class AdminDashboardPageComponent implements OnInit {
                       }
                       return false;
                     });
+                    // Store all time entries for modal, sorted by date (newest first)
+                    this.allTimeEntries = adminTimeEntries.sort((a: any, b: any) => {
+                      const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+                      const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+                      return dateB - dateA; // Newest first
+                    });
                     this.totalTimeEntries = adminTimeEntries.length || 0;
                   },
                   error: (err) => {
@@ -437,10 +454,17 @@ export class AdminDashboardPageComponent implements OnInit {
             const adminTimeEntries = entries.filter((entry: any) => {
               return entry.user_id === this.currentAdminId;
             });
+            // Store all time entries for modal, sorted by date (newest first)
+            this.allTimeEntries = adminTimeEntries.sort((a: any, b: any) => {
+              const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+              const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+              return dateB - dateA; // Newest first
+            });
             this.totalTimeEntries = adminTimeEntries.length || 0;
           },
           error: (err2) => {
             console.error('Error loading time entries:', err2);
+            this.allTimeEntries = [];
             this.totalTimeEntries = 0;
           }
         });
@@ -574,7 +598,12 @@ export class AdminDashboardPageComponent implements OnInit {
     this.showTasksModal = false;
   }
 
-  goToTimesheet(): void {
-    this.router.navigate(['/timesheet']);
+  openTimeEntriesModal(): void {
+    console.log('Opening time entries modal, total entries:', this.allTimeEntries.length);
+    this.showTimeEntriesModal = true;
+  }
+
+  closeTimeEntriesModal(): void {
+    this.showTimeEntriesModal = false;
   }
 }

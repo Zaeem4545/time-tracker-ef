@@ -23,10 +23,12 @@ export class DashboardComponent implements OnInit {
   // All data for modals
   allProjects: any[] = [];
   allTasks: any[] = [];
+  allTimeEntries: any[] = [];
   
   // List modals
   showProjectsModal: boolean = false;
   showTasksModal: boolean = false;
+  showTimeEntriesModal: boolean = false;
   
   // Modal states
   showProjectDetailsModal: boolean = false;
@@ -395,10 +397,17 @@ export class DashboardComponent implements OnInit {
   loadTimeEntries(): void {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
+        // Store all time entries for modal, sorted by date (newest first)
+        this.allTimeEntries = entries.sort((a: any, b: any) => {
+          const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+          const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+          return dateB - dateA; // Newest first
+        });
         this.totalTimeEntries = entries.length;
       },
       error: (err) => {
         console.error('Error loading time entries:', err);
+        this.allTimeEntries = [];
       }
     });
   }
@@ -1314,7 +1323,12 @@ export class DashboardComponent implements OnInit {
     this.showTasksModal = false;
   }
 
-  goToTimesheet(): void {
-    this.router.navigate(['/timesheet']);
+  openTimeEntriesModal(): void {
+    console.log('Opening time entries modal, total entries:', this.allTimeEntries.length);
+    this.showTimeEntriesModal = true;
+  }
+
+  closeTimeEntriesModal(): void {
+    this.showTimeEntriesModal = false;
   }
 }

@@ -25,6 +25,16 @@ export class EmployeeDashboardComponent implements OnInit {
   recentProjects: any[] = [];
   recentTasks: any[] = [];
   
+  // All data for modals
+  allProjects: any[] = [];
+  allTasks: any[] = [];
+  allTimeEntries: any[] = [];
+  
+  // Modal states
+  showProjectsModal: boolean = false;
+  showTasksModal: boolean = false;
+  showTimeEntriesModal: boolean = false;
+  
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
   taskStatusDropdownOpen: number | null = null;
@@ -175,6 +185,12 @@ export class EmployeeDashboardComponent implements OnInit {
   loadTimeEntries(): void {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
+        // Store all time entries for modal, sorted by date (newest first)
+        this.allTimeEntries = entries.sort((a: any, b: any) => {
+          const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+          const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+          return dateB - dateA; // Newest first
+        });
         this.totalTimeEntries = entries.length;
         
         // Load all projects (not filtered by worked projects)
@@ -182,6 +198,7 @@ export class EmployeeDashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading time entries:', err);
+        this.allTimeEntries = [];
         this.totalTimeEntries = 0;
         // Still try to load projects even if time entries fail
         this.loadProjects();
@@ -448,6 +465,15 @@ export class EmployeeDashboardComponent implements OnInit {
       this.projectStatusDropdownOpen = null;
       this.taskStatusDropdownOpen = null;
     }
+  }
+
+  openTimeEntriesModal(): void {
+    console.log('Opening time entries modal, total entries:', this.allTimeEntries.length);
+    this.showTimeEntriesModal = true;
+  }
+
+  closeTimeEntriesModal(): void {
+    this.showTimeEntriesModal = false;
   }
 }
 

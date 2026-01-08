@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <div class="metric-card">
+    <div class="metric-card" (click)="openTimeEntriesModal()" style="cursor: pointer;">
       <div class="metric-icon time-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="12" cy="12" r="10" stroke="#9c27b0" stroke-width="2"/>
@@ -467,6 +467,43 @@
     <div class="task-modal-footer">
       <button (click)="saveTask()" class="btn-expertflow btn-primary">💾 Save Changes</button>
       <button (click)="closeEditTaskModal()" class="btn-expertflow">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Time Entries Modal -->
+<div *ngIf="showTimeEntriesModal" class="task-modal-overlay" (click)="closeTimeEntriesModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 1000px; max-height: 80vh; overflow-y: auto;">
+    <div class="task-modal-header">
+      <h3>All Time Entries ({{ allTimeEntries.length }})</h3>
+      <button (click)="closeTimeEntriesModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div *ngIf="allTimeEntries.length === 0" class="empty-state" style="padding: 2rem; text-align: center; color: #999;">
+        <p>No time entries found</p>
+      </div>
+      <div *ngIf="allTimeEntries.length > 0" class="time-entries-list">
+        <table class="expertflow-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Project</th>
+              <th>Task</th>
+              <th>Time Spent</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of allTimeEntries">
+              <td>{{ formatDate(entry.date || entry.entry_date || entry.start_time) }}</td>
+              <td>{{ entry.project_name || 'N/A' }}</td>
+              <td>{{ entry.task_name || 'N/A' }}</td>
+              <td>{{ entry.time_spent || '00:00:00' }}</td>
+              <td>{{ entry.description || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
