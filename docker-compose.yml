@@ -5,16 +5,16 @@ services:
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-rootpassword}"
-      MYSQL_DATABASE: "${MYSQL_DATABASE:-time_tracking}"
-      MYSQL_USER: "${MYSQL_USER:-tt_user}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-tt_password}"
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: time_tracking
+      MYSQL_USER: tt_user
+      MYSQL_PASSWORD: tt_password
     ports:
-      - "${DB_PORT:-3306}:3306" # Added so SQL Workbench works
+      - "3306:3306" # Added so SQL Workbench works
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-tt_user}", "-p${MYSQL_PASSWORD:-tt_password}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "tt_user", "-ptt_password"] # Added user/pass to fix those "Access Denied" logs
       interval: 10s
       timeout: 5s
       retries: 3
@@ -36,9 +36,6 @@ services:
       - backend
     environment:
       NODE_ENV: production
-      # API Base URL - can be overridden via environment variables
-      API_BASE: "${API_BASE:-/api}"
-      PRODUCTION: "${PRODUCTION:-true}"
     networks:
       - app-network
 
@@ -53,28 +50,12 @@ services:
     depends_on:
       - db
     environment:
-      # Node Environment
-      NODE_ENV: "${NODE_ENV:-production}"
-      PORT: "${PORT:-3000}"
-      
-      # Database Configuration (with defaults)
-      DB_HOST: "${DB_HOST:-db}"
-      DB_USER: "${DB_USER:-tt_user}"
-      DB_PASSWORD: "${DB_PASSWORD:-tt_password}"
-      DB_NAME: "${DB_NAME:-time_tracking}"
-      DB_PORT: "${DB_PORT:-3306}"
-      
-      # CORS Configuration
-      FRONTEND_URL: "${FRONTEND_URL:-}"
-      CORS_ORIGINS: "${CORS_ORIGINS:-}"
-      
-      # JWT Configuration (if using)
-      JWT_SECRET: "${JWT_SECRET:-your-secret-key-change-in-production}"
-      JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-24h}"
-      
-      # Upload Configuration
-      MAX_FILE_SIZE: "${MAX_FILE_SIZE:-10mb}"
-      UPLOAD_DIR: "${UPLOAD_DIR:-./uploads}"
+      NODE_ENV: production
+      DB_HOST: db
+      DB_USER: tt_user
+      DB_PASSWORD: tt_password
+      DB_NAME: time_tracking
+      DB_PORT: 3306
     networks:
       - app-network
 

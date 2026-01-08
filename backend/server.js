@@ -11,39 +11,23 @@ const customersRoutes = require('./routes/customers.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const historyRoutes = require('./routes/history.routes');
 const db = require('./config/db'); // your database config
-const config = require('./config/config'); // Configuration
+require('dotenv').config();
+
+
 
 const app = express();
-const PORT = config.port;
+const PORT = process.env.PORT || 3000;
 
-// ✅ Middleware - CORS configuration from config
-console.log('🔹 CORS Configuration:');
-console.log('  Allowed Origins:', config.cors.allowedOrigins);
-console.log('  FQDN:', config.cors.fqdn || 'Not set');
-
-// CORS with origin validation function
+// ✅ Middleware
 app.use(cors({ 
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) {
-      return callback(null, true);
-    }
-    
-    // Check exact matches
-    if (config.cors.allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    // Check regex patterns
-    for (const pattern of config.cors.regexPatterns) {
-      if (pattern.test(origin)) {
-        return callback(null, true);
-      }
-    }
-    
-    // Reject origin
-    callback(new Error('Not allowed by CORS'));
-  }
+  origin: [
+    'http://localhost:4200',           // Local dev
+    'http://localhost',                // Direct localhost
+    'http://host.docker.internal:4200', // Docker dev
+    'http://host.docker.internal',      // Docker direct
+    /localhost/,                       // Any localhost variant
+    /host\.docker\.internal/           // Any host.docker.internal variant
+  ]
 })); // allow Angular frontend
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded files
@@ -97,8 +81,6 @@ db.getConnection()
   });
 
 // 🔹 Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📦 Environment: ${config.nodeEnv}`);
-  console.log(`🌐 CORS enabled for: ${config.cors.fqdn || 'localhost'}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
