@@ -10,10 +10,8 @@ const config = {
   // Database Configuration
   database: {
     host: process.env.DB_HOST || 'localhost',
-    // Default to 'tt_user' for Docker, 'root' for local development
-    user: process.env.DB_USER || (process.env.NODE_ENV === 'production' ? 'tt_user' : 'root'),
-    // Default to 'tt_password' for Docker, empty for local development
-    password: process.env.DB_PASSWORD || (process.env.NODE_ENV === 'production' ? 'tt_password' : ''),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'time_tracking',
     port: parseInt(process.env.DB_PORT || '3306', 10)
   },

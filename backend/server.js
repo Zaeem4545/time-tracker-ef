@@ -41,11 +41,8 @@ app.use(cors({
       }
     }
     
-    // Reject origin with helpful error message
-    console.warn(`⚠️  CORS blocked origin: ${origin}`);
-    console.warn(`   Allowed origins: ${config.cors.allowedOrigins.join(', ')}`);
-    console.warn(`   Set FRONTEND_URL or CORS_ORIGINS environment variable to allow this origin`);
-    callback(new Error(`Not allowed by CORS. Origin: ${origin}. Set FRONTEND_URL or CORS_ORIGINS environment variable.`));
+    // Reject origin
+    callback(new Error('Not allowed by CORS'));
   }
 })); // allow Angular frontend
 app.use(express.json());
