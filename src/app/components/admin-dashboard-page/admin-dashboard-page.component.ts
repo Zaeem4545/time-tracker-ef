@@ -64,6 +64,7 @@ export class AdminDashboardPageComponent implements OnInit {
   // Current admin info
   currentAdminId: number | null = null;
   currentAdminEmail: string | null = null;
+  users: any[] = [];
 
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
@@ -95,6 +96,7 @@ export class AdminDashboardPageComponent implements OnInit {
   ngOnInit(): void {
     this.currentAdminId = this.authService.getUserId();
     this.currentAdminEmail = this.authService.getEmail();
+    this.loadUsers();
     this.loadDashboardData();
   }
 

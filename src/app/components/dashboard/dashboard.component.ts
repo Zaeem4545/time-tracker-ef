@@ -75,6 +75,7 @@ export class DashboardComponent implements OnInit {
 
   currentUserRole: string | null = null;
   currentUserId: number | null = null;
+  currentUserEmail: string | null = null;
   isManager: boolean = false;
   isAdmin: boolean = false;
   isHeadManager: boolean = false;
@@ -111,6 +112,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.currentUserRole = this.authService.getRole();
     this.currentUserId = this.authService.getUserId();
+    this.currentUserEmail = this.authService.getEmail();
     const roleLower = this.currentUserRole?.toLowerCase();
     
     this.isManager = roleLower === 'manager';
@@ -507,49 +509,32 @@ export class DashboardComponent implements OnInit {
   }
 
   getTaskTypeLabel(task: any): string {
-    if (!task.taskType) {
-      // Determine task type if not set
-      const managerEmail = this.authService.getEmail();
-      const isCreatedByManager = task.created_by === managerEmail || task.created_by === this.currentUserId;
-      const isAssignedByManager = task.assigned_by === managerEmail;
-      
-      if (isCreatedByManager) {
-        return 'Created by me';
-      } else if (isAssignedByManager) {
-        return 'Assigned by me';
-      } else if (task.assigned_by && task.assigned_by !== managerEmail) {
-        return 'Assigned to me';
-      }
-      return 'Created by me';
-    }
+    // Check if created by current user
+    const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
+                                   task.created_by === this.currentUserId ||
+                                   task.created_by_id === this.currentUserId;
     
-    switch (task.taskType) {
-      case 'created_by_manager':
-        return 'Created by me';
-      case 'assigned_by_manager':
-        return 'Assigned by me';
-      case 'assigned_by_others':
-        return 'Assigned to me';
-      default:
-        return 'Created by me';
+    if (isCreatedByCurrentUser) {
+      return 'Created by me';
+    } else if (task.assigned_by) {
+      // Get the name of the user who assigned it
+      const assignedByName = this.getAssignedByName(task.assigned_by);
+      return `Assigned by ${assignedByName}`;
     }
+    return 'Not Assigned';
   }
 
   getTaskTypeClass(task: any): string {
-    if (!task.taskType) {
-      return 'task-type-created';
-    }
+    const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
+                                   task.created_by === this.currentUserId ||
+                                   task.created_by_id === this.currentUserId;
     
-    switch (task.taskType) {
-      case 'created_by_manager':
-        return 'task-type-created';
-      case 'assigned_by_manager':
-        return 'task-type-assigned';
-      case 'assigned_by_others':
-        return 'task-type-received';
-      default:
-        return 'task-type-created';
+    if (isCreatedByCurrentUser) {
+      return 'task-type-created';
+    } else if (task.assigned_by) {
+      return 'task-type-assigned';
     }
+    return 'task-type-not-assigned';
   }
 
   toggleProjectStatusDropdown(projectId: number, event: Event): void {

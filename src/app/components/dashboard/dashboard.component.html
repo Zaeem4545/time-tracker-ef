@@ -68,6 +68,9 @@
           <span class="card-date" *ngIf="project.due_date">{{ formatDate(project.due_date) }}</span>
         </div>
         <p class="card-description">{{ project.description || 'No description' }}</p>
+        <div class="task-type-badge" [ngClass]="getProjectTypeClass(project)" style="margin-bottom: 0.75rem;">
+          {{ getProjectTypeLabel(project) }}
+        </div>
         <div class="card-footer">
           <div class="status-dropdown-container">
             <button 
@@ -762,8 +765,11 @@
             <h4 class="card-title">{{ task.title }}</h4>
             <span class="card-date" *ngIf="task.due_date">{{ formatDate(task.due_date) }}</span>
           </div>
-          <p class="card-description">{{ task.description || 'No description' }}</p>
-          <div class="card-footer">
+        <p class="card-description">{{ task.description || 'No description' }}</p>
+        <div class="task-type-badge" [ngClass]="getTaskTypeClass(task)" style="margin-bottom: 0.75rem;">
+          {{ getTaskTypeLabel(task) }}
+        </div>
+        <div class="card-footer">
             <span class="status-badge" [ngClass]="getStatusClass(task.status)">
               {{ getStatusDisplayName(task.status || 'pending') }}
             </span>
