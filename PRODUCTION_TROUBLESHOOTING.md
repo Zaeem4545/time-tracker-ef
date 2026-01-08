@@ -10,75 +10,38 @@
 ```
 
 **Cause:**
-The backend is trying to connect with incorrect database credentials. In Docker, the default database user is `tt_user`, not `root`. This usually happens when:
-- `DB_USER=root` is set in a `.env` file or system environment
-- The environment variables don't match between backend and database services
+The backend is trying to connect with incorrect database credentials. In Docker, the default database user is `tt_user`, not `root`.
 
 **Solution:**
 
-1. **First, check what environment variables are actually set in the backend container:**
-   ```bash
-   docker exec time-tracking-backend env | grep DB_
-   ```
-   
-   You should see:
-   ```
-   DB_HOST=db
-   DB_USER=tt_user
-   DB_PASSWORD=tt_password
-   DB_NAME=time_tracking
-   ```
+Ensure your environment variables match the database configuration:
 
-2. **If you see `DB_USER=root`, you need to fix it. Check for `.env` files:**
-   ```bash
-   # In your project root
-   cat .env | grep DB_USER
-   
-   # Or check if there's a .env file
-   ls -la .env
-   ```
-
-3. **Remove or fix the `DB_USER=root` setting. Options:**
-   
-   **Option A: Remove DB_USER from .env (let docker-compose use default):**
-   ```bash
-   # Edit .env file and remove or comment out:
-   # DB_USER=root
-   ```
-   
-   **Option B: Set DB_USER to match docker-compose default:**
+1. **Check your `.env` file or docker-compose.yml:**
    ```env
-   # In .env file or docker-compose.yml environment section
+   # Database credentials must match
    DB_USER=tt_user
    DB_PASSWORD=tt_password
    MYSQL_USER=tt_user
    MYSQL_PASSWORD=tt_password
    ```
 
-4. **Verify database credentials match:**
-   ```bash
-   # Check what user the database was created with
-   docker exec time-tracking-db mysql -u root -p${MYSQL_ROOT_PASSWORD:-rootpassword} -e "SELECT User, Host FROM mysql.user WHERE User='tt_user' OR User='root';"
+2. **Or if using custom credentials, ensure they match:**
+   ```env
+   DB_USER=your_custom_user
+   DB_PASSWORD=your_custom_password
+   MYSQL_USER=your_custom_user
+   MYSQL_PASSWORD=your_custom_password
    ```
 
-5. **Restart the services:**
+3. **Verify the backend service has the correct environment variables:**
+   ```bash
+   docker exec time-tracking-backend env | grep DB_
+   ```
+
+4. **Restart the services:**
    ```bash
    docker-compose down
    docker-compose up -d --build
-   ```
-
-6. **Check the backend logs to verify the correct user is being used:**
-   ```bash
-   docker logs time-tracking-backend | grep "Database configuration"
-   ```
-   
-   You should see:
-   ```
-   🔹 Database configuration:
-     Host: db
-     Database: time_tracking
-     User: tt_user
-     ...
    ```
 
 ### 2. CORS Error: Not Allowed by CORS

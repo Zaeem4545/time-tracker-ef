@@ -8,25 +8,15 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   
   // Database Configuration
-  database: (() => {
-    // Detect if we're in Docker by checking if DB_HOST is 'db' (Docker service name)
-    const isDocker = (process.env.DB_HOST === 'db' || process.env.NODE_ENV === 'production');
-    
-    return {
-      host: process.env.DB_HOST || 'localhost',
-      // Default to 'tt_user' for Docker, 'root' for local development
-      // Only use default if DB_USER is not explicitly set (undefined or empty string means use default)
-      user: process.env.DB_USER !== undefined && process.env.DB_USER !== '' 
-        ? process.env.DB_USER 
-        : (isDocker ? 'tt_user' : 'root'),
-      // Default to 'tt_password' for Docker, empty for local development
-      password: process.env.DB_PASSWORD !== undefined && process.env.DB_PASSWORD !== ''
-        ? process.env.DB_PASSWORD
-        : (isDocker ? 'tt_password' : ''),
-      database: process.env.DB_NAME || 'time_tracking',
-      port: parseInt(process.env.DB_PORT || '3306', 10)
-    };
-  })(),
+  database: {
+    host: process.env.DB_HOST || 'localhost',
+    // Default to 'tt_user' for Docker, 'root' for local development
+    user: process.env.DB_USER || (process.env.NODE_ENV === 'production' ? 'tt_user' : 'root'),
+    // Default to 'tt_password' for Docker, empty for local development
+    password: process.env.DB_PASSWORD || (process.env.NODE_ENV === 'production' ? 'tt_password' : ''),
+    database: process.env.DB_NAME || 'time_tracking',
+    port: parseInt(process.env.DB_PORT || '3306', 10)
+  },
   
   // CORS Configuration
   cors: {
