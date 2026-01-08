@@ -45,7 +45,23 @@
   <div class="section-container">
     <h3 class="section-title">Projects</h3>
     <div class="projects-grid">
-      <div class="project-card" *ngFor="let project of recentProjects">
+      <div class="project-card" *ngFor="let project of recentProjects" style="position: relative;">
+        <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10;">
+          <button 
+            (click)="viewProjectDetails(project)" 
+            class="btn-circle-icon" 
+            title="View Details"
+            style="width: 28px; height: 28px; border-radius: 50%; background: #1976d2; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            👁️
+          </button>
+          <button 
+            (click)="editProject(project)" 
+            class="btn-circle-icon" 
+            title="Edit"
+            style="width: 28px; height: 28px; border-radius: 50%; background: #ff9800; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            ✏️
+          </button>
+        </div>
         <div class="card-header">
           <h4 class="card-title">{{ project.name }}</h4>
           <span class="card-date" *ngIf="project.due_date">{{ formatDate(project.due_date) }}</span>

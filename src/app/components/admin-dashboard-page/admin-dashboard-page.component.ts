@@ -659,4 +659,44 @@ export class AdminDashboardPageComponent implements OnInit {
   closeTimeEntriesModal(): void {
     this.showTimeEntriesModal = false;
   }
+
+  viewProjectDetails(project: any): void {
+    // Navigate to projects page and open project details
+    this.router.navigate(['/projects'], { 
+      queryParams: { viewProject: project.id },
+      state: { project: project }
+    });
+  }
+
+  editProject(project: any): void {
+    // Navigate to projects page and open edit modal
+    this.router.navigate(['/projects'], { 
+      queryParams: { editProject: project.id },
+      state: { project: project }
+    });
+  }
+
+  viewTaskDetails(task: any): void {
+    // Navigate to projects page and open task details
+    if (task.project_id) {
+      this.router.navigate(['/projects'], { 
+        queryParams: { viewTask: task.id, projectId: task.project_id },
+        state: { task: task }
+      });
+    } else {
+      this.router.navigate(['/projects']);
+    }
+  }
+
+  editTask(task: any): void {
+    // Navigate to projects page and open task edit
+    if (task.project_id) {
+      this.router.navigate(['/projects'], { 
+        queryParams: { editTask: task.id, projectId: task.project_id },
+        state: { task: task }
+      });
+    } else {
+      this.router.navigate(['/projects']);
+    }
+  }
 }
