@@ -447,6 +447,34 @@
   flex-shrink: 0;
 }
 
+.task-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  text-transform: capitalize;
+}
+
+.task-type-created {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #81c784;
+}
+
+.task-type-assigned {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #90caf9;
+}
+
+.task-type-not-assigned {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
 // Task Modal Styles
 .task-modal-overlay {
   position: fixed;

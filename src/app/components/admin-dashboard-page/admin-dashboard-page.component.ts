@@ -1331,10 +1331,12 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   getProjectTypeLabel(project: any): string {
-    // Check if created by current user
+    // Check if created by current user (check created_by field or if user is the manager/head manager)
     const isCreatedByCurrentUser = project.created_by === this.currentAdminEmail || 
                                    project.created_by === this.currentAdminId ||
-                                   project.created_by_id === this.currentAdminId;
+                                   project.created_by_id === this.currentAdminId ||
+                                   project.manager_id === this.currentAdminId ||
+                                   project.head_manager_id === this.currentAdminId;
     
     if (isCreatedByCurrentUser) {
       return 'Created by me';
@@ -1355,7 +1357,9 @@ export class AdminDashboardPageComponent implements OnInit {
   getProjectTypeClass(project: any): string {
     const isCreatedByCurrentUser = project.created_by === this.currentAdminEmail || 
                                    project.created_by === this.currentAdminId ||
-                                   project.created_by_id === this.currentAdminId;
+                                   project.created_by_id === this.currentAdminId ||
+                                   project.manager_id === this.currentAdminId ||
+                                   project.head_manager_id === this.currentAdminId;
     
     if (isCreatedByCurrentUser) {
       return 'task-type-created';

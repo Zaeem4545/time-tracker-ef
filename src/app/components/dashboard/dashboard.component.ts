@@ -1494,10 +1494,12 @@ export class DashboardComponent implements OnInit {
   }
 
   getProjectTypeLabel(project: any): string {
-    // Check if created by current user
+    // Check if created by current user (check created_by field or if user is the manager/head manager)
     const isCreatedByCurrentUser = project.created_by === this.currentUserEmail || 
                                    project.created_by === this.currentUserId ||
-                                   project.created_by_id === this.currentUserId;
+                                   project.created_by_id === this.currentUserId ||
+                                   project.manager_id === this.currentUserId ||
+                                   project.head_manager_id === this.currentUserId;
     
     if (isCreatedByCurrentUser) {
       return 'Created by me';
@@ -1518,7 +1520,9 @@ export class DashboardComponent implements OnInit {
   getProjectTypeClass(project: any): string {
     const isCreatedByCurrentUser = project.created_by === this.currentUserEmail || 
                                    project.created_by === this.currentUserId ||
-                                   project.created_by_id === this.currentUserId;
+                                   project.created_by_id === this.currentUserId ||
+                                   project.manager_id === this.currentUserId ||
+                                   project.head_manager_id === this.currentUserId;
     
     if (isCreatedByCurrentUser) {
       return 'task-type-created';
