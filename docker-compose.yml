@@ -13,10 +13,6 @@ services:
       - "${DB_PORT:-3306}:3306" # Added so SQL Workbench works
     volumes:
       - db_data:/var/lib/mysql
-      # Mount initialization scripts - run only on first startup
-      # MySQL runs all .sh, .sql, and .sql.gz files in /docker-entrypoint-initdb.d/
-      - ./backend/database/init-user.sql:/docker-entrypoint-initdb.d/01-init-user.sql:ro
-      - ./backend/database/init-user.sh:/docker-entrypoint-initdb.d/02-init-user.sh:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-tt_user}", "-p${MYSQL_PASSWORD:-tt_password}"]
       interval: 10s
