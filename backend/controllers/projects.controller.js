@@ -307,7 +307,7 @@ async function createProject(req, res) {
 // Update project - UPDATE
 async function updateProject(req, res) {
   try {
-    const { id } = req.params;
+  const { id } = req.params;
     const {
       name,
       description,
@@ -933,7 +933,7 @@ async function deleteProject(req, res) {
 // Assign manager to project - Head Manager only
 async function assignManagerToProject(req, res) {
   try {
-    const { id } = req.params;
+  const { id } = req.params;
     const { manager_id } = req.body;
 
     // Check if user is head manager or admin
