@@ -16,6 +16,8 @@ export class EmployeeDashboardComponent implements OnInit {
   currentUserId: number | null = null;
   currentUserEmail: string | null = null;
   users: any[] = [];
+  showWelcomeMessage = false;
+  welcomeUserName = '';
   
   // Summary metrics
   totalProjects: number = 0;
@@ -99,10 +101,57 @@ export class EmployeeDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUserId = this.authService.getUserId();
+    this.currentUserEmail = this.authService.getEmail();
+    // Load users first to get name for welcome message
+    this.loadUsers();
     // Load time entries first to determine which projects employee has worked on
     this.loadTimeEntries();
     // Check for notifications when dashboard loads
     this.checkForNewNotifications();
+  }
+
+  checkAndShowWelcome(): void {
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+    if (justLoggedIn === 'true') {
+      this.loadUserAndShowWelcome();
+      sessionStorage.removeItem('justLoggedIn');
+    }
+  }
+
+  loadUserAndShowWelcome(): void {
+    if (this.users.length > 0) {
+      const currentUser = this.users.find(u => u.id === this.currentUserId || u.email === this.currentUserEmail);
+      if (currentUser && currentUser.name) {
+        this.welcomeUserName = currentUser.name;
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+        return;
+      }
+    }
+
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
+        if (currentUser && currentUser.name) {
+          this.welcomeUserName = currentUser.name;
+        } else {
+          this.welcomeUserName = this.currentUserEmail?.split('@')[0] || 'User';
+        }
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      },
+      error: () => {
+        this.welcomeUserName = this.currentUserEmail?.split('@')[0] || 'User';
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      }
+    });
   }
 
   // Check for new notifications
@@ -1001,10 +1050,14 @@ export class EmployeeDashboardComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
+        // Check welcome message after users are loaded
+        this.checkAndShowWelcome();
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.users = [];
+        // Still check welcome message even if users load fails
+        this.checkAndShowWelcome();
       }
     });
   }

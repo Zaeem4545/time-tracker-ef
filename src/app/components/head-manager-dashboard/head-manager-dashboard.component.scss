@@ -458,3 +458,79 @@
   border: 1px solid #ddd;
 }
 
+// Welcome Banner
+.welcome-banner {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: slideDown 0.5s ease-out;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.05) 10px,
+    rgba(255, 255, 255, 0.05) 20px
+  );
+  pointer-events: none;
+}
+
+.welcome-content {
+  position: relative;
+  z-index: 1;
+  text-align: left;
+}
+
+.welcome-back {
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  margin: 0 0 0.5rem 0;
+  opacity: 0.95;
+}
+
+.welcome-name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .welcome-banner {
+    padding: 1.5rem;
+  }
+  
+  .welcome-name {
+    font-size: 2rem;
+  }
+  
+  .welcome-back {
+    font-size: 0.9rem;
+  }
+}
+

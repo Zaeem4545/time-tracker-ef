@@ -76,6 +76,8 @@ export class DashboardComponent implements OnInit {
   currentUserRole: string | null = null;
   currentUserId: number | null = null;
   currentUserEmail: string | null = null;
+  showWelcomeMessage = false;
+  welcomeUserName = '';
   isManager: boolean = false;
   isAdmin: boolean = false;
   isHeadManager: boolean = false;
@@ -134,6 +136,57 @@ export class DashboardComponent implements OnInit {
     // Load customers and managers for edit modals
     this.loadCustomers();
     this.loadManagers();
+  }
+
+  checkAndShowWelcome(): void {
+    // Check if this is a fresh login (not a page refresh)
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+    if (justLoggedIn === 'true') {
+      // Get user name from users list or API
+      this.loadUserAndShowWelcome();
+      // Remove the flag so it doesn't show again on refresh
+      sessionStorage.removeItem('justLoggedIn');
+    }
+  }
+
+  loadUserAndShowWelcome(): void {
+    // Try to get name from users list first
+    if (this.users.length > 0) {
+      const currentUser = this.users.find(u => u.id === this.currentUserId || u.email === this.currentUserEmail);
+      if (currentUser && currentUser.name) {
+        this.welcomeUserName = currentUser.name;
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+        return;
+      }
+    }
+
+    // If not found, try to get from API
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
+        if (currentUser && currentUser.name) {
+          this.welcomeUserName = currentUser.name;
+        } else {
+          // Fallback to email username
+          this.welcomeUserName = this.currentUserEmail?.split('@')[0] || 'User';
+        }
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      },
+      error: () => {
+        // Fallback to email username
+        this.welcomeUserName = this.currentUserEmail?.split('@')[0] || 'User';
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      }
+    });
   }
   
   loadCustomers(): void {

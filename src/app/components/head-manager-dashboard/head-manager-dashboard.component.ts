@@ -14,6 +14,8 @@ export class HeadManagerDashboardComponent implements OnInit {
   private currentUserId: number | null = null;
   private currentUserEmail: string | null = null;
   users: any[] = [];
+  showWelcomeMessage = false;
+  welcomeUserName = '';
 
   // Dashboard properties
   totalProjects: number = 0;
@@ -82,6 +84,50 @@ export class HeadManagerDashboardComponent implements OnInit {
     this.loadManagers();
     this.loadUsers();
   }
+
+  checkAndShowWelcome(): void {
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+    if (justLoggedIn === 'true') {
+      this.loadUserAndShowWelcome();
+      sessionStorage.removeItem('justLoggedIn');
+    }
+  }
+
+  loadUserAndShowWelcome(): void {
+    if (this.users.length > 0) {
+      const currentUser = this.users.find(u => u.id === this.currentUserId || u.email === this.currentUserEmail);
+      if (currentUser && currentUser.name) {
+        this.welcomeUserName = currentUser.name;
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+        return;
+      }
+    }
+
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
+        if (currentUser && currentUser.name) {
+          this.welcomeUserName = currentUser.name;
+        } else {
+          this.welcomeUserName = this.currentUserEmail?.split('@')[0] || 'User';
+        }
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      },
+      error: () => {
+        this.welcomeUserName = this.currentUserEmail?.split('@')[0] || 'User';
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      }
+    });
+  }
   
   loadCustomers(): void {
     this.adminService.getCustomers().subscribe({
@@ -114,10 +160,14 @@ export class HeadManagerDashboardComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
+        // Check welcome message after users are loaded
+        this.checkAndShowWelcome();
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.users = [];
+        // Still check welcome message even if users load fails
+        this.checkAndShowWelcome();
       }
     });
   }

@@ -65,6 +65,8 @@ export class AdminDashboardPageComponent implements OnInit {
   currentAdminId: number | null = null;
   currentAdminEmail: string | null = null;
   users: any[] = [];
+  showWelcomeMessage = false;
+  welcomeUserName = '';
 
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
@@ -98,6 +100,50 @@ export class AdminDashboardPageComponent implements OnInit {
     this.currentAdminEmail = this.authService.getEmail();
     this.loadUsers();
     this.loadDashboardData();
+  }
+
+  checkAndShowWelcome(): void {
+    const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+    if (justLoggedIn === 'true') {
+      this.loadUserAndShowWelcome();
+      sessionStorage.removeItem('justLoggedIn');
+    }
+  }
+
+  loadUserAndShowWelcome(): void {
+    if (this.users.length > 0) {
+      const currentUser = this.users.find(u => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
+      if (currentUser && currentUser.name) {
+        this.welcomeUserName = currentUser.name;
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+        return;
+      }
+    }
+
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        const currentUser = users.find((u: any) => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
+        if (currentUser && currentUser.name) {
+          this.welcomeUserName = currentUser.name;
+        } else {
+          this.welcomeUserName = this.currentAdminEmail?.split('@')[0] || 'User';
+        }
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      },
+      error: () => {
+        this.welcomeUserName = this.currentAdminEmail?.split('@')[0] || 'User';
+        this.showWelcomeMessage = true;
+        setTimeout(() => {
+          this.showWelcomeMessage = false;
+        }, 3000);
+      }
+    });
   }
 
   loadDashboardData(): void {
@@ -1275,10 +1321,14 @@ export class AdminDashboardPageComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
+        // Check welcome message after users are loaded
+        this.checkAndShowWelcome();
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.users = [];
+        // Still check welcome message even if users load fails
+        this.checkAndShowWelcome();
       }
     });
   }

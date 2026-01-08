@@ -1,5 +1,13 @@
 <!-- Manager Dashboard Content -->
 <div class="dashboard-container" *ngIf="isManager">
+  <!-- Welcome Message -->
+  <div *ngIf="showWelcomeMessage" class="welcome-banner">
+    <div class="welcome-content">
+      <p class="welcome-back">Welcome back!</p>
+      <h2 class="welcome-name">{{ welcomeUserName }}</h2>
+    </div>
+  </div>
+
   <!-- Summary Metrics Section -->
   <div class="summary-metrics">
     <div class="metric-card" (click)="openProjectsModal()" style="cursor: pointer;">

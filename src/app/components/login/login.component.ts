@@ -15,8 +15,6 @@ export class LoginComponent implements AfterViewInit {
   email = '';
   password = '';
   rememberMe = false;
-  showWelcomeMessage = false;
-  welcomeName = '';
 
   constructor(
     private auth: AuthService,
@@ -38,9 +36,30 @@ export class LoginComponent implements AfterViewInit {
       next: res => {
         console.log('Login response', res);
         
-        // Get user name from response or token
-        const userName = res.name || res.user?.name || this.getUserNameFromToken() || this.email.split('@')[0];
-        this.showWelcomeAndRedirect(userName, res.role);
+        // Redirect users to their role-specific dashboard
+        const role = res.role?.toLowerCase();
+        let targetRoute = '/dashboard';
+        
+        if (role === 'admin') {
+          targetRoute = '/admin-dashboard';
+        } else if (role === 'head manager') {
+          targetRoute = '/dashboard';
+        } else if (role === 'manager') {
+          targetRoute = '/dashboard';
+        } else if (role === 'employee') {
+          targetRoute = '/employee';
+        }
+
+        // Set flag to show welcome message on dashboard
+        sessionStorage.setItem('justLoggedIn', 'true');
+        
+        // Navigate and check notifications after navigation
+        this.router.navigate([targetRoute]).then(() => {
+          // Check for unread notifications after navigation completes
+          setTimeout(() => {
+            this.checkForNewNotifications();
+          }, 1000); // 1 second delay to ensure page is loaded
+        });
       },
       error: err => {
         console.error('Login failed', err);
@@ -95,13 +114,33 @@ export class LoginComponent implements AfterViewInit {
     const googleIdToken = response.credential;
 
     this.auth.loginWithGoogle(googleIdToken).subscribe({
-      next: (res) => {
+      next: () => {
         // Ensure navigation happens inside Angular zone
         this.ngZone.run(() => {
-          // Get user name from response or token
-          const userName = res?.name || res?.user?.name || this.getUserNameFromToken() || this.auth.getEmail()?.split('@')[0] || 'User';
+          // Get user role and redirect to role-specific dashboard
           const role = this.auth.getRole()?.toLowerCase();
-          this.showWelcomeAndRedirect(userName, role || '');
+          let targetRoute = '/dashboard';
+          
+          if (role === 'admin') {
+            targetRoute = '/admin-dashboard';
+          } else if (role === 'head manager') {
+            targetRoute = '/dashboard';
+          } else if (role === 'manager') {
+            targetRoute = '/dashboard';
+          } else if (role === 'employee') {
+            targetRoute = '/employee';
+          }
+
+          // Set flag to show welcome message on dashboard
+          sessionStorage.setItem('justLoggedIn', 'true');
+          
+          // Navigate and check notifications after navigation
+          this.router.navigate([targetRoute]).then(() => {
+            // Check for unread notifications after navigation completes
+            setTimeout(() => {
+              this.checkForNewNotifications();
+            }, 1000); // 1 second delay to ensure page is loaded
+          });
         });
       },
       error: err => {
@@ -109,51 +148,6 @@ export class LoginComponent implements AfterViewInit {
         this.toastService.show(msg, 'error');
       }
     });
-  }
-
-  // Show welcome message and redirect
-  showWelcomeAndRedirect(userName: string, role: string): void {
-    this.welcomeName = userName;
-    this.showWelcomeMessage = true;
-
-    // Determine target route
-    const roleLower = role?.toLowerCase();
-    let targetRoute = '/dashboard';
-    
-    if (roleLower === 'admin') {
-      targetRoute = '/admin-dashboard';
-    } else if (roleLower === 'head manager') {
-      targetRoute = '/dashboard';
-    } else if (roleLower === 'manager') {
-      targetRoute = '/dashboard';
-    } else if (roleLower === 'employee') {
-      targetRoute = '/employee';
-    }
-
-    // Hide welcome message after 2 seconds and navigate
-    setTimeout(() => {
-      this.showWelcomeMessage = false;
-      this.router.navigate([targetRoute]).then(() => {
-        // Check for unread notifications after navigation completes
-        setTimeout(() => {
-          this.checkForNewNotifications();
-        }, 1000); // 1 second delay to ensure page is loaded
-      });
-    }, 2000);
-  }
-
-  // Get user name from JWT token
-  getUserNameFromToken(): string | null {
-    const token = this.auth.getToken();
-    if (!token) return null;
-    
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.name || null;
-    } catch (error) {
-      console.error('Error decoding token:', error);
-      return null;
-    }
   }
 
   // Check for new notifications after login
