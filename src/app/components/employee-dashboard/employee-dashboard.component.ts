@@ -213,6 +213,59 @@ export class EmployeeDashboardComponent implements OnInit {
     return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
   }
 
+  calculateTimeSpent(entry: any): string {
+    // Calculate time from start_time and end_time (most accurate)
+    if (entry.start_time && entry.end_time) {
+      const start = new Date(entry.start_time);
+      const end = new Date(entry.end_time);
+      
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+        const diffMs = end.getTime() - start.getTime();
+        const seconds = Math.floor(diffMs / 1000);
+        return this.formatTimeFromSeconds(seconds);
+      }
+    }
+    
+    // Fallback: use total_time (stored in minutes) if available
+    if (entry.total_time !== null && entry.total_time !== undefined) {
+      const seconds = entry.total_time * 60;
+      return this.formatTimeFromSeconds(seconds);
+    }
+    
+    // Fallback: use time_spent if it's already in HH:MM:SS format
+    if (entry.time_spent && entry.time_spent !== '00:00:00') {
+      return entry.time_spent;
+    }
+    
+    return '00:00:00';
+  }
+
+  formatTimeFromSeconds(seconds: number): string {
+    if (!seconds || seconds === 0) return '00:00:00';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+
+  getWorkedBy(entry: any): string {
+    if (entry.employee_name) {
+      return entry.employee_name;
+    }
+    if (entry.employee_email) {
+      return entry.employee_email;
+    }
+    if (entry.user_name) {
+      return entry.user_name;
+    }
+    if (entry.user_email) {
+      return entry.user_email;
+    }
+    return 'Unknown';
+  }
+
   getStatusClass(status: string): string {
     const statusLower = status?.toLowerCase() || '';
     if (statusLower.includes('on-track') || statusLower.includes('in_progress') || statusLower.includes('in-progress')) {

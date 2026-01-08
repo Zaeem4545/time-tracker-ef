@@ -142,3 +142,42 @@
     </div>
   </div>
 </div>
+
+<!-- Time Entries Modal -->
+<div *ngIf="showTimeEntriesModal" class="task-modal-overlay" (click)="closeTimeEntriesModal()">
+  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 1000px; max-height: 80vh; overflow-y: auto;">
+    <div class="task-modal-header">
+      <h3>All Time Entries ({{ allTimeEntries.length }})</h3>
+      <button (click)="closeTimeEntriesModal()" class="task-modal-close">×</button>
+    </div>
+    <div class="task-modal-body">
+      <div *ngIf="allTimeEntries.length === 0" class="empty-state" style="padding: 2rem; text-align: center; color: #999;">
+        <p>No time entries found</p>
+      </div>
+      <div *ngIf="allTimeEntries.length > 0" class="time-entries-list">
+        <table class="expertflow-table" style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Project</th>
+              <th>Task</th>
+              <th>Time Spent</th>
+              <th>Worked By</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of allTimeEntries">
+              <td>{{ formatDate(entry.date || entry.entry_date || entry.start_time) }}</td>
+              <td>{{ entry.project_name || 'N/A' }}</td>
+              <td>{{ entry.task_name || 'N/A' }}</td>
+              <td>{{ calculateTimeSpent(entry) }}</td>
+              <td>{{ getWorkedBy(entry) }}</td>
+              <td>{{ entry.description || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

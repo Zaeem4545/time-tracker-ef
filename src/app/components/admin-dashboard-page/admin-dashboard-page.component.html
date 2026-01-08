@@ -199,6 +199,7 @@
               <th>Project</th>
               <th>Task</th>
               <th>Time Spent</th>
+              <th>Worked By</th>
               <th>Description</th>
             </tr>
           </thead>
@@ -207,7 +208,8 @@
               <td>{{ formatDate(entry.date || entry.entry_date || entry.start_time) }}</td>
               <td>{{ entry.project_name || 'N/A' }}</td>
               <td>{{ entry.task_name || 'N/A' }}</td>
-              <td>{{ entry.time_spent || '00:00:00' }}</td>
+              <td>{{ calculateTimeSpent(entry) }}</td>
+              <td>{{ getWorkedBy(entry) }}</td>
               <td>{{ entry.description || '-' }}</td>
             </tr>
           </tbody>
