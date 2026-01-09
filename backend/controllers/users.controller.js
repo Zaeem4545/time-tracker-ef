@@ -4,24 +4,9 @@ const bcrypt = require('bcryptjs');
 // Get all users
 async function getAllUsers(req, res) {
     try {
-        const role = req.user.role.toLowerCase(); // normalize to lowercase
-        let users;
-
-        if (role === 'admin') {
-            // Admin sees all users
-            const [rows] = await db.query('SELECT * FROM users');
-            users = rows;
-        } else if (role === 'head manager') {
-            // Head manager sees all managers and all employees (for task assignment)
-            const [rows] = await db.query("SELECT * FROM users WHERE LOWER(role) IN ('manager', 'employee') ORDER BY role, email");
-            users = rows;
-        } else {
-            // Others see only themselves
-            const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.user.id]);
-            users = rows;
-        }
-
-        res.json(users);
+        // Return all users for all roles to show in assigned_to dropdown across all portals
+        const [rows] = await db.query('SELECT * FROM users ORDER BY role, email');
+        res.json(rows);
     } catch (error) {
         console.error('Error fetching users:', error);
         res.status(500).json({ success: false, message: 'Server error' });
