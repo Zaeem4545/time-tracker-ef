@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from './services/auth.service';
+import { SidebarComponent } from './components/shared/sidebar/sidebar.component';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -10,6 +11,7 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
+  @ViewChild('sidebar') sidebar!: SidebarComponent;
   title = 'time-tracking';
   private routerSubscription?: Subscription;
   private authSubscription?: Subscription;
@@ -80,5 +82,14 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
+  }
+
+  onSidebarToggle(): void {
+    // Use setTimeout to ensure ViewChild is initialized after *ngIf renders
+    setTimeout(() => {
+      if (this.sidebar) {
+        this.sidebar.toggleMobile();
+      }
+    }, 0);
   }
 }
