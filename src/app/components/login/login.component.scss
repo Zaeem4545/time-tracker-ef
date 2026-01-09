@@ -188,14 +188,56 @@
 .login-right {
   flex: 1;
   position: relative;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   padding: 3rem;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+
+.branding-background-default,
+.branding-background-hover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.branding-background-default {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 0;
+}
+
+.branding-background-hover {
+  opacity: 0;
+  transform: scale(1.1);
+  z-index: 0;
+}
+
+.login-right:hover {
+  .branding-background-default {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+  
+  .branding-background-hover {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .branding-overlay {
+    background: rgba(59, 130, 246, 0.4); // Blue overlay on hover
+    backdrop-filter: blur(1px);
+  }
 }
 
 .branding-overlay {
@@ -206,11 +248,13 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(2px);
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+  z-index: 1;
 }
 
 .branding-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: 100%;
   height: 100%;
   display: flex;
@@ -218,6 +262,11 @@
   align-items: center;
   justify-content: space-between;
   color: white;
+  transition: transform 0.4s ease;
+}
+
+.login-right:hover .branding-content {
+  transform: scale(1.02);
 }
 
 .logo-top,
@@ -283,6 +332,15 @@
     min-height: 30vh;
     max-height: 30vh;
     padding: 1.5rem;
+    
+    // On tablets, show hover image by default or on touch
+    .branding-background-default {
+      opacity: 0.7;
+    }
+    
+    .branding-background-hover {
+      opacity: 0.3;
+    }
   }
 
   .login-content {
@@ -330,6 +388,25 @@
     min-height: 25vh;
     max-height: 25vh;
     padding: 1rem;
+    
+    // On mobile, blend both images
+    .branding-background-default {
+      opacity: 0.6;
+    }
+    
+    .branding-background-hover {
+      opacity: 0.4;
+    }
+    
+    &:hover {
+      .branding-background-default {
+        opacity: 0.4;
+      }
+      
+      .branding-background-hover {
+        opacity: 0.6;
+      }
+    }
   }
 
   .login-content {
@@ -411,6 +488,26 @@
     min-height: 20vh;
     max-height: 20vh;
     padding: 0.75rem;
+    
+    // On small mobile, show blended images
+    .branding-background-default {
+      opacity: 0.5;
+    }
+    
+    .branding-background-hover {
+      opacity: 0.5;
+    }
+    
+    &:hover,
+    &:active {
+      .branding-background-default {
+        opacity: 0.3;
+      }
+      
+      .branding-background-hover {
+        opacity: 0.7;
+      }
+    }
   }
 
   .login-content {
