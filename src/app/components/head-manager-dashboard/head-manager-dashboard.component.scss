@@ -135,6 +135,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 0.75rem;
+  padding-right: 70px; // Reserve space for action buttons (2 buttons + gap)
 }
 
 .card-title {
@@ -563,6 +564,11 @@
   .project-card,
   .task-card {
     padding: 1rem;
+  }
+  
+  // Card header - adjust padding for mobile buttons
+  .card-header {
+    padding-right: 65px; // Slightly less padding on mobile
   }
   
   .action-buttons {
