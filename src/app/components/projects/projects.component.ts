@@ -1637,7 +1637,7 @@ export class ProjectsComponent implements OnInit {
     const managerId = this.selectedProjectForEdit.manager_id || null;
     
     // Normalize assigned_to: convert string to number, or null if empty/null/undefined
-    let assignedToValue = null;
+    let assignedToValue: number | null = null;
     if (data.assigned_to !== null && data.assigned_to !== undefined && data.assigned_to !== '') {
       if (typeof data.assigned_to === 'string') {
         const parsed = parseInt(data.assigned_to);
@@ -1846,7 +1846,7 @@ export class ProjectsComponent implements OnInit {
   
   private updateProjectWithDataInline(projectId: number, editData: any, customFields: any, customerId: number | null, finalStartDate: string | null, finalEndDate: string | null, attachment: string | null): void {
     // Normalize assigned_to: convert string to number, or null if empty/null/undefined
-    let assignedToValue = null;
+    let assignedToValue: number | null = null;
     if (editData.assigned_to !== null && editData.assigned_to !== undefined && editData.assigned_to !== '') {
       if (typeof editData.assigned_to === 'string') {
         const parsed = parseInt(editData.assigned_to);
