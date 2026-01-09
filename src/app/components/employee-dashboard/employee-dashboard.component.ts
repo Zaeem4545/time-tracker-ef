@@ -1064,6 +1064,18 @@ export class EmployeeDashboardComponent implements OnInit {
     });
   }
 
+  getAssignedByNameForProject(project: any): string {
+    // First check if project has created_by_name from backend
+    if (project && project.created_by_name) {
+      return project.created_by_name;
+    }
+    // Fallback to manager_name (the manager who assigned the project)
+    if (project && project.manager_name) {
+      return project.manager_name;
+    }
+    return '';
+  }
+
   getAssignedByName(assignedBy: any): string {
     if (!assignedBy) return 'Unknown';
     
