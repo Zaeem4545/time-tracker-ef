@@ -114,7 +114,7 @@ export class SidebarComponent implements OnInit {
     if (role === 'admin') {
       // Create Team and Team Details removed
     } else if (role === 'manager') {
-      this.menuItems.push({ label: 'Employee Details', route: '/employee-details', icon: '👥', active: false });
+      // Employee Details removed from team lead portal
     }
   }
 
