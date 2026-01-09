@@ -89,20 +89,14 @@ async function createTask(req, res) {
     
     // assigned_to is optional for all roles - no validation needed
     
-    // Normalize data
-    // For employees, assigned_by should always be blank/null
-    // For other roles, if assigned_by is not provided, use the current user's email
+    // Auto-set assigned_by to current user's name for all roles
+    // Get current user's name from database
+    const [userRows] = await db.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
+    const userName = userRows.length > 0 ? userRows[0].name : null;
+    const userEmail = userRows.length > 0 ? userRows[0].email : '';
+    const normalizedAssignedBy = userName; // Always use the creator's name
     const userRole = req.user.role?.toLowerCase();
     const userId = req.user.id;
-    let normalizedAssignedBy = null;
-    if (userRole !== 'employee') {
-      normalizedAssignedBy = assigned_by && assigned_by.trim() !== '' 
-        ? assigned_by.trim() 
-        : (req.user.email || null);
-    } else {
-      // Employees: always set assigned_by to null/blank
-      normalizedAssignedBy = null;
-    }
     
     // Parse assigned_to if provided, otherwise set to null
     let assignedToValue = null;
@@ -136,10 +130,7 @@ async function createTask(req, res) {
     const task = await Task.createTask(taskData);
     
     // Log task creation in history
-    const [userRows] = await db.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
-    const userName = userRows.length > 0 ? userRows[0].name : 'Unknown User';
-    const userEmail = userRows.length > 0 ? userRows[0].email : '';
-    await logTaskHistory(task.id, project_id, 'create', null, null, null, title.trim(), req.user.id, userName, userEmail);
+    await logTaskHistory(task.id, project_id, 'create', null, null, null, title.trim(), req.user.id, userName || 'Unknown User', userEmail);
     
     // Send notification to the assigned employee (only if assigned_to is provided)
     if (taskData.assigned_to) {
@@ -323,8 +314,9 @@ async function updateTask(req, res) {
     
     const statusChanged = normalizedPreviousStatus !== normalizedStatus;
     
-    // Normalize assigned_by - keep as string or null
-    const normalizedAssignedBy = (assigned_by && assigned_by.trim() !== '') ? assigned_by.trim() : null;
+    // Preserve assigned_by - don't allow changes, keep original creator
+    // assigned_by should always remain as the original task creator
+    const normalizedAssignedBy = currentTask.assigned_by; // Preserve original value
     
     await Task.updateTask(id, { title, description, status: normalizedStatus, assigned_to: newAssignedTo, assigned_by: normalizedAssignedBy, due_date: finalDueDate, archived, custom_fields, allocated_time });
     
@@ -339,7 +331,7 @@ async function updateTask(req, res) {
       description: { old: currentTask.description, new: description },
       status: { old: currentTask.status, new: normalizedStatus },
       assigned_to: { old: currentTask.assigned_to, new: newAssignedTo },
-      assigned_by: { old: currentTask.assigned_by, new: normalizedAssignedBy },
+      // assigned_by is not tracked for changes since it's preserved
       due_date: { old: currentTask.due_date, new: finalDueDate },
       allocated_time: { old: currentTask.allocated_time, new: allocated_time }
     };

@@ -540,9 +540,7 @@
                             <span *ngIf="editingTask === task.id && isEmployee">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
                           </td>
                           <td>
-                            <span *ngIf="editingTask !== task.id">{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
-                            <input *ngIf="editingTask === task.id && !isEmployee" type="text" [(ngModel)]="task.assigned_by" />
-                            <span *ngIf="editingTask === task.id && isEmployee">{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
+                            <span>{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
                           </td>
                           <td>
                             <span *ngIf="editingTask !== task.id">{{ formatDateForDisplay(task.due_date) }}</span>
@@ -788,9 +786,7 @@
                         <span *ngIf="editingTask === task.id && isEmployee">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
                       </td>
                       <td>
-                        <span *ngIf="editingTask !== task.id">{{ task.assigned_by || '-' }}</span>
-                        <input *ngIf="editingTask === task.id && !isEmployee" type="text" [(ngModel)]="task.assigned_by" />
-                        <span *ngIf="editingTask === task.id && isEmployee">{{ task.assigned_by || '-' }}</span>
+                        <span>{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
                       </td>
                       <td>
                         <span *ngIf="editingTask !== task.id">{{ formatDateForDisplay(task.due_date) }}</span>

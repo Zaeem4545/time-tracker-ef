@@ -100,9 +100,8 @@ export class ProjectsComponent implements OnInit {
       { value: 'completed', label: 'Completed' }
     ]},
     { id: 'assigned_to', name: 'assigned_to', label: 'Assign To', type: 'select', placeholder: 'Assign To (Optional)', required: false, order: 3, nonDeletable: true },
-    { id: 'assigned_by', name: 'assigned_by', label: 'Assigned By', type: 'text', placeholder: 'Assigned By (Optional)', required: false, order: 4, nonDeletable: true },
-    { id: 'due_date', name: 'due_date', label: 'Due Date', type: 'date', placeholder: 'Due Date (Optional)', required: false, order: 5, nonDeletable: true },
-    { id: 'allocated_time', name: 'allocated_time', label: 'Allocated Time', type: 'text', placeholder: 'HH:MM:SS', required: false, order: 6, nonDeletable: true }
+    { id: 'due_date', name: 'due_date', label: 'Due Date', type: 'date', placeholder: 'Due Date (Optional)', required: false, order: 4, nonDeletable: true },
+    { id: 'allocated_time', name: 'allocated_time', label: 'Allocated Time', type: 'text', placeholder: 'HH:MM:SS', required: false, order: 5, nonDeletable: true }
   ];
   editingTask: number | null = null;
   showEditTaskModal: boolean = false; // Show edit task modal with dynamic form
@@ -515,7 +514,7 @@ export class ProjectsComponent implements OnInit {
       // Initialize newTask for each project
       this.projects.forEach((p: any) => {
         if (!this.newTask[p.id]) {
-          this.newTask[p.id] = { title: '', description: '', status: 'pending', assigned_to: '', assigned_by: '', due_date: '' };
+          this.newTask[p.id] = { title: '', description: '', status: 'pending', assigned_to: '', due_date: '' };
         }
       });
       this.filteredProjects = this.projects; // Initialize filtered projects
@@ -2121,11 +2120,11 @@ export class ProjectsComponent implements OnInit {
   }
 
   getTaskDynamicOptions(projectId: number): { [key: string]: { value: string; label: string }[] } {
-    const employees = this.getEmployees();
+    // Show all users in assigned_to dropdown for tasks
     return {
-      assigned_to: employees.map(emp => ({
-        value: emp.id.toString(),
-        label: `${emp.email} (${emp.role.charAt(0).toUpperCase() + emp.role.slice(1)})`
+      assigned_to: this.users.map(user => ({
+        value: user.id.toString(),
+        label: `${user.name || user.email} (${user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'})`
       }))
     };
   }
@@ -2670,14 +2669,14 @@ export class ProjectsComponent implements OnInit {
       description: task.description?.trim() || null,
       status: task.status || 'pending',
       assigned_to: task.assigned_to || null,
-      assigned_by: task.assigned_by?.trim() || null,
+      // assigned_by is auto-set by backend based on current user
       due_date: task.due_date || null,
       allocated_time: task.allocated_time?.trim() || null
     };
     
     // Extract custom fields from task object (everything that's not a standard field)
     const customFields: any = {};
-    const standardFieldIds = ['title', 'description', 'status', 'assigned_to', 'assigned_by', 'due_date', 'allocated_time'];
+    const standardFieldIds = ['title', 'description', 'status', 'assigned_to', 'due_date', 'allocated_time'];
     
     // Get all keys from task object
     Object.keys(task).forEach(key => {
@@ -2982,7 +2981,6 @@ export class ProjectsComponent implements OnInit {
         description: '',
         status: 'on-track',
         assigned_to: null,
-        assigned_by: '',
         due_date: '',
         allocated_time: '',
         custom_fields: {}
@@ -3033,7 +3031,7 @@ export class ProjectsComponent implements OnInit {
       description: taskData.description?.trim() || '',
       status: normalizedStatus,
       assigned_to: assignedToValue,
-      assigned_by: taskData.assigned_by?.trim() || null,
+      // assigned_by is preserved by backend - don't send it
       due_date: taskData.due_date || null,
       allocated_time: taskData.allocated_time?.trim() || null,
       custom_fields: taskData.custom_fields || {}
@@ -3112,12 +3110,18 @@ export class ProjectsComponent implements OnInit {
     return user ? (user.name || user.email || 'Unknown User') : '';
   }
 
-  // Get user name from email (for assigned_by field which stores email)
-  getUserNameFromEmail(email: string | null | undefined): string {
-    if (!email) return 'Not provided';
+  // Get user name from email or name (for assigned_by field which now stores name, but may have legacy email data)
+  getUserNameFromEmail(emailOrName: string | null | undefined): string {
+    if (!emailOrName) return '-';
     
-    const user = this.users.find(u => u.email === email);
-    return user ? (user.name || email) : email;
+    // If it contains @, it's likely an email - look up the user
+    if (emailOrName.includes('@')) {
+      const user = this.users.find(u => u.email === emailOrName);
+      return user ? (user.name || emailOrName) : emailOrName;
+    }
+    
+    // Otherwise, it's already a name - return it directly
+    return emailOrName;
   }
 
   updateTask(task: any) {
