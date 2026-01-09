@@ -1,6 +1,6 @@
 <div class="app-container">
-  <app-sidebar *ngIf="showNavbar"></app-sidebar>
-  <app-header *ngIf="showNavbar"></app-header>
+  <app-sidebar *ngIf="showNavbar" #sidebar></app-sidebar>
+  <app-header *ngIf="showNavbar" (sidebarToggle)="sidebar.toggleMobile()"></app-header>
   <main class="main-content" [class.with-sidebar]="showNavbar">
     <router-outlet></router-outlet>
   </main>

@@ -538,8 +538,36 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  .summary-metrics {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .projects-grid,
+  .tasks-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .metric-card {
+    padding: 1rem;
+  }
+  
+  .metric-value {
+    font-size: 1.75rem;
+  }
+  
+  .section-container {
+    padding: 1rem;
+  }
+  
   .welcome-banner {
     padding: 1.5rem;
+    margin-bottom: 1rem;
   }
   
   .welcome-name {
@@ -548,6 +576,83 @@
   
   .welcome-back {
     font-size: 0.9rem;
+  }
+  
+  // Project and Task Cards
+  .project-card,
+  .task-card {
+    padding: 1rem;
+  }
+  
+  // Action buttons
+  .action-buttons {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    
+    .btn-expertflow.btn-icon {
+      width: 32px;
+      height: 32px;
+      margin-right: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+  }
+  
+  // Modals
+  .task-modal-content {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .task-modal-header {
+    padding: 1rem;
+    
+    h3 {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .task-modal-body {
+    padding: 1rem;
+  }
+  
+  .task-modal-footer {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    button {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+  
+  .metric-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+  }
+  
+  .welcome-name {
+    font-size: 1.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
   }
 }
 

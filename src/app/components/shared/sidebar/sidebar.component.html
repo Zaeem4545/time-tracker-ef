@@ -1,4 +1,5 @@
-<div class="sidebar collapsed">
+<div class="sidebar-overlay" *ngIf="isMobileView && isMobileOpen" (click)="closeMobile()"></div>
+<div class="sidebar collapsed" [class.mobile-open]="isMobileView && isMobileOpen">
   <nav class="sidebar-nav">
     <ul>
       <li *ngFor="let item of menuItems" [class.active]="item.active">

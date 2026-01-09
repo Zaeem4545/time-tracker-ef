@@ -47,3 +47,169 @@ a {
   max-width: 100%;
   padding: 0;
 }
+
+/* Global Responsive Styles */
+@media (max-width: 768px) {
+  // Tables - make scrollable on mobile
+  .expertflow-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    
+    thead, tbody, tr {
+      display: block;
+    }
+    
+    thead {
+      display: none; // Hide header on mobile, show in first cell
+    }
+    
+    tbody tr {
+      border: 1px solid #e0e0e0;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      padding: 0.5rem;
+      background: white;
+    }
+    
+    td {
+      display: block;
+      text-align: right;
+      padding: 0.5rem;
+      border: none;
+      border-bottom: 1px solid #f0f0f0;
+      
+      &:before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        color: #666;
+      }
+      
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+  
+  // Modals - full screen on mobile
+  .task-modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  
+  // Forms - stack fields
+  form, .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  // Grid layouts - single column
+  .summary-metrics,
+  .projects-grid,
+  .tasks-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  // Cards - full width
+  .metric-card,
+  .project-card,
+  .task-card {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  // Buttons - full width on mobile
+  .btn-expertflow {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  // Action buttons - smaller on mobile
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    
+    .btn-expertflow.btn-icon {
+      width: 28px;
+      height: 28px;
+      font-size: 0.875rem;
+    }
+  }
+  
+  // Dashboard containers
+  .dashboard-container {
+    padding: 1rem !important;
+  }
+  
+  // Header adjustments
+  .header-content {
+    padding: 0 1rem !important;
+  }
+  
+  .user-name {
+    display: none; // Hide user name text on mobile, show only avatar
+  }
+}
+
+@media (max-width: 480px) {
+  // Extra small devices
+  .dashboard-container {
+    padding: 0.75rem !important;
+  }
+  
+  .metric-card {
+    padding: 1rem !important;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem !important;
+  }
+  
+  .welcome-name {
+    font-size: 1.5rem !important;
+  }
+  
+  .task-modal-header {
+    padding: 1rem !important;
+    
+    h3 {
+      font-size: 1rem !important;
+    }
+  }
+  
+  .task-modal-body {
+    padding: 1rem !important;
+  }
+  
+  .task-modal-footer {
+    padding: 0.75rem 1rem !important;
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Tablet styles
+@media (min-width: 769px) and (max-width: 1024px) {
+  .summary-metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .projects-grid,
+  .tasks-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

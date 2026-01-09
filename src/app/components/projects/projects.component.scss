@@ -787,6 +787,78 @@
   cursor: pointer;
 }
 
+// Responsive Styles
+@media (max-width: 768px) {
+  .content-card {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .page-title-main {
+    font-size: 1.1rem !important;
+  }
+  
+  .expertflow-table {
+    font-size: 0.875rem;
+    
+    th, td {
+      padding: 0.5rem 0.25rem !important;
+      font-size: 0.8rem;
+    }
+  }
+  
+  .btn-expertflow {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .task-modal-content {
+    width: 95% !important;
+    max-width: 95% !important;
+  }
+  
+  // Filter and group by sections
+  .filter-section,
+  .group-by-section {
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    > div {
+      width: 100%;
+    }
+  }
+  
+  // Action buttons in table
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.25rem;
+    
+    .btn-expertflow.btn-icon {
+      width: 28px;
+      height: 28px;
+      margin-right: 0;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .content-card {
+    padding: 0.75rem !important;
+  }
+  
+  .expertflow-table {
+    th, td {
+      padding: 0.375rem 0.125rem !important;
+      font-size: 0.75rem;
+    }
+  }
+  
+  .btn-expertflow {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+}
+
 .status-filter-item {
   display: flex;
   align-items: center;

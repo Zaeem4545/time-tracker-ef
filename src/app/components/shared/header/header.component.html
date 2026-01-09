@@ -1,6 +1,9 @@
 <header class="app-header">
   <div class="header-content">
     <div class="header-left">
+      <button class="mobile-menu-btn" (click)="toggleSidebar()" *ngIf="isMobile()" aria-label="Toggle menu">
+        <span>☰</span>
+      </button>
       <div class="logo">
         <img src="assets/new-logo.png" alt="ExpertFlow" class="logo-image" />
       </div>

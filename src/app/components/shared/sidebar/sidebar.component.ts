@@ -11,12 +11,15 @@ import { filter } from 'rxjs/operators';
 export class SidebarComponent implements OnInit {
   currentRoute: string = '';
   isCollapsed: boolean = true; // Start collapsed by default
+  isMobileOpen: boolean = false;
+  isMobileView: boolean = false;
 
   constructor(private router: Router, public auth: AuthService, private el: ElementRef) {}
 
   menuItems: any[] = [];
 
   ngOnInit(): void {
+    this.checkMobileView();
     // Initialize sidebar width
     document.documentElement.style.setProperty('--sidebar-width', '70px');
     
@@ -28,10 +31,34 @@ export class SidebarComponent implements OnInit {
       .subscribe((event: any) => {
         this.currentRoute = event.url;
         this.updateActiveMenu();
+        // Close mobile sidebar after navigation
+        if (this.isMobileView) {
+          this.isMobileOpen = false;
+        }
       });
     
     this.currentRoute = this.router.url;
     this.updateActiveMenu();
+  }
+
+  checkMobileView(): void {
+    this.isMobileView = window.innerWidth <= 768;
+  }
+
+  toggleMobile(): void {
+    this.isMobileOpen = !this.isMobileOpen;
+  }
+
+  closeMobile(): void {
+    this.isMobileOpen = false;
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(): void {
+    this.checkMobileView();
+    if (!this.isMobileView) {
+      this.isMobileOpen = false;
+    }
   }
 
   buildMenuItems(): void {

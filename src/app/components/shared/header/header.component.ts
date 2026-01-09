@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService, Notification } from '../../../services/notification.service';
@@ -10,12 +10,14 @@ import { filter, interval, Subscription } from 'rxjs';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit, OnDestroy {
+  @Output() sidebarToggle = new EventEmitter<void>();
   pageTitle: string = 'Dashboard';
   showNotifications: boolean = false;
   showMenu: boolean = false;
   notifications: Notification[] = [];
   unreadCount: number = 0;
   private refreshSubscription?: Subscription;
+  isMobileView: boolean = false;
 
   private routeTitles: { [key: string]: string } = {
     '/dashboard': 'Dashboard',
@@ -40,6 +42,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.checkMobileView();
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
@@ -55,6 +58,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.loadNotifications();
       this.loadUnreadCount();
     });
+  }
+
+  checkMobileView(): void {
+    this.isMobileView = window.innerWidth <= 768;
+  }
+
+  isMobile(): boolean {
+    return window.innerWidth <= 768;
+  }
+
+  toggleSidebar(): void {
+    this.sidebarToggle.emit();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(): void {
+    this.checkMobileView();
   }
 
   ngOnDestroy(): void {
