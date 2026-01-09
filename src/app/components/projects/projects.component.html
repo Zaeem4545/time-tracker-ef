@@ -1258,7 +1258,7 @@
 
     <!-- Task Creation Modal -->
     <div *ngIf="showTaskModal && selectedProjectForTaskModal" class="task-modal-overlay" (click)="closeTaskModal()">
-      <div class="task-modal-content" (click)="$event.stopPropagation()">
+      <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
         <div class="task-modal-header">
           <h3>Create New Task</h3>
           <button (click)="closeTaskModal()" class="task-modal-close">×</button>
@@ -1267,15 +1267,47 @@
           <div style="margin-bottom: 1rem; padding: 0.75rem; background: #e3f2fd; border-radius: 4px;">
             <strong>Project:</strong> {{ getProjectName(selectedProjectForTaskModal!) }}
           </div>
-          <app-dynamic-form
-            [formId]="'createTask_' + selectedProjectForTaskModal"
-            [defaultFields]="taskFormFields"
-            [formData]="newTask[selectedProjectForTaskModal!] || {}"
-            [showAddField]="true"
-            [dynamicOptions]="getTaskDynamicOptions(selectedProjectForTaskModal!)"
-            [hiddenFields]="['assigned_by']"
-            (formDataChange)="onTaskFormDataChange(selectedProjectForTaskModal!, $event)">
-          </app-dynamic-form>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Task Title *</label>
+              <input type="text" [(ngModel)]="newTask[selectedProjectForTaskModal!].title" placeholder="Task Title" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description</label>
+              <textarea [(ngModel)]="newTask[selectedProjectForTaskModal!].description" placeholder="Task Description"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+              <select [(ngModel)]="newTask[selectedProjectForTaskModal!].status"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assign To</label>
+              <select [(ngModel)]="newTask[selectedProjectForTaskModal!].assigned_to"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option [value]="null">Select User</option>
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{ user.name || user.email }} ({{ user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User' }})
+                </option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Due Date</label>
+              <input type="date" [(ngModel)]="newTask[selectedProjectForTaskModal!].due_date"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+              <input type="text" [(ngModel)]="newTask[selectedProjectForTaskModal!].allocated_time" placeholder="HH:MM:SS"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+          </div>
         </div>
         <div class="task-modal-footer">
           <button (click)="createTask(selectedProjectForTaskModal!)" class="btn-expertflow btn-primary">+ Create Task</button>
@@ -1284,7 +1316,7 @@
       </div>
     </div>
 
-    <!-- Edit Task Modal with Dynamic Form -->
+    <!-- Edit Task Modal -->
     <div *ngIf="showEditTaskModal && selectedTaskForEdit" class="task-modal-overlay" (click)="closeEditTaskModal()">
       <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
         <div class="task-modal-header">
@@ -1292,15 +1324,47 @@
           <button (click)="closeEditTaskModal()" class="task-modal-close">×</button>
         </div>
         <div class="task-modal-body">
-          <app-dynamic-form
-            [formId]="'editTask_' + selectedTaskForEdit.id"
-            [defaultFields]="taskFormFields"
-            [formData]="editTaskData[selectedTaskForEdit.id]"
-            [showAddField]="true"
-            [dynamicOptions]="getTaskDynamicOptions(getProjectIdForTask(selectedTaskForEdit.id))"
-            [hiddenFields]="['assigned_by']"
-            (formDataChange)="onEditTaskFormDataChange(selectedTaskForEdit.id, $event)">
-          </app-dynamic-form>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Task Title *</label>
+              <input type="text" [(ngModel)]="editTaskData[selectedTaskForEdit.id].title" placeholder="Task Title" required
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description</label>
+              <textarea [(ngModel)]="editTaskData[selectedTaskForEdit.id].description" placeholder="Task Description"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+              <select [(ngModel)]="editTaskData[selectedTaskForEdit.id].status"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assign To</label>
+              <select [(ngModel)]="editTaskData[selectedTaskForEdit.id].assigned_to"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option [value]="null">Select User</option>
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{ user.name || user.email }} ({{ user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User' }})
+                </option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Due Date</label>
+              <input type="date" [(ngModel)]="editTaskData[selectedTaskForEdit.id].due_date"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+              <input type="text" [(ngModel)]="editTaskData[selectedTaskForEdit.id].allocated_time" placeholder="HH:MM:SS"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+          </div>
 
           <!-- Comments Section -->
           <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">

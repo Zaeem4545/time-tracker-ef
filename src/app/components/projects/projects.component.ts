@@ -2136,9 +2136,15 @@ export class ProjectsComponent implements OnInit {
   openTaskModal(projectId: number): void {
     this.selectedProjectForTaskModal = projectId;
     this.showTaskModal = true;
-    // Always reset form to ensure clean state and remove any cached assigned_by field
-    this.newTask[projectId] = {};
-    this.dynamicFormService.resetForm(`createTask_${projectId}`, this.taskFormFields);
+    // Always reset form to ensure clean state
+    this.newTask[projectId] = {
+      title: '',
+      description: '',
+      status: 'pending',
+      assigned_to: null,
+      due_date: '',
+      allocated_time: ''
+    };
   }
 
   closeTaskModal(): void {
@@ -2770,10 +2776,10 @@ export class ProjectsComponent implements OnInit {
       }
     });
     
-    // Normalize status - convert legacy statuses to new format
-    let normalizedStatus = task.status || 'on-track';
-    if (normalizedStatus === 'pending' || normalizedStatus === 'in_progress' || normalizedStatus === 'in-progress') {
-      normalizedStatus = 'on-track';
+    // Normalize status - keep task statuses as is (pending, in-progress, completed)
+    let normalizedStatus = task.status || 'pending';
+    if (normalizedStatus === 'in_progress') {
+      normalizedStatus = 'in-progress';
     }
     
     // Ensure assigned_to is a number or null
@@ -2794,9 +2800,6 @@ export class ProjectsComponent implements OnInit {
       allocated_time: task.allocated_time || '',
       custom_fields: initializedCustomFields
     };
-    
-    // Initialize dynamic form for editing
-    this.dynamicFormService.initializeForm(`editTask_${task.id}`, this.taskFormFields);
   }
 
   // Close edit task modal
@@ -2978,7 +2981,7 @@ export class ProjectsComponent implements OnInit {
       this.editTaskData[taskId] = {
         title: '',
         description: '',
-        status: 'on-track',
+        status: 'pending',
         assigned_to: null,
         due_date: '',
         allocated_time: '',
