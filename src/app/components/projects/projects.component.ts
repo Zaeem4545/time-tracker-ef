@@ -114,7 +114,7 @@ export class ProjectsComponent implements OnInit {
   loadingTaskComments: boolean = false;
   editingTaskCommentId: number | null = null;
   editingTaskCommentText: string = '';
-  editTaskData: { [key: number]: { title: string; description: string; status: string; assigned_to: number | string | null; assigned_by: string; due_date: string; allocated_time?: string; custom_fields?: any } } = {};
+  editTaskData: { [key: number]: { title: string; description: string; status: string; assigned_to: number | string | null; due_date: string; allocated_time?: string; custom_fields?: any } } = {};
   teamMembers: any[] = []; // Team members for managers
   employeeTasks: any[] = []; // All tasks for employees
   
