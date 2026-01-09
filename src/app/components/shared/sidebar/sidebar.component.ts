@@ -64,9 +64,6 @@ export class SidebarComponent implements OnInit {
   buildMenuItems(): void {
     const role = this.auth.getRole()?.toLowerCase();
     
-    // Set project label - head managers see "Assign Projects", others see "Projects"
-    const projectLabel = role === 'head manager' ? 'Assign Projects' : 'Projects';
-    
     // Initialize menu items
     this.menuItems = [];
     
@@ -96,15 +93,19 @@ export class SidebarComponent implements OnInit {
       );
     }
 
-    // For head managers, add "Create Projects" as second option
+    // For head managers, add "Projects" (renamed from "Create Projects") instead of the regular projects route
     if (role === 'head manager') {
       this.menuItems.push(
-        { label: 'Create Projects', route: '/create-project', icon: '➕', active: false }
+        { label: 'Projects', route: '/create-project', icon: '📁', active: false }
+      );
+    } else {
+      // For other roles, add regular Projects menu item
+      this.menuItems.push(
+        { label: 'Projects', route: '/projects', icon: '📁', active: false }
       );
     }
 
     this.menuItems.push(
-      { label: projectLabel, route: '/projects', icon: '📁', active: false },
       { label: 'Calendar', route: '/calendar', icon: '📅', active: false },
       { label: 'Timesheet', route: '/timesheet', icon: '⏱️', active: false },
       { label: 'Add Customer', route: '/customer-details', icon: '➕', active: false }
@@ -131,19 +132,11 @@ export class SidebarComponent implements OnInit {
       }
     });
     
-    // Handle create-project route for "Create Projects" menu item
+    // Handle create-project route for "Projects" menu item (head managers)
     if (this.currentRoute === '/create-project') {
       const createProjectItem = this.menuItems.find(item => item.route === '/create-project');
       if (createProjectItem) {
         createProjectItem.active = true;
-      }
-    }
-    
-    // Handle my-projects-tasks route for "My Projects and Tasks" menu item
-    if (this.currentRoute === '/my-projects-tasks') {
-      const myProjectsItem = this.menuItems.find(item => item.route === '/my-projects-tasks');
-      if (myProjectsItem) {
-        myProjectsItem.active = true;
       }
     }
   }

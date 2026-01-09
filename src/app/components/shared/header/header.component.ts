@@ -147,9 +147,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const route = url.split('?')[0].split('#')[0];
     let title = this.routeTitles[route] || 'Dashboard';
     
-    // For head managers, show "Assign Projects" instead of "Manage Projects"
-    if (route === '/projects' && this.auth.getRole()?.toLowerCase() === 'head manager') {
-      title = 'Assign Projects';
+    // For head managers on create-project route, show "Projects"
+    if (route === '/create-project' && this.auth.getRole()?.toLowerCase() === 'head manager') {
+      title = 'Projects';
     }
     
     // For head managers on dashboard route, show "Select Team Leads"
