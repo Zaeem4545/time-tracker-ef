@@ -303,9 +303,10 @@
                 </div>
               </div>
             </div>
-            <div class="dropdown-item customer-filter-item" (click)="toggleCustomerFilter(); $event.stopPropagation()">
+            <div class="dropdown-item customer-filter-item" [class.active]="selectedCustomerFilter !== null" (click)="toggleCustomerFilter(); $event.stopPropagation()">
               <span>Customer</span>
-              <span class="dropdown-arrow">▼</span>
+              <span class="dropdown-arrow" [class.rotated]="showCustomerFilter">▼</span>
+              <span class="checkmark" *ngIf="selectedCustomerFilter !== null">✓</span>
               <div *ngIf="showCustomerFilter" class="manager-filter-dropdown" (click)="$event.stopPropagation()">
                 <select [ngModel]="selectedCustomerFilter" (ngModelChange)="setCustomerFilter($event)" class="manager-select">
                   <option [ngValue]="null">All Customers</option>
