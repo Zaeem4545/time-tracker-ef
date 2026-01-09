@@ -1382,7 +1382,8 @@ export class ProjectsComponent implements OnInit {
       start_date: this.newProject.start_date || null,
       end_date: this.newProject.end_date || null,
       status: this.newProject.status || 'on-track',
-      allocated_time: this.newProject.allocated_time || null
+      allocated_time: this.newProject.allocated_time || null,
+      assigned_to: this.newProject.assigned_to || null
     };
     
     // Auto-populate region from customer if not provided

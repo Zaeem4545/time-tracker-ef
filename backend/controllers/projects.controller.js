@@ -119,6 +119,7 @@ async function createProject(req, res) {
       region,
       allocated_time,
       attachment,
+      assigned_to,
     } = req.body;
     if (!name || name.trim() === "") {
       return res
@@ -178,8 +179,19 @@ async function createProject(req, res) {
       managerIdToSet = req.user.id; // Auto-assign admin as manager if not specified
     }
 
+    // Normalize assigned_to: convert null, undefined, empty string, or string "null" to null
+    const normalizedAssignedTo =
+      assigned_to === null ||
+      assigned_to === undefined ||
+      assigned_to === "" ||
+      assigned_to === "null"
+        ? null
+        : typeof assigned_to === "string"
+        ? parseInt(assigned_to)
+        : assigned_to;
+
     const [result] = await db.query(
-  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id, assigned_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   [
     name.trim(),
     description.trim(),
@@ -192,11 +204,31 @@ async function createProject(req, res) {
     projectRegion,
     allocated_time || null,
     managerIdToSet,
+    normalizedAssignedTo,
   ]
 );
 
 
     const projectId = result.insertId;
+
+    // Send notification to the assigned user if assigned_to is provided
+    if (normalizedAssignedTo) {
+      try {
+        // Get assigned user name for logging
+        const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [normalizedAssignedTo]);
+        const assignedUserName = userRows.length > 0 ? userRows[0].name : 'User';
+        
+        // Get assigner name
+        const assignerName = creatorName;
+        const notificationMessage = `You have been assigned to project "${name}" by ${assignerName}`;
+        
+        await Notification.createNotification(normalizedAssignedTo, notificationMessage, 'project_assigned');
+        console.log(`Project assignment notification sent to user ${normalizedAssignedTo} (${assignedUserName}): ${notificationMessage}`);
+      } catch (notifError) {
+        console.error('Error sending project assignment notification:', notifError);
+        // Don't fail the request if notification creation fails
+      }
+    }
 
     // If project is created by a head manager, automatically select it for them
     if (creatorRole === "head manager") {
