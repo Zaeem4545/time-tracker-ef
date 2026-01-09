@@ -391,18 +391,19 @@ async function updateProject(req, res) {
         ? null
         : manager_id;
 
-    // If manager_id is provided (not null), verify it's a manager
+    // No role validation - any user can be assigned as manager_id (removed privacy restrictions)
+    // Just verify the user exists
     if (normalizedManagerId) {
-      const [managerRows] = await db.query(
-        "SELECT * FROM users WHERE id = ? AND role = ?",
-        [normalizedManagerId, "manager"]
+      const [userRows] = await db.query(
+        "SELECT * FROM users WHERE id = ?",
+        [normalizedManagerId]
       );
-      if (managerRows.length === 0) {
+      if (userRows.length === 0) {
         return res
           .status(400)
           .json({
             success: false,
-            message: "Invalid manager ID. User must be a manager.",
+            message: "Invalid user ID. User not found.",
           });
       }
     }
@@ -1023,18 +1024,19 @@ async function assignManagerToProject(req, res) {
         ? null
         : manager_id;
 
-    // If manager_id is provided (not null), verify it's a manager
+    // No role validation - any user can be assigned as manager_id (removed privacy restrictions)
+    // Just verify the user exists
     if (normalizedManagerId) {
-      const [managerRows] = await db.query(
-        "SELECT * FROM users WHERE id = ? AND role = ?",
-        [normalizedManagerId, "manager"]
+      const [userRows] = await db.query(
+        "SELECT * FROM users WHERE id = ?",
+        [normalizedManagerId]
       );
-      if (managerRows.length === 0) {
+      if (userRows.length === 0) {
         return res
           .status(400)
           .json({
             success: false,
-            message: "Invalid manager ID. User must be a manager.",
+            message: "Invalid user ID. User not found.",
           });
       }
     }
