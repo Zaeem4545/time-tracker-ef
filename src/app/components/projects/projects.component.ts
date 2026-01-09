@@ -2136,11 +2136,9 @@ export class ProjectsComponent implements OnInit {
   openTaskModal(projectId: number): void {
     this.selectedProjectForTaskModal = projectId;
     this.showTaskModal = true;
-    // Initialize task form if not already done
-    if (!this.newTask[projectId]) {
-      this.newTask[projectId] = {};
-      this.dynamicFormService.initializeForm(`createTask_${projectId}`, this.taskFormFields);
-    }
+    // Always reset form to ensure clean state and remove any cached assigned_by field
+    this.newTask[projectId] = {};
+    this.dynamicFormService.resetForm(`createTask_${projectId}`, this.taskFormFields);
   }
 
   closeTaskModal(): void {
