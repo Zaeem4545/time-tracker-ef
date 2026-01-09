@@ -1636,16 +1636,17 @@ export class ProjectsComponent implements OnInit {
     // Preserve existing manager_id (not editable in modal)
     const managerId = this.selectedProjectForEdit.manager_id || null;
     
-    // Normalize assigned_to: convert string to number, or null if empty/null/undefined
+    // Normalize assigned_to: convert string to number, or null if empty/null/undefined (same logic as tasks)
     let assignedToValue: number | null = null;
-    if (data.assigned_to !== null && data.assigned_to !== undefined && data.assigned_to !== '') {
-      if (typeof data.assigned_to === 'string') {
-        const parsed = parseInt(data.assigned_to);
+    const assignedTo = data.assigned_to;
+    if (assignedTo !== null && assignedTo !== undefined) {
+      if (typeof assignedTo === 'number' && assignedTo > 0) {
+        assignedToValue = assignedTo;
+      } else if (typeof assignedTo === 'string' && assignedTo.trim() !== '') {
+        const parsed = parseInt(assignedTo);
         if (!isNaN(parsed) && parsed > 0) {
           assignedToValue = parsed;
         }
-      } else if (typeof data.assigned_to === 'number' && data.assigned_to > 0) {
-        assignedToValue = data.assigned_to;
       }
     }
     
@@ -1845,16 +1846,17 @@ export class ProjectsComponent implements OnInit {
   }
   
   private updateProjectWithDataInline(projectId: number, editData: any, customFields: any, customerId: number | null, finalStartDate: string | null, finalEndDate: string | null, attachment: string | null): void {
-    // Normalize assigned_to: convert string to number, or null if empty/null/undefined
+    // Normalize assigned_to: convert string to number, or null if empty/null/undefined (same logic as tasks)
     let assignedToValue: number | null = null;
-    if (editData.assigned_to !== null && editData.assigned_to !== undefined && editData.assigned_to !== '') {
-      if (typeof editData.assigned_to === 'string') {
-        const parsed = parseInt(editData.assigned_to);
+    const assignedTo = editData.assigned_to;
+    if (assignedTo !== null && assignedTo !== undefined) {
+      if (typeof assignedTo === 'number' && assignedTo > 0) {
+        assignedToValue = assignedTo;
+      } else if (typeof assignedTo === 'string' && assignedTo.trim() !== '') {
+        const parsed = parseInt(assignedTo);
         if (!isNaN(parsed) && parsed > 0) {
           assignedToValue = parsed;
         }
-      } else if (typeof editData.assigned_to === 'number' && editData.assigned_to > 0) {
-        assignedToValue = editData.assigned_to;
       }
     }
     

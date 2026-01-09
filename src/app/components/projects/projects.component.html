@@ -435,8 +435,8 @@
                 <td>
                   <span *ngIf="editingProject !== project.id">{{ getAssignedUserNameForProject(project.assigned_to, project) || '-' }}</span>
                   <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].assigned_to">
-                    <option [value]="null">Select User</option>
-                    <option *ngFor="let user of users" [value]="user.id">
+                    <option [ngValue]="null">Select User</option>
+                    <option *ngFor="let user of users" [ngValue]="user.id">
                       {{ user.name }} ({{ user.email }})
                     </option>
                   </select>
@@ -1054,8 +1054,8 @@
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned to</label>
               <select [(ngModel)]="modalEditProjectData.assigned_to"
                 style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
-                <option [value]="null">Select User</option>
-                <option *ngFor="let user of users" [value]="user.id">
+                <option [ngValue]="null">Select User</option>
+                <option *ngFor="let user of users" [ngValue]="user.id">
                   {{ user.name }} ({{ user.email }})
                 </option>
               </select>
@@ -1238,8 +1238,8 @@
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned to</label>
               <select [(ngModel)]="newProject.assigned_to"
                 style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
-                <option [value]="null">Select User</option>
-                <option *ngFor="let user of users" [value]="user.id">
+                <option [ngValue]="null">Select User</option>
+                <option *ngFor="let user of users" [ngValue]="user.id">
                   {{ user.name }} ({{ user.email }})
                 </option>
               </select>
