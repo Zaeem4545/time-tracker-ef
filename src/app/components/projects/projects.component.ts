@@ -1301,18 +1301,21 @@ export class ProjectsComponent implements OnInit {
   }
   
   openCreateProjectModal() {
-    this.newProject = {};
+    this.newProject = {
+      customer_id: null,
+      assigned_to: null
+    };
     this.createProjectError = '';
     this.showCreateProjectModal = true;
   }
 
   closeCreateProjectModal() {
     this.showCreateProjectModal = false;
-    this.newProject = {};
+    this.newProject = {
+      customer_id: null,
+      assigned_to: null
+    };
     this.createProjectError = '';
-    if (this.newProject.attachment) {
-      this.newProject.attachment = null;
-    }
   }
 
   // Validate dates: start_date should not be greater than end_date
@@ -1422,7 +1425,10 @@ export class ProjectsComponent implements OnInit {
     this.adminService.createProject(projectData).subscribe({
       next: () => {
         this.toastService.show('Project created successfully', 'success');
-        this.newProject = {};
+        this.newProject = {
+          customer_id: null,
+          assigned_to: null
+        };
         this.createProjectError = '';
         this.showCreateProjectModal = false;
         // Reload customers first, then projects to ensure customer names are available
