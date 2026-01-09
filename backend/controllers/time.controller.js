@@ -29,66 +29,18 @@ function formatDateTimeForMySQL(isoString) {
 // Get all time entries (Admin sees all, Manager/Head Manager see their team's entries, Employee sees their own and tasks they're assigned to)
 async function getTimeEntries(req, res) {
   try {
-    const userRole = req.user.role?.toLowerCase();
-    const userId = req.user.id;
+    // All roles (Admin, Project Manager, Team Lead, Employee) see ALL time entries with no privacy restrictions
+    const query = `
+      SELECT t.id, t.start_time, t.end_time, t.status, t.total_time, t.task_name, t.description,
+             t.user_id, u.email as employee_email, u.name as employee_name, u.id as user_id, u.role as user_role,
+             p.name as project_name, p.id as project_id
+      FROM time_entries t
+      JOIN users u ON t.user_id = u.id
+      JOIN projects p ON t.project_id = p.id
+      ORDER BY t.start_time DESC
+    `;
 
-    let query = '';
-    let params = [];
-
-    if (userRole === 'admin') {
-      // Admin sees all time entries
-      query = `
-        SELECT t.id, t.start_time, t.end_time, t.status, t.total_time, t.task_name, t.description,
-               t.user_id, u.email as employee_email, u.name as employee_name, u.id as user_id, p.name as project_name, p.id as project_id
-        FROM time_entries t
-        JOIN users u ON t.user_id = u.id
-        JOIN projects p ON t.project_id = p.id
-        ORDER BY t.start_time DESC
-      `;
-    } else if (userRole === 'manager') {
-      // Manager sees time entries for tasks assigned to their employees AND their own time entries
-      query = `
-        SELECT DISTINCT t.id, t.start_time, t.end_time, t.status, t.total_time, t.task_name, t.description,
-               t.user_id, u.email as employee_email, u.name as employee_name, u.id as user_id, p.name as project_name, p.id as project_id
-        FROM time_entries t
-        JOIN users u ON t.user_id = u.id
-        JOIN projects p ON t.project_id = p.id
-        LEFT JOIN tasks tk ON tk.title = t.task_name AND tk.project_id = p.id
-        WHERE (t.user_id = ? OR u.manager_id = ? OR p.manager_id = ? OR tk.assigned_by = (SELECT email FROM users WHERE id = ?))
-        ORDER BY t.start_time DESC
-      `;
-      params = [userId, userId, userId, userId];
-    } else if (userRole === 'head manager') {
-      // Head Manager sees ALL time entries for ALL projects (all users: managers, employees, etc.)
-      // Similar to admin, but head managers see everything
-      query = `
-        SELECT t.id, t.start_time, t.end_time, t.status, t.total_time, t.task_name, t.description,
-               t.user_id, u.email as employee_email, u.name as employee_name, u.id as user_id, u.role as user_role,
-               p.name as project_name, p.id as project_id
-        FROM time_entries t
-        JOIN users u ON t.user_id = u.id
-        JOIN projects p ON t.project_id = p.id
-        ORDER BY t.start_time DESC
-      `;
-      params = [];
-    } else {
-      // Employee sees ALL their own time entries (regardless of task assignment)
-      // This allows employees to work on any task and see their time entries
-      query = `
-        SELECT DISTINCT t.id, t.start_time, t.end_time, t.status, t.total_time, t.task_name, t.description,
-               t.user_id, u.email as employee_email, u.name as employee_name, u.id as user_id, p.name as project_name, p.id as project_id,
-               tk.assigned_by, tk.assigned_to
-        FROM time_entries t
-        JOIN users u ON t.user_id = u.id
-        JOIN projects p ON t.project_id = p.id
-        LEFT JOIN tasks tk ON tk.title = t.task_name AND tk.project_id = p.id
-        WHERE t.user_id = ?
-        ORDER BY t.start_time DESC
-      `;
-      params = [userId];
-    }
-
-    const [rows] = await db.query(query, params);
+    const [rows] = await db.query(query, []);
     res.json(rows);
   } catch (err) {
     console.error(err);
