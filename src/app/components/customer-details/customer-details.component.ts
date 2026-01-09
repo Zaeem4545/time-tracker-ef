@@ -532,6 +532,11 @@ export class CustomerDetailsComponent implements OnInit {
     });
   }
 
+  canCreate(): boolean {
+    // All authenticated users can create customers
+    return true;
+  }
+
   canEdit(): boolean {
     return this.isAdmin || this.isHeadManager || this.isManager;
   }
