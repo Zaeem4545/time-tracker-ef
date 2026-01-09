@@ -169,8 +169,8 @@
 </div>
 
 <!-- Projects Modal -->
-<div *ngIf="showProjectsModal" class="task-modal-overlay" (click)="closeProjectsModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+<div *ngIf="showProjectsModal" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
     <div class="task-modal-header">
       <h3>All Projects ({{ allProjects.length }})</h3>
       <button (click)="closeProjectsModal()" class="task-modal-close">×</button>
@@ -198,8 +198,8 @@
 </div>
 
 <!-- Tasks Modal -->
-<div *ngIf="showTasksModal" class="task-modal-overlay" (click)="closeTasksModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+<div *ngIf="showTasksModal" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
     <div class="task-modal-header">
       <h3>All Tasks ({{ allTasks.length }})</h3>
       <button (click)="closeTasksModal()" class="task-modal-close">×</button>
@@ -227,8 +227,8 @@
 </div>
 
 <!-- Time Entries Modal -->
-<div *ngIf="showTimeEntriesModal" class="task-modal-overlay" (click)="closeTimeEntriesModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 1000px; max-height: 80vh; overflow-y: auto;">
+<div *ngIf="showTimeEntriesModal" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 1000px; max-height: 80vh; overflow-y: auto;">
     <div class="task-modal-header">
       <h3>All Time Entries ({{ allTimeEntries.length }})</h3>
       <button (click)="closeTimeEntriesModal()" class="task-modal-close">×</button>
@@ -266,8 +266,8 @@
 </div>
 
 <!-- Project Details Modal -->
-<div *ngIf="showProjectDetailsModal && selectedProjectForDetails" class="task-modal-overlay" (click)="closeProjectDetailsModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
+<div *ngIf="showProjectDetailsModal && selectedProjectForDetails" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 800px;">
     <div class="task-modal-header">
       <h3>Project Details</h3>
       <button (click)="closeProjectDetailsModal()" class="task-modal-close">×</button>
@@ -339,8 +339,8 @@
 </div>
 
 <!-- Edit Project Modal -->
-<div *ngIf="showEditProjectModal && selectedProjectForEdit" class="task-modal-overlay" (click)="closeEditProjectModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+<div *ngIf="showEditProjectModal && selectedProjectForEdit" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
     <div class="task-modal-header">
       <h3>Edit Project: {{ selectedProjectForEdit.name }}</h3>
       <button (click)="closeEditProjectModal()" class="task-modal-close">×</button>
@@ -501,8 +501,8 @@
 </div>
 
 <!-- Task Details Modal -->
-<div *ngIf="showTaskDetailsModal && selectedTaskForDetails" class="task-modal-overlay" (click)="closeTaskDetailsModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px;">
+<div *ngIf="showTaskDetailsModal && selectedTaskForDetails" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 800px;">
     <div class="task-modal-header">
       <h3>Task Details</h3>
       <button (click)="closeTaskDetailsModal()" class="task-modal-close">×</button>
@@ -557,8 +557,8 @@
 </div>
 
 <!-- Edit Task Modal -->
-<div *ngIf="showEditTaskModal && selectedTaskForEdit" class="task-modal-overlay" (click)="closeEditTaskModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+<div *ngIf="showEditTaskModal && selectedTaskForEdit" class="task-modal-overlay">
+  <div class="task-modal-content" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
     <div class="task-modal-header">
       <h3>Edit Task: {{ selectedTaskForEdit.title }}</h3>
       <button (click)="closeEditTaskModal()" class="task-modal-close">×</button>
@@ -609,8 +609,8 @@
 </div>
 
 <!-- Project History Modal -->
-<div *ngIf="showProjectHistoryModal && selectedProjectForEdit" class="task-modal-overlay task-history-modal-overlay" (click)="closeProjectHistoryModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+<div *ngIf="showProjectHistoryModal && selectedProjectForEdit" class="task-modal-overlay task-history-modal-overlay">
+  <div class="task-modal-content" style="max-width: 900px; max-height: 90vh;">
     <div class="task-modal-header">
       <h3>Project History - {{ selectedProjectForEdit?.name }}</h3>
       <button (click)="closeProjectHistoryModal()" class="task-modal-close">×</button>
@@ -676,8 +676,8 @@
 </div>
 
 <!-- Task History Modal -->
-<div *ngIf="showTaskHistoryModal && selectedTaskForEdit" class="task-modal-overlay task-history-modal-overlay" (click)="closeTaskHistoryModal()">
-  <div class="task-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+<div *ngIf="showTaskHistoryModal && selectedTaskForEdit" class="task-modal-overlay task-history-modal-overlay">
+  <div class="task-modal-content" style="max-width: 900px; max-height: 90vh;">
     <div class="task-modal-header">
       <h3>Task History - {{ selectedTaskForEdit?.title }}</h3>
       <button (click)="closeTaskHistoryModal()" class="task-modal-close">×</button>

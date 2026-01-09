@@ -134,8 +134,8 @@
     </div>
 
     <!-- Add Line Modal -->
-    <div *ngIf="showAddLineForm" class="modal-overlay" (click)="cancelAddLine()">
-      <div class="modal-content add-line-modal" [class.maximized]="isModalMaximized" (click)="$event.stopPropagation()">
+    <div *ngIf="showAddLineForm" class="modal-overlay">
+      <div class="modal-content add-line-modal" [class.maximized]="isModalMaximized">
         <div class="modal-header">
           <h3 class="modal-title">Add a Line</h3>
           <div class="modal-actions">

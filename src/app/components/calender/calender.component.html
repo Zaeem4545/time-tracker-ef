@@ -59,8 +59,8 @@
       </div>
 
     <!-- Tasks Modal -->
-    <div *ngIf="showTasksModal" class="modal-overlay" (click)="closeTasksModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
+    <div *ngIf="showTasksModal" class="modal-overlay">
+      <div class="modal-content">
         <div class="modal-header">
           <h3>Tasks for {{ selectedProject?.name }}</h3>
           <button class="close-btn" (click)="closeTasksModal()">×</button>

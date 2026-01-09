@@ -163,8 +163,8 @@
   </div>
 
   <!-- Add Customer Modal -->
-  <div *ngIf="showAddModal" class="modal-overlay" (click)="closeAddModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  <div *ngIf="showAddModal" class="modal-overlay">
+    <div class="modal-content">
       <div class="modal-header">
         <h2>Add New Customer</h2>
         <button (click)="closeAddModal()" class="modal-close">×</button>
@@ -189,8 +189,8 @@
   </div>
 
   <!-- Edit Customer Modal -->
-  <div *ngIf="showEditModal && selectedCustomer" class="modal-overlay" (click)="closeEditModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  <div *ngIf="showEditModal && selectedCustomer" class="modal-overlay">
+    <div class="modal-content">
       <div class="modal-header">
         <h2>Edit Customer</h2>
         <button (click)="closeEditModal()" class="modal-close">×</button>
@@ -212,8 +212,8 @@
   </div>
 
   <!-- Customer Projects Details Modal -->
-  <div *ngIf="showProjectsModal && selectedCustomerForProjects" class="modal-overlay" (click)="closeProjectsModal()">
-    <div class="modal-content projects-modal-content" (click)="$event.stopPropagation()" style="max-width: 900px; max-height: 90vh;">
+  <div *ngIf="showProjectsModal && selectedCustomerForProjects" class="modal-overlay">
+    <div class="modal-content projects-modal-content" style="max-width: 900px; max-height: 90vh;">
       <div class="modal-header">
         <h2>Projects for {{ selectedCustomerForProjects.name }}</h2>
         <button (click)="closeProjectsModal()" class="modal-close">×</button>
