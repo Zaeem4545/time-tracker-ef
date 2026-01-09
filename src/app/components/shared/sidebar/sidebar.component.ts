@@ -77,8 +77,7 @@ export class SidebarComponent implements OnInit {
       );
     } else if (role === 'manager') {
       this.menuItems.push(
-        { label: 'Dashboard', route: '/dashboard', icon: '📊', active: false },
-        { label: 'Create Team', route: '/manager', icon: '➕', active: false }
+        { label: 'Dashboard', route: '/dashboard', icon: '📊', active: false }
       );
     } else if (role === 'admin') {
       this.menuItems.push(
@@ -113,10 +112,7 @@ export class SidebarComponent implements OnInit {
 
     // Add role-specific menu items
     if (role === 'admin') {
-      this.menuItems.push(
-        { label: 'Create Team', route: '/create-team', icon: '➕', active: false },
-        { label: 'Team Details', route: '/team-details', icon: '👥', active: false }
-      );
+      // Create Team and Team Details removed
     } else if (role === 'manager') {
       this.menuItems.push({ label: 'Employee Details', route: '/employee-details', icon: '👥', active: false });
     }
