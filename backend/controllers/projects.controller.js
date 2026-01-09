@@ -359,6 +359,7 @@ async function updateProject(req, res) {
       region,
       allocated_time,
       attachment,
+      assigned_to,
     } = req.body;
     if (!name) {
       return res
@@ -440,6 +441,17 @@ async function updateProject(req, res) {
     }
 
     
+    // Normalize assigned_to: convert null, undefined, empty string, or string "null" to null
+    const normalizedAssignedTo =
+      assigned_to === null ||
+      assigned_to === undefined ||
+      assigned_to === "" ||
+      assigned_to === "null"
+        ? null
+        : typeof assigned_to === "string"
+        ? parseInt(assigned_to)
+        : assigned_to;
+
     // Update project (include status and archived if provided)
     const updateFields = [
       "name",
@@ -452,6 +464,7 @@ async function updateProject(req, res) {
       "region",
       "allocated_time",
       "attachment",
+      "assigned_to",
     ];
     const updateValues = [
       name,
@@ -464,6 +477,7 @@ async function updateProject(req, res) {
       projectRegion,
       allocated_time || null,
       attachment || null,
+      normalizedAssignedTo,
     ];
 
     if (status !== undefined) {

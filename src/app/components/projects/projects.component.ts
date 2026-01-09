@@ -1593,6 +1593,7 @@ export class ProjectsComponent implements OnInit {
       start_date: originalDates.start_date || project.start_date || '', // Use original date exactly
       end_date: originalDates.end_date || project.end_date || '', // Use original date exactly
       manager_id: project.manager_id || null, // Include manager_id
+      assigned_to: project.assigned_to || null, // Include assigned_to
       customer_id: project.customer_id ? project.customer_id.toString() : null, // Include customer_id
       allocated_time: project.allocated_time || '', // Include allocated_time
       attachment: project.attachment || '', // Include attachment
