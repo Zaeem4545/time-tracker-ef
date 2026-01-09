@@ -1989,7 +1989,7 @@ export class ProjectsComponent implements OnInit {
       description: task.description,
       status: normalizedStatus,
       assigned_to: assignedToValue,
-      assigned_by: task.assigned_by || null,
+      // assigned_by is preserved by backend automatically
       due_date: task.due_date || null,
       archived: newArchivedStatus
     };
@@ -2790,7 +2790,6 @@ export class ProjectsComponent implements OnInit {
       description: task.description || '',
       status: normalizedStatus,
       assigned_to: assignedToValue,
-      assigned_by: task.assigned_by || '',
       due_date: this.extractDateOnly(task.due_date) || '',
       allocated_time: task.allocated_time || '',
       custom_fields: initializedCustomFields
@@ -3173,7 +3172,7 @@ export class ProjectsComponent implements OnInit {
       description: task.description,
       status: normalizedStatus,
       assigned_to: assignedToValue,
-      assigned_by: task.assigned_by || null,
+      // assigned_by is preserved by backend automatically
       due_date: task.due_date || null,
       allocated_time: task.allocated_time?.trim() || null
     };
@@ -3228,7 +3227,7 @@ export class ProjectsComponent implements OnInit {
       description: task.description,
       status: normalizedStatus,
       assigned_to: assignedToValue,
-      assigned_by: task.assigned_by || null,
+      // assigned_by is preserved by backend automatically
       due_date: task.due_date || null
     }).subscribe({
       next: () => {
