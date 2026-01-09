@@ -1636,6 +1636,19 @@ export class ProjectsComponent implements OnInit {
     // Preserve existing manager_id (not editable in modal)
     const managerId = this.selectedProjectForEdit.manager_id || null;
     
+    // Normalize assigned_to: convert string to number, or null if empty/null/undefined
+    let assignedToValue = null;
+    if (data.assigned_to !== null && data.assigned_to !== undefined && data.assigned_to !== '') {
+      if (typeof data.assigned_to === 'string') {
+        const parsed = parseInt(data.assigned_to);
+        if (!isNaN(parsed) && parsed > 0) {
+          assignedToValue = parsed;
+        }
+      } else if (typeof data.assigned_to === 'number' && data.assigned_to > 0) {
+        assignedToValue = data.assigned_to;
+      }
+    }
+    
     // Handle attachment upload
     if (this.selectedAttachmentFile) {
       this.adminService.uploadFile(this.selectedAttachmentFile).subscribe({
@@ -1650,7 +1663,7 @@ export class ProjectsComponent implements OnInit {
               start_date: data.start_date || null,
               end_date: data.end_date || null,
               allocated_time: data.allocated_time || null,
-              assigned_to: data.assigned_to || null,
+              assigned_to: assignedToValue,
               attachment: uploadResponse.file.path
             };
             this.updateProjectWithData(projectId, updateData);
@@ -1677,7 +1690,7 @@ export class ProjectsComponent implements OnInit {
       start_date: data.start_date || null,
       end_date: data.end_date || null,
       allocated_time: data.allocated_time || null,
-      assigned_to: data.assigned_to || null,
+      assigned_to: assignedToValue,
       attachment: existingAttachment
     };
     
@@ -1832,6 +1845,19 @@ export class ProjectsComponent implements OnInit {
   }
   
   private updateProjectWithDataInline(projectId: number, editData: any, customFields: any, customerId: number | null, finalStartDate: string | null, finalEndDate: string | null, attachment: string | null): void {
+    // Normalize assigned_to: convert string to number, or null if empty/null/undefined
+    let assignedToValue = null;
+    if (editData.assigned_to !== null && editData.assigned_to !== undefined && editData.assigned_to !== '') {
+      if (typeof editData.assigned_to === 'string') {
+        const parsed = parseInt(editData.assigned_to);
+        if (!isNaN(parsed) && parsed > 0) {
+          assignedToValue = parsed;
+        }
+      } else if (typeof editData.assigned_to === 'number' && editData.assigned_to > 0) {
+        assignedToValue = editData.assigned_to;
+      }
+    }
+    
     const dataToSend: any = {
       name: editData.name,
       description: editData.description || '',
@@ -1843,7 +1869,7 @@ export class ProjectsComponent implements OnInit {
       customer_id: customerId,
       region: editData.region || null,
       allocated_time: editData.allocated_time || null,
-      assigned_to: editData.assigned_to || null,
+      assigned_to: assignedToValue,
       attachment: attachment || null
     };
     
