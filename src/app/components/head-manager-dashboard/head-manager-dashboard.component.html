@@ -446,6 +446,16 @@
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
         <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned to</label>
+          <select [(ngModel)]="editProjectData.assigned_to"
+            style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+            <option [value]="null">Select User</option>
+            <option *ngFor="let user of users" [value]="user.id">
+              {{ user.name }} ({{ user.email }})
+            </option>
+          </select>
+        </div>
+        <div>
           <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Attachment</label>
           <input type="file" (change)="onAttachmentChange($event)" 
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />

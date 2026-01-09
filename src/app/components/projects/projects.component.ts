@@ -1470,7 +1470,8 @@ export class ProjectsComponent implements OnInit {
             start_date: this.extractDateOnly(fullProject.start_date) || '',
             end_date: this.extractDateOnly(fullProject.end_date) || '',
             customer_id: fullProject.customer_id ? fullProject.customer_id.toString() : null,
-            allocated_time: fullProject.allocated_time || ''
+            allocated_time: fullProject.allocated_time || '',
+            assigned_to: fullProject.assigned_to || null
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
@@ -1487,7 +1488,8 @@ export class ProjectsComponent implements OnInit {
             start_date: this.extractDateOnly(project.start_date) || '',
             end_date: this.extractDateOnly(project.end_date) || '',
             customer_id: project.customer_id ? project.customer_id.toString() : null,
-            allocated_time: project.allocated_time || ''
+            allocated_time: project.allocated_time || '',
+            assigned_to: project.assigned_to || null
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
@@ -1508,7 +1510,8 @@ export class ProjectsComponent implements OnInit {
           end_date: this.extractDateOnly(project.end_date) || '',
           manager_id: project.manager_id || null,
           customer_id: project.customer_id ? project.customer_id.toString() : null,
-          allocated_time: project.allocated_time || ''
+          allocated_time: project.allocated_time || '',
+          assigned_to: project.assigned_to || null
         };
         this.selectedAttachmentFile = null;
         this.showEditProjectModal = true;
@@ -1647,6 +1650,7 @@ export class ProjectsComponent implements OnInit {
               start_date: data.start_date || null,
               end_date: data.end_date || null,
               allocated_time: data.allocated_time || null,
+              assigned_to: data.assigned_to || null,
               attachment: uploadResponse.file.path
             };
             this.updateProjectWithData(projectId, updateData);
@@ -1673,6 +1677,7 @@ export class ProjectsComponent implements OnInit {
       start_date: data.start_date || null,
       end_date: data.end_date || null,
       allocated_time: data.allocated_time || null,
+      assigned_to: data.assigned_to || null,
       attachment: existingAttachment
     };
     
@@ -1838,6 +1843,7 @@ export class ProjectsComponent implements OnInit {
       customer_id: customerId,
       region: editData.region || null,
       allocated_time: editData.allocated_time || null,
+      assigned_to: editData.assigned_to || null,
       attachment: attachment || null
     };
     
@@ -2266,10 +2272,27 @@ export class ProjectsComponent implements OnInit {
 
   // Calculate total column count for project table (including custom fields)
   getProjectTableColumnCount(): number {
-    const baseColumns = 8; // Name, Description, Customer, Region, Start Date, End Date, Allocated Time, Actions
+    const baseColumns = 9; // Name, Description, Customer, Region, Start Date, End Date, Allocated Time, Assigned to, Actions
     const statusColumn = this.showStatusColumn ? 1 : 0;
     const customFieldColumns = this.getAllProjectCustomFieldNames().length;
     return baseColumns + statusColumn + customFieldColumns;
+  }
+
+  // Get assigned user name for project
+  getAssignedUserNameForProject(userId: number | null | undefined, project?: any): string {
+    if (!userId) {
+      return '';
+    }
+    // First try to use assigned_to_name from backend if available
+    if (project && project.assigned_to_name) {
+      return project.assigned_to_name;
+    }
+    // Try to find user in users array
+    const user = this.users.find(u => u.id === userId);
+    if (user && user.name) {
+      return user.name;
+    }
+    return '';
   }
 
   // Get task custom fields

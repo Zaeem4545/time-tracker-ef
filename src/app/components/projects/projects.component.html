@@ -342,6 +342,7 @@
           <th>Start Date</th>
           <th>End Date</th>
           <th>Allocated Time</th>
+          <th>Assigned to</th>
           <th *ngFor="let fieldName of getAllProjectCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
           <th class="role-cell" style="text-align: center; width: 200px; min-width: 200px;">Actions</th>
         </tr>
@@ -428,6 +429,15 @@
                 <td>
                   <span *ngIf="editingProject !== project.id">{{ formatAllocatedTime(project.allocated_time) || '-' }}</span>
                   <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
+                </td>
+                <td>
+                  <span *ngIf="editingProject !== project.id">{{ getAssignedUserNameForProject(project.assigned_to, project) || '-' }}</span>
+                  <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].assigned_to">
+                    <option [value]="null">Select User</option>
+                    <option *ngFor="let user of users" [value]="user.id">
+                      {{ user.name }} ({{ user.email }})
+                    </option>
+                  </select>
                 </td>
                 <!-- Dynamic Custom Fields Columns -->
                 <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
@@ -661,6 +671,15 @@
             <td>
               <span *ngIf="editingProject !== project.id">{{ formatAllocatedTime(project.allocated_time) || '-' }}</span>
               <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
+            </td>
+            <td>
+              <span *ngIf="editingProject !== project.id">{{ getAssignedUserNameForProject(project.assigned_to, project) || '-' }}</span>
+              <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].assigned_to">
+                <option [value]="null">Select User</option>
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{ user.name }} ({{ user.email }})
+                </option>
+              </select>
             </td>
             <!-- Dynamic Custom Fields Columns -->
             <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
@@ -1025,6 +1044,16 @@
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
               <input type="text" [(ngModel)]="modalEditProjectData.allocated_time" placeholder="HH:MM:SS"
                 style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned to</label>
+              <select [(ngModel)]="modalEditProjectData.assigned_to"
+                style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
+                <option [value]="null">Select User</option>
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{ user.name }} ({{ user.email }})
+                </option>
+              </select>
             </div>
             <div>
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Attachment</label>

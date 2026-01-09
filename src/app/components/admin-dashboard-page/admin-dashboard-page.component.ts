@@ -775,7 +775,8 @@ export class AdminDashboardPageComponent implements OnInit {
             start_date: this.extractDateOnly(fullProject.start_date) || '',
             end_date: this.extractDateOnly(fullProject.end_date) || '',
             customer_id: fullProject.customer_id ? fullProject.customer_id.toString() : null,
-            allocated_time: fullProject.allocated_time || ''
+            allocated_time: fullProject.allocated_time || '',
+            assigned_to: fullProject.assigned_to || null
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
@@ -791,7 +792,8 @@ export class AdminDashboardPageComponent implements OnInit {
             start_date: this.extractDateOnly(project.start_date) || '',
             end_date: this.extractDateOnly(project.end_date) || '',
             customer_id: project.customer_id ? project.customer_id.toString() : null,
-            allocated_time: project.allocated_time || ''
+            allocated_time: project.allocated_time || '',
+            assigned_to: project.assigned_to || null
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
@@ -897,7 +899,8 @@ export class AdminDashboardPageComponent implements OnInit {
       status: this.modalEditProjectData.status,
       start_date: this.modalEditProjectData.start_date || null,
       end_date: this.modalEditProjectData.end_date || null,
-      allocated_time: this.modalEditProjectData.allocated_time || null
+      allocated_time: this.modalEditProjectData.allocated_time || null,
+      assigned_to: this.modalEditProjectData.assigned_to || null
     };
 
     // Create FormData if attachment is selected

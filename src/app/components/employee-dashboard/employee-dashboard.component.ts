@@ -573,7 +573,8 @@ export class EmployeeDashboardComponent implements OnInit {
       status: project.status || 'on-track',
       start_date: this.extractDateOnly(project.start_date) || '',
       end_date: this.extractDateOnly(project.end_date) || '',
-      allocated_time: project.allocated_time || ''
+      allocated_time: project.allocated_time || '',
+      assigned_to: project.assigned_to || null
     };
     this.showEditProjectModal = true;
     // Load comments for edit modal
@@ -656,7 +657,8 @@ export class EmployeeDashboardComponent implements OnInit {
       status: this.modalEditProjectData.status,
       start_date: this.modalEditProjectData.start_date || null,
       end_date: this.modalEditProjectData.end_date || null,
-      allocated_time: this.modalEditProjectData.allocated_time || null
+      allocated_time: this.modalEditProjectData.allocated_time || null,
+      assigned_to: this.modalEditProjectData.assigned_to || null
     };
 
     this.adminService.updateProject(this.selectedProjectForEdit.id, updateData).subscribe({

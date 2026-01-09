@@ -1123,7 +1123,8 @@ export class HeadManagerDashboardComponent implements OnInit {
             start_date: this.extractDateOnly(project.start_date) || '',
             end_date: this.extractDateOnly(project.end_date) || '',
             customer_id: project.customer_id ? project.customer_id.toString() : null,
-            allocated_time: project.allocated_time || ''
+            allocated_time: project.allocated_time || '',
+            assigned_to: project.assigned_to || null
           };
           this.selectedAttachmentFile = null;
           this.showEditProjectModal = true;
@@ -1197,6 +1198,7 @@ export class HeadManagerDashboardComponent implements OnInit {
               start_date: data.start_date || null,
               end_date: data.end_date || null,
               allocated_time: data.allocated_time || null,
+              assigned_to: data.assigned_to || null,
               attachment: uploadResponse.file.path
             };
             this.updateProjectWithData(projectId, updateData);
@@ -1223,6 +1225,7 @@ export class HeadManagerDashboardComponent implements OnInit {
       start_date: data.start_date || null,
       end_date: data.end_date || null,
       allocated_time: data.allocated_time || null,
+      assigned_to: data.assigned_to || null,
       attachment: existingAttachment
     };
     
