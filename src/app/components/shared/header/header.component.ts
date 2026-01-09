@@ -30,6 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     '/my-projects-tasks': 'My Projects and Tasks',
     '/calendar': 'Calendar',
     '/timesheet': 'Timesheet',
+    '/customer-details': 'Add Customer',
     '/employee-details': 'Employee Details'
   };
 

@@ -107,7 +107,7 @@ export class SidebarComponent implements OnInit {
       { label: projectLabel, route: '/projects', icon: '📁', active: false },
       { label: 'Calendar', route: '/calendar', icon: '📅', active: false },
       { label: 'Timesheet', route: '/timesheet', icon: '⏱️', active: false },
-      { label: 'Customer Details', route: '/customer-details', icon: '👤', active: false }
+      { label: 'Add Customer', route: '/customer-details', icon: '➕', active: false }
     );
 
     // Add role-specific menu items
