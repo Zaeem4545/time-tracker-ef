@@ -56,12 +56,12 @@ a {
   }
   
   .content-card {
-    max-height: calc(100vh - 100px);
-    overflow-y: auto;
+    overflow: visible;
   }
   
   .expertflow-table-wrapper {
-    max-height: calc(100vh - 300px) !important;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
   }
 }
 

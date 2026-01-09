@@ -322,7 +322,7 @@
     
     <!-- Create Project Section - Separate Box -->
     <!-- Show for admin/manager/employee always, or for head manager only in create mode -->
-    <div *ngIf="(isAdmin || isManager || isEmployee) || (isHeadManager && isCreateMode)" class="content-card" style="margin-bottom: 1.5rem;">
+    <div *ngIf="(isAdmin || isManager || isEmployee) || (isHeadManager && isCreateMode)" style="width: 100%;">
       <div *ngIf="!isCreateMode" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h2 class="page-title-main" style="margin: 0;">
           <span class="arrow">►</span>
