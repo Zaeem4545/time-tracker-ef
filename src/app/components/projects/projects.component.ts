@@ -35,6 +35,8 @@ export class ProjectsComponent implements OnInit {
   selectedManagerFilter: number | null = null; // Selected manager for filtering
   showRegionDropdown: boolean = false; // Show region dropdown in Group By
   selectedRegionFilter: string | null = null; // Selected region for filtering
+  showCustomerFilter: boolean = false; // Show customer filter dropdown
+  selectedCustomerFilter: number | null = null; // Selected customer for filtering
   availableRegions: string[] = []; // Available regions from projects and tasks
   users: any[] = [];
   newProject: any = {};
@@ -777,7 +779,6 @@ export class ProjectsComponent implements OnInit {
       'project-manager': 'Project Manager',
       'status': 'Status',
       'tags': 'Tags',
-      'custom-group': 'Custom Group'
     };
     return groupByNames[option] || option;
   }
@@ -806,7 +807,19 @@ export class ProjectsComponent implements OnInit {
       });
     }
 
-    // Apply manager filter first (if selected)
+    // Apply customer filter first (if selected)
+    if (this.selectedCustomerFilter !== null) {
+      filtered = filtered.filter((p: any) => {
+        const customerId = p.customer_id;
+        if (customerId) {
+          const customerIdNum = typeof customerId === 'string' ? parseInt(customerId) : customerId;
+          return customerIdNum === this.selectedCustomerFilter;
+        }
+        return false;
+      });
+    }
+
+    // Apply manager filter (if selected)
     if (this.selectedManagerFilter !== null) {
       filtered = filtered.filter((p: any) => p.manager_id === this.selectedManagerFilter);
     }
@@ -1116,8 +1129,25 @@ export class ProjectsComponent implements OnInit {
     if (this.showManagerFilter) {
       this.showStartDatePicker = false;
       this.showEndDatePicker = false;
+      this.showCustomerFilter = false;
     }
   }
+
+  toggleCustomerFilter(): void {
+    this.showCustomerFilter = !this.showCustomerFilter;
+    if (this.showCustomerFilter) {
+      this.showStartDatePicker = false;
+      this.showEndDatePicker = false;
+      this.showManagerFilter = false;
+    }
+  }
+
+  setCustomerFilter(customerId: number | null): void {
+    this.selectedCustomerFilter = customerId;
+    this.showCustomerFilter = false;
+    this.applyFilters();
+  }
+
 
   applyDateFilter(type: 'start' | 'end'): void {
     this.applyFilters();

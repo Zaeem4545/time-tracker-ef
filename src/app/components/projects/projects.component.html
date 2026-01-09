@@ -102,7 +102,7 @@
         <span class="search-icon">🔍</span>
         
         <!-- Active Filters Tags -->
-        <div class="active-filters-container" *ngIf="activeFilters.length > 0 || statusFilters.length > 0 || groupBy.length > 0 || selectedManagerFilter !== null || selectedRegionFilter !== null">
+        <div class="active-filters-container" *ngIf="activeFilters.length > 0 || statusFilters.length > 0 || groupBy.length > 0 || selectedManagerFilter !== null || selectedRegionFilter !== null || selectedCustomerFilter !== null">
           <!-- Filter Tags -->
           <div class="filter-tag" *ngFor="let filter of activeFilters">
             <span class="filter-tag-text">{{ getFilterDisplayName(filter) }}</span>
@@ -132,6 +132,12 @@
           <div class="filter-tag" *ngIf="selectedManagerFilter !== null">
             <span class="filter-tag-text">Team Lead: {{ getManagerName(selectedManagerFilter) }}</span>
             <button class="filter-tag-remove" (click)="clearManagerFilter(); $event.stopPropagation()" title="Remove team lead filter">×</button>
+          </div>
+          
+          <!-- Customer Filter Tag -->
+          <div class="filter-tag" *ngIf="selectedCustomerFilter !== null">
+            <span class="filter-tag-text">Customer: {{ getCustomerName(selectedCustomerFilter, null) || 'Unknown' }}</span>
+            <button class="filter-tag-remove" (click)="setCustomerFilter(null); $event.stopPropagation()" title="Remove customer filter">×</button>
           </div>
         </div>
         
@@ -297,9 +303,15 @@
                 </div>
               </div>
             </div>
-            <div class="dropdown-item">
-              <span>Custom Group</span>
+            <div class="dropdown-item customer-filter-item" (click)="toggleCustomerFilter(); $event.stopPropagation()">
+              <span>Customer</span>
               <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showCustomerFilter" class="manager-filter-dropdown" (click)="$event.stopPropagation()">
+                <select [ngModel]="selectedCustomerFilter" (ngModelChange)="setCustomerFilter($event)" class="manager-select">
+                  <option [ngValue]="null">All Customers</option>
+                  <option *ngFor="let customer of customers" [ngValue]="customer.id">{{ customer.name }}</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
