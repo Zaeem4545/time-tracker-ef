@@ -55,6 +55,15 @@ export class AdminDashboardComponent implements OnInit {
     }, 500);
   }
 
+  // Get display name for role (using utility function)
+  getRoleDisplayName(role: string): string {
+    if (!role) return '';
+    const roleLower = role.toLowerCase().trim();
+    if (roleLower === 'manager') return 'Team Lead';
+    if (roleLower === 'head manager') return 'Project Manager';
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  }
+
   // User Management
   loadUsers() { 
     this.adminService.getUsers().subscribe(users => {

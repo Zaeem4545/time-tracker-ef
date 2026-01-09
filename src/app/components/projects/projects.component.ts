@@ -2122,11 +2122,23 @@ export class ProjectsComponent implements OnInit {
   getTaskDynamicOptions(projectId: number): { [key: string]: { value: string; label: string }[] } {
     // Show all users in assigned_to dropdown for tasks
     return {
-      assigned_to: this.users.map(user => ({
-        value: user.id.toString(),
-        label: `${user.name || user.email} (${user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'})`
-      }))
+      assigned_to: this.users.map(user => {
+        const roleDisplay = this.getRoleDisplayName(user.role);
+        return {
+          value: user.id.toString(),
+          label: `${user.name || user.email} (${roleDisplay})`
+        };
+      })
     };
+  }
+
+  // Get display name for role
+  getRoleDisplayName(role: string): string {
+    if (!role) return 'User';
+    const roleLower = role.toLowerCase().trim();
+    if (roleLower === 'manager') return 'Team Lead';
+    if (roleLower === 'head manager') return 'Project Manager';
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
   }
 
   onTaskFormDataChange(projectId: number, data: any): void {

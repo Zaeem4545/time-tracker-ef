@@ -179,7 +179,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (roleLower === 'manager') {
       return 'Team Lead';
     } else if (roleLower === 'head manager') {
-      return 'Head Manager';
+      return 'Project Manager';
     } else {
       return role.charAt(0).toUpperCase() + role.slice(1);
     }

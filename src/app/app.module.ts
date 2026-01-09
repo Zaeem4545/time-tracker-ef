@@ -30,6 +30,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DynamicFormComponent } from './components/shared/dynamic-form/dynamic-form.component';
 import { MaintenanceComponent } from './components/maintenance/maintenance.component';
 import { AdminDashboardPageComponent } from './components/admin-dashboard-page/admin-dashboard-page.component';
+import { RoleDisplayPipe } from './pipes/role-display.pipe';
 
 @NgModule({
   declarations: [
@@ -55,7 +56,8 @@ import { AdminDashboardPageComponent } from './components/admin-dashboard-page/a
     ConfirmationModalComponent,
     DynamicFormComponent,
     MaintenanceComponent,
-    AdminDashboardPageComponent
+    AdminDashboardPageComponent,
+    RoleDisplayPipe
   ],
   imports: [
     BrowserModule,

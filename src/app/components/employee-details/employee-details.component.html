@@ -27,7 +27,7 @@
           <td>{{ employee.email }}</td>
           <td>{{ employee.contact_number || '-' }}</td>
           <td class="role-cell">
-            <span class="role-text">{{ employee.role | titlecase }}</span>
+            <span class="role-text">{{ employee.role | roleDisplay }}</span>
           </td>
         </tr>
       </tbody>

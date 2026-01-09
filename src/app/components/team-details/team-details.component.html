@@ -29,7 +29,7 @@
             <td>{{ member.email }}</td>
             <td>{{ member.contact_number || '-' }}</td>
             <td class="role-cell">
-              <span class="role-text">{{ member.role | titlecase }}</span>
+              <span class="role-text">{{ member.role | roleDisplay }}</span>
             </td>
           </tr>
         </tbody>

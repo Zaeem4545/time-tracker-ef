@@ -25,8 +25,8 @@
         <input type="text" placeholder="Contact Number *" [(ngModel)]="newUser.contact_number" (input)="onContactNumberInput($event)" pattern="[0-9]*" required style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
         <select [(ngModel)]="newUser.role" style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;">
           <option value="Employee">Employee</option>
-          <option value="Manager">Manager</option>
-          <option value="Head Manager">Head Manager</option>
+          <option value="manager">Team Lead</option>
+          <option value="head manager">Project Manager</option>
           <option value="Admin">Admin</option>
         </select>
       </div>
@@ -65,11 +65,11 @@
         </td>
         <td class="role-cell">
           <div class="role-content">
-            <span *ngIf="editingUser !== user.id" class="role-text">{{ user.role | titlecase }}</span>
+            <span *ngIf="editingUser !== user.id" class="role-text">{{ getRoleDisplayName(user.role) }}</span>
             <select *ngIf="editingUser === user.id" [(ngModel)]="editUserData[user.id].role">
             <option value="admin">Admin</option>
-            <option value="head manager">Head Manager</option>
-            <option value="manager">Manager</option>
+            <option value="head manager">Project Manager</option>
+            <option value="manager">Team Lead</option>
             <option value="employee">Employee</option>
             </select>
             <div *ngIf="editingUser !== user.id && editingPassword !== user.id" class="action-buttons">
