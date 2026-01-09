@@ -2338,6 +2338,8 @@ export class ProjectsComponent implements OnInit {
 
   // Get all unique custom field names from all tasks
   getAllTaskCustomFieldNames(): string[] {
+    // Filter out 'assigned_by' from custom fields to avoid duplicate column
+    const excludedFields = ['assigned_by', 'assigned_to', 'title', 'description', 'status', 'due_date', 'allocated_time'];
     const fieldNames = new Set<string>();
     Object.keys(this.projectTasks).forEach(projectId => {
       const tasks = this.projectTasks[parseInt(projectId)];
@@ -2347,7 +2349,7 @@ export class ProjectsComponent implements OnInit {
           const customFields = this.getTaskCustomFields(task);
           if (customFields && typeof customFields === 'object') {
             Object.keys(customFields).forEach(key => {
-              if (key && key.trim() !== '') {
+              if (key && key.trim() !== '' && !excludedFields.includes(key.toLowerCase())) {
                 fieldNames.add(key);
               }
             });
@@ -2355,7 +2357,7 @@ export class ProjectsComponent implements OnInit {
           // Also check if task has custom_fields directly as object
           if (task.custom_fields && typeof task.custom_fields === 'object' && !Array.isArray(task.custom_fields)) {
             Object.keys(task.custom_fields).forEach(key => {
-              if (key && key.trim() !== '' && task.custom_fields[key] !== null && task.custom_fields[key] !== undefined && task.custom_fields[key] !== '') {
+              if (key && key.trim() !== '' && task.custom_fields[key] !== null && task.custom_fields[key] !== undefined && task.custom_fields[key] !== '' && !excludedFields.includes(key.toLowerCase())) {
                 fieldNames.add(key);
               }
             });
