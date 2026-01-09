@@ -48,6 +48,23 @@ a {
   padding: 0;
 }
 
+/* Global Responsive Styles for Short Screens */
+@media (max-height: 800px) {
+  .page-container {
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .content-card {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  
+  .expertflow-table-wrapper {
+    max-height: calc(100vh - 300px) !important;
+  }
+}
+
 /* Global Responsive Styles */
 @media (max-width: 768px) {
   // Tables - make scrollable on mobile

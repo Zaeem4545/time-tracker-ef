@@ -331,23 +331,24 @@
       </div>
     </div>
 
-    <table *ngIf="(!isCreateMode && !isHeadManager) || (isHeadManager && isCreateMode)" class="expertflow-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Customer</th>
-          <th>Region</th>
-          <th *ngIf="showStatusColumn">Status</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Allocated Time</th>
-          <th>Assigned to</th>
-          <th>Assigned by</th>
-          <th *ngFor="let fieldName of getAllProjectCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
-          <th class="role-cell" style="text-align: center; width: 200px; min-width: 200px;">Actions</th>
-        </tr>
-      </thead>
+    <div class="expertflow-table-wrapper" *ngIf="(!isCreateMode && !isHeadManager) || (isHeadManager && isCreateMode)">
+      <table class="expertflow-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Customer</th>
+            <th>Region</th>
+            <th *ngIf="showStatusColumn">Status</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Allocated Time</th>
+            <th>Assigned to</th>
+            <th>Assigned by</th>
+            <th *ngFor="let fieldName of getAllProjectCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
+            <th class="role-cell" style="text-align: center; width: 200px; min-width: 200px;">Actions</th>
+          </tr>
+        </thead>
       <tbody>
         <!-- Grouped by Team Lead -->
         <ng-container *ngIf="isGroupedByManager()">
@@ -838,7 +839,8 @@
           </ng-container>
         </ng-container>
       </tbody>
-    </table>
+      </table>
+    </div>
 
     <!-- Project Details Modal -->
     <div *ngIf="showProjectDetailsModal && selectedProjectForDetails" class="task-modal-overlay" (click)="closeProjectDetailsModal()">
