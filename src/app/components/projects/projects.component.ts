@@ -2272,7 +2272,7 @@ export class ProjectsComponent implements OnInit {
 
   // Calculate total column count for project table (including custom fields)
   getProjectTableColumnCount(): number {
-    const baseColumns = 9; // Name, Description, Customer, Region, Start Date, End Date, Allocated Time, Assigned to, Actions
+    const baseColumns = 10; // Name, Description, Customer, Region, Start Date, End Date, Allocated Time, Assigned to, Assigned by, Actions
     const statusColumn = this.showStatusColumn ? 1 : 0;
     const customFieldColumns = this.getAllProjectCustomFieldNames().length;
     return baseColumns + statusColumn + customFieldColumns;
@@ -2291,6 +2291,26 @@ export class ProjectsComponent implements OnInit {
     const user = this.users.find(u => u.id === userId);
     if (user && user.name) {
       return user.name;
+    }
+    return '';
+  }
+
+  // Get assigned by name for project (creator/assigner)
+  getAssignedByNameForProject(project: any): string {
+    // First check if project has created_by_name or assigned_by_name from backend
+    if (project && project.created_by_name) {
+      return project.created_by_name;
+    }
+    if (project && project.assigned_by_name) {
+      return project.assigned_by_name;
+    }
+    // Fallback to manager_name (the manager who assigned the project)
+    if (project && project.manager_name) {
+      return project.manager_name;
+    }
+    // If project is being created by current user, show their name
+    if (project && project.id === undefined && this.authService.getUserName()) {
+      return this.authService.getUserName();
     }
     return '';
   }

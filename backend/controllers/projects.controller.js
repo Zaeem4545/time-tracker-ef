@@ -55,12 +55,14 @@ async function getAllProjects(req, res) {
              u.name as manager_name,
              hmp.head_manager_id as selected_by_head_manager_id,
              hm.email as selected_by_head_manager_email,
-             c.name as customer_name
+             c.name as customer_name,
+             creator.name as created_by_name
       FROM projects p 
       LEFT JOIN users u ON p.manager_id = u.id 
       LEFT JOIN head_manager_projects hmp ON p.id = hmp.project_id
       LEFT JOIN users hm ON hmp.head_manager_id = hm.id
       LEFT JOIN customers c ON p.id = c.id
+      LEFT JOIN users creator ON p.created_by = creator.id
     `;
 
     let params = [];
@@ -190,8 +192,11 @@ async function createProject(req, res) {
         ? parseInt(assigned_to)
         : assigned_to;
 
+    // Store creator ID (current user)
+    const createdBy = req.user.id;
+
     const [result] = await db.query(
-  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id, assigned_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id, assigned_to, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   [
     name.trim(),
     description.trim(),
@@ -205,6 +210,7 @@ async function createProject(req, res) {
     allocated_time || null,
     managerIdToSet,
     normalizedAssignedTo,
+    createdBy,
   ]
 );
 

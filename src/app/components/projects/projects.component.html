@@ -343,6 +343,7 @@
           <th>End Date</th>
           <th>Allocated Time</th>
           <th>Assigned to</th>
+          <th>Assigned by</th>
           <th *ngFor="let fieldName of getAllProjectCustomFieldNames()">{{ formatCustomFieldKey(fieldName) }}</th>
           <th class="role-cell" style="text-align: center; width: 200px; min-width: 200px;">Actions</th>
         </tr>
@@ -438,6 +439,9 @@
                       {{ user.name }} ({{ user.email }})
                     </option>
                   </select>
+                </td>
+                <td>
+                  <span>{{ getAssignedByNameForProject(project) || '-' }}</span>
                 </td>
                 <!-- Dynamic Custom Fields Columns -->
                 <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
@@ -680,6 +684,9 @@
                   {{ user.name }} ({{ user.email }})
                 </option>
               </select>
+            </td>
+            <td>
+              <span>{{ getAssignedByNameForProject(project) || '-' }}</span>
             </td>
             <!-- Dynamic Custom Fields Columns -->
             <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
