@@ -40,6 +40,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   description: string = '';
   isEmployee: boolean = false;
   isAdmin: boolean = false;
+  isHeadManager: boolean = false;
+  currentUserId: number | null = null;
   
   // Week view properties
   currentWeekStart: Date = new Date();
@@ -93,8 +95,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const role = this.authService.getRole();
-    this.isEmployee = role?.toLowerCase() === 'employee';
-    this.isAdmin = role?.toLowerCase() === 'admin';
+    const roleLower = role?.toLowerCase();
+    this.isEmployee = roleLower === 'employee';
+    this.isAdmin = roleLower === 'admin';
+    this.isHeadManager = roleLower === 'head manager';
+    this.currentUserId = this.authService.getUserId();
     
     this.initializeWeek();
     this.loadTimeEntries();
@@ -680,11 +685,27 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   loadTimeEntries() {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
-        this.timeEntries = entries || [];
+        // Filter entries based on role:
+        // - Admin and Project Manager (Head Manager): show all entries
+        // - Other roles (Employee, Team Lead/Manager): show only their own entries
+        let filteredEntries = entries || [];
+        
+        if (!this.isAdmin && !this.isHeadManager) {
+          // For non-admin and non-project-manager roles, show only current user's entries
+          if (this.currentUserId) {
+            filteredEntries = entries.filter((entry: any) => {
+              return entry.user_id === this.currentUserId;
+            });
+          } else {
+            filteredEntries = [];
+          }
+        }
+        
+        this.timeEntries = filteredEntries;
         
         // Load tasks for all projects that have time entries
         const projectIds = new Set<number>();
-        entries.forEach((entry: any) => {
+        filteredEntries.forEach((entry: any) => {
           if (entry.project_id) {
             projectIds.add(entry.project_id);
           }
