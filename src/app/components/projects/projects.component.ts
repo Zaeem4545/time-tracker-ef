@@ -2309,8 +2309,8 @@ export class ProjectsComponent implements OnInit {
       return project.manager_name;
     }
     // If project is being created by current user, show their name
-    if (project && project.id === undefined && this.authService.getUserName()) {
-      return this.authService.getUserName();
+    if (project && project.id === undefined && this.authService.getName()) {
+      return this.authService.getName() || '';
     }
     return '';
   }
