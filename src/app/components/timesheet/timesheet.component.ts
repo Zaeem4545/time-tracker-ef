@@ -685,27 +685,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   loadTimeEntries() {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
-        // Filter entries based on role:
-        // - Admin and Project Manager (Head Manager): show all entries
-        // - Other roles (Employee, Team Lead/Manager): show only their own entries
-        let filteredEntries = entries || [];
-        
-        if (!this.isAdmin && !this.isHeadManager) {
-          // For non-admin and non-project-manager roles, show only current user's entries
-          if (this.currentUserId) {
-            filteredEntries = entries.filter((entry: any) => {
-              return entry.user_id === this.currentUserId;
-            });
-          } else {
-            filteredEntries = [];
-          }
-        }
-        
-        this.timeEntries = filteredEntries;
+        // Show all timesheets for all roles (Admin, Project Manager, Team Lead, Employee)
+        this.timeEntries = entries || [];
         
         // Load tasks for all projects that have time entries
         const projectIds = new Set<number>();
-        filteredEntries.forEach((entry: any) => {
+        this.timeEntries.forEach((entry: any) => {
           if (entry.project_id) {
             projectIds.add(entry.project_id);
           }
