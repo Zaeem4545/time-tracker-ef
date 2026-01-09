@@ -452,17 +452,25 @@ export class DashboardComponent implements OnInit {
   loadTimeEntries(): void {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
-        // Store all time entries for modal, sorted by date (newest first)
+        // Filter to only count current user's time entries for dashboard count
+        const currentUserEntries = entries.filter((entry: any) => {
+          return entry.user_id === this.currentUserId;
+        });
+        
+        // Store all time entries for modal (but only count current user's entries)
         this.allTimeEntries = entries.sort((a: any, b: any) => {
           const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
           const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
           return dateB - dateA; // Newest first
         });
-        this.totalTimeEntries = entries.length;
+        
+        // Only count current user's entries for dashboard
+        this.totalTimeEntries = currentUserEntries.length;
       },
       error: (err) => {
         console.error('Error loading time entries:', err);
         this.allTimeEntries = [];
+        this.totalTimeEntries = 0;
       }
     });
   }
