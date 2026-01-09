@@ -1273,7 +1273,7 @@
             [formData]="newTask[selectedProjectForTaskModal!] || {}"
             [showAddField]="true"
             [dynamicOptions]="getTaskDynamicOptions(selectedProjectForTaskModal!)"
-            [hiddenFields]="isEmployee ? ['assigned_to'] : []"
+            [hiddenFields]="[]"
             (formDataChange)="onTaskFormDataChange(selectedProjectForTaskModal!, $event)">
           </app-dynamic-form>
         </div>
@@ -1298,7 +1298,7 @@
             [formData]="editTaskData[selectedTaskForEdit.id]"
             [showAddField]="true"
             [dynamicOptions]="getTaskDynamicOptions(getProjectIdForTask(selectedTaskForEdit.id))"
-            [hiddenFields]="isEmployee ? ['assigned_to'] : []"
+            [hiddenFields]="[]"
             (formDataChange)="onEditTaskFormDataChange(selectedTaskForEdit.id, $event)">
           </app-dynamic-form>
 
