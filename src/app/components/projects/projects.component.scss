@@ -9,6 +9,34 @@
   flex-direction: column;
   overflow: visible;
   position: relative;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+// Page Title Styling
+.page-title-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a237e;
+  margin-bottom: 1.5rem;
+  padding: 1rem 0;
+  
+  .arrow {
+    color: #667eea;
+    font-size: 1.25rem;
+    transition: transform 0.3s ease;
+  }
+  
+  .title-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
 .content-card {
@@ -17,10 +45,13 @@
   flex-direction: column;
   min-height: 0;
   width: 100%;
-  padding: 1.5rem;
+  padding: 2rem;
   box-sizing: border-box;
   overflow: visible;
   position: relative;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   
   > div {
     width: 100%;
@@ -38,57 +69,148 @@
   width: 100%;
   position: relative;
   -webkit-overflow-scrolling: touch;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   flex: 1;
   min-height: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: white;
   
   .expertflow-table {
     width: 100%;
     margin-top: 0;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    border: none;
+    border-radius: 12px;
     background: white;
     display: table;
     table-layout: auto; // Auto layout allows flexible column sizing
+    border-collapse: separate;
+    border-spacing: 0;
     
     thead {
       position: sticky;
       top: 0;
       z-index: 10;
-      background: white;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px 12px 0 0;
       
       th {
         white-space: normal;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        background: white;
-        padding: 0.75rem 0.5rem;
+        background: transparent;
+        padding: 1.25rem 1rem;
         text-align: left;
+        color: white;
+        font-weight: 600;
+        font-size: 0.8125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        border: none;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+        position: relative;
+        
+        &:not(:last-child)::after {
+          content: '';
+          position: absolute;
+          right: 0;
+          top: 25%;
+          height: 50%;
+          width: 1px;
+          background: rgba(255, 255, 255, 0.2);
+        }
+        
+        &:first-child {
+          border-radius: 12px 0 0 0;
+        }
+        
+        &:last-child {
+          border-radius: 0 12px 0 0;
+        }
         
         // Actions column - fixed width
         &.role-cell {
           width: 150px;
           min-width: 150px;
           max-width: 150px;
+          text-align: center;
         }
       }
     }
     
     tbody {
+      background: white;
+      
       tr {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom: 1px solid #e8eaf6;
+        cursor: pointer;
+        
+        &:hover {
+          background: linear-gradient(90deg, #f8f9ff 0%, #ffffff 100%);
+          transform: translateX(4px);
+          box-shadow: -4px 0 12px rgba(102, 126, 234, 0.15);
+          border-left: 3px solid #667eea;
+        }
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
         td {
           white-space: normal;
           word-wrap: break-word;
           overflow-wrap: break-word;
-          padding: 0.75rem 0.5rem;
-          vertical-align: top;
+          padding: 1.125rem 1rem;
+          vertical-align: middle;
+          color: #2c3e50;
+          font-size: 0.9375rem;
+          line-height: 1.6;
+          border: none;
+          transition: color 0.2s ease;
+          
+          // Style empty cells
+          &:empty::before {
+            content: '-';
+            color: #b0bec5;
+            font-style: italic;
+            font-weight: 300;
+          }
+          
+          // Make first column (Name) stand out
+          &:first-child {
+            font-weight: 600;
+            color: #1a237e;
+          }
+          
+          // Description column styling
+          &:nth-child(2) {
+            color: #546e7a;
+            font-size: 0.875rem;
+          }
+          
+          // Date columns
+          &:nth-child(6), &:nth-child(7) {
+            color: #5c6bc0;
+            font-weight: 500;
+            font-size: 0.875rem;
+          }
           
           // Actions column - fixed width
           &.role-cell {
             width: 150px;
             min-width: 150px;
             max-width: 150px;
+            text-align: center;
+          }
+        }
+        
+        // Alternate row colors for better readability
+        &:nth-child(even) {
+          background: #fafbfc;
+          
+          &:hover {
+            background: linear-gradient(90deg, #f8f9ff 0%, #ffffff 100%);
           }
         }
       }
@@ -213,9 +335,9 @@
 .search-container-top {
   position: relative;
   z-index: 100;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -225,13 +347,20 @@
   align-items: center;
   flex-wrap: wrap;
   background: white;
-  border: 1px solid #17a2b8;
-  border-radius: 4px;
+  border: 2px solid #e0e7ff;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 0.25rem;
-  gap: 0.25rem;
-  min-height: 38px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+  padding: 0.5rem;
+  gap: 0.5rem;
+  min-height: 48px;
+  transition: all 0.3s ease;
+  
+  &:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
+    transform: translateY(-2px);
+  }
 
   .search-icon {
     font-size: 1rem;
@@ -719,31 +848,87 @@
   }
 }
 
+// Enhanced Button Styles
+.btn-expertflow {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  &:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  &.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+  }
+}
+
 // Toggle Form Button Design
 .toggle-form-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #1976d2;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 
   &:hover {
-    background: #1565c0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
   }
 
   &.active {
-    background: #1976d2;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
     &:hover {
-      background: #1565c0;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
     }
   }
 
