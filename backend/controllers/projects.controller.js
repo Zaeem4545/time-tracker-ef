@@ -807,13 +807,15 @@ async function updateProject(req, res) {
     if (userRole === "employee") {
       try {
         const employeeId = req.user.id;
-        // Get updater name
+        // Get updater name and email
         const [updaterRows] = await db.query(
-          "SELECT name FROM users WHERE id = ?",
+          "SELECT name, email FROM users WHERE id = ?",
           [employeeId]
         );
         const updaterName =
           updaterRows.length > 0 ? updaterRows[0].name : "Employee";
+        const updaterEmail =
+          updaterRows.length > 0 ? updaterRows[0].email : req.user.email || "Employee";
         const projectName = name;
 
         // Get employee's manager_id from database
