@@ -11,7 +11,7 @@
         <span class="search-icon">🔍</span>
         
         <!-- Active Filters Tags -->
-        <div class="active-filters-container" *ngIf="activeFilters.length > 0 || selectedProjectFilter !== null">
+        <div class="active-filters-container" *ngIf="activeFilters.length > 0 || selectedProjectFilter !== null || selectedDateFilter || selectedWorkedByFilter !== null">
           <!-- Filter Tags -->
           <div class="filter-tag" *ngFor="let filter of activeFilters">
             <span class="filter-tag-text">{{ getFilterDisplayName(filter) }}</span>
@@ -22,6 +22,18 @@
           <div class="filter-tag" *ngIf="selectedProjectFilter !== null">
             <span class="filter-tag-text">Project: {{ getProjectName(selectedProjectFilter) }}</span>
             <button class="filter-tag-remove" (click)="clearProjectFilter(); $event.stopPropagation()" title="Remove project filter">×</button>
+          </div>
+          
+          <!-- Date Filter Tag -->
+          <div class="filter-tag" *ngIf="selectedDateFilter">
+            <span class="filter-tag-text">Date: {{ formatDateForFilter(selectedDateFilter) }}</span>
+            <button class="filter-tag-remove" (click)="clearDateFilter(); $event.stopPropagation()" title="Remove date filter">×</button>
+          </div>
+          
+          <!-- Worked By Filter Tag -->
+          <div class="filter-tag" *ngIf="selectedWorkedByFilter !== null">
+            <span class="filter-tag-text">Worked By: {{ getUserName(selectedWorkedByFilter) }}</span>
+            <button class="filter-tag-remove" (click)="clearWorkedByFilter(); $event.stopPropagation()" title="Remove worked by filter">×</button>
           </div>
         </div>
         
@@ -72,6 +84,31 @@
                 <select [ngModel]="selectedProjectFilter" (ngModelChange)="setProjectFilter($event)" class="project-select">
                   <option [ngValue]="null">All Projects</option>
                   <option *ngFor="let project of projects" [ngValue]="project.id">{{ project.name }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item date-filter-item" (click)="toggleDateFilter(); $event.stopPropagation()">
+              <span>Search Date</span>
+              <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showDateFilter" class="date-filter-dropdown" (click)="$event.stopPropagation()">
+                <input 
+                  type="date" 
+                  [ngModel]="selectedDateFilter" 
+                  (ngModelChange)="setDateFilter($event)" 
+                  class="date-filter-input"
+                  placeholder="Select date"
+                />
+                <button *ngIf="selectedDateFilter" (click)="clearDateFilter(); $event.stopPropagation()" class="clear-date-btn" title="Clear date filter">×</button>
+              </div>
+            </div>
+            <div class="dropdown-item worked-by-filter-item" (click)="toggleWorkedByFilter(); $event.stopPropagation()">
+              <span>Search Worked By</span>
+              <span class="dropdown-arrow">▼</span>
+              <div *ngIf="showWorkedByFilter" class="worked-by-filter-dropdown" (click)="$event.stopPropagation()">
+                <select [ngModel]="selectedWorkedByFilter" (ngModelChange)="setWorkedByFilter($event)" class="worked-by-select">
+                  <option [ngValue]="null">All Users</option>
+                  <option *ngFor="let user of users" [ngValue]="user.id">{{ user.name || user.email }} ({{ user.email }})</option>
                 </select>
               </div>
             </div>

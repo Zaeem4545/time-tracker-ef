@@ -261,6 +261,89 @@
       font-size: 0.875rem;
     }
   }
+
+  &.date-filter-item {
+    .date-filter-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      margin-top: 0.25rem;
+      padding: 0.5rem;
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-filter-input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      outline: none;
+
+      &:focus {
+        border-color: #17a2b8;
+      }
+    }
+
+    .clear-date-btn {
+      background: #ffebee;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #c62828;
+      font-size: 1rem;
+      font-weight: bold;
+      padding: 0;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #ffcdd2;
+      }
+    }
+  }
+
+  &.worked-by-filter-item {
+    .worked-by-filter-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      margin-top: 0.25rem;
+      padding: 0.5rem;
+      z-index: 1001;
+    }
+
+    .worked-by-select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      outline: none;
+      cursor: pointer;
+
+      &:focus {
+        border-color: #17a2b8;
+      }
+    }
+  }
 }
 
 .dropdown-divider {

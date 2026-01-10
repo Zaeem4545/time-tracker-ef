@@ -86,6 +86,10 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   selectedProjectFilter: number | null = null;
   showProjectFilter: boolean = false;
   filteredTimeEntries: any[] = [];
+  selectedDateFilter: string = '';
+  showDateFilter: boolean = false;
+  selectedWorkedByFilter: number | null = null;
+  showWorkedByFilter: boolean = false;
 
   constructor(
     private adminService: AdminService,
@@ -225,6 +229,23 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     // Apply project filter
     if (this.selectedProjectFilter !== null) {
       filteredEntries = filteredEntries.filter(entry => entry.project_id === this.selectedProjectFilter);
+    }
+    
+    // Apply date filter
+    if (this.selectedDateFilter) {
+      const filterDate = new Date(this.selectedDateFilter);
+      filterDate.setHours(0, 0, 0, 0);
+      filteredEntries = filteredEntries.filter(entry => {
+        if (!entry.start_time) return false;
+        const entryDate = new Date(entry.start_time);
+        entryDate.setHours(0, 0, 0, 0);
+        return entryDate.getTime() === filterDate.getTime();
+      });
+    }
+    
+    // Apply worked by filter
+    if (this.selectedWorkedByFilter !== null) {
+      filteredEntries = filteredEntries.filter(entry => entry.user_id === this.selectedWorkedByFilter);
     }
     
     // Apply my-entries filter
@@ -1496,12 +1517,66 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     return project ? project.name : `Project ${projectId}`;
   }
 
+  toggleDateFilter() {
+    this.showDateFilter = !this.showDateFilter;
+    // Close other filters when opening this one
+    if (this.showDateFilter) {
+      this.showProjectFilter = false;
+      this.showWorkedByFilter = false;
+    }
+  }
+
+  setDateFilter(date: string) {
+    this.selectedDateFilter = date;
+    this.processTimeEntries();
+  }
+
+  clearDateFilter() {
+    this.selectedDateFilter = '';
+    this.showDateFilter = false;
+    this.processTimeEntries();
+  }
+
+  formatDateForFilter(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  toggleWorkedByFilter() {
+    this.showWorkedByFilter = !this.showWorkedByFilter;
+    // Close other filters when opening this one
+    if (this.showWorkedByFilter) {
+      this.showProjectFilter = false;
+      this.showDateFilter = false;
+    }
+  }
+
+  setWorkedByFilter(userId: number | null) {
+    this.selectedWorkedByFilter = userId;
+    this.processTimeEntries();
+  }
+
+  clearWorkedByFilter() {
+    this.selectedWorkedByFilter = null;
+    this.showWorkedByFilter = false;
+    this.processTimeEntries();
+  }
+
+  getUserName(userId: number): string {
+    const user = this.users.find(u => u.id === userId);
+    return user ? (user.name || user.email) : `User ${userId}`;
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.search-container-top')) {
       this.showSearchDropdown = false;
       this.showSearchSuggestions = false;
+      this.showProjectFilter = false;
+      this.showDateFilter = false;
+      this.showWorkedByFilter = false;
     }
   }
 
