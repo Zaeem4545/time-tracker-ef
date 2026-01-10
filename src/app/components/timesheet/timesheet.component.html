@@ -324,13 +324,9 @@
             <td class="total-cell" [class.time-exceeded]="activity.timeExceeded">{{ formatTime(activity.totalTime) }}</td>
             <td class="allocated-cell">{{ formatAllocatedTime(activity.allocatedTime) }}</td>
             <td class="users-cell">
-              <div *ngIf="activity.userList && activity.userList.length > 0" class="users-list">
-                <div *ngFor="let userName of activity.userList" class="user-item">
-                  <span class="user-name" style="font-weight: 500; color: #333;">{{ userName }}</span>
-                  <span class="user-time" style="color: #666; font-size: 0.875rem;">({{ formatTime(getUserTimeForName(activity, userName)) }})</span>
-                </div>
+              <div class="user-item">
+                <span class="user-name" style="font-weight: 500; color: #333;">{{ activity.userName || activity.userEmail || 'Unknown User' }}</span>
               </div>
-              <span *ngIf="!activity.userList || activity.userList.length === 0" class="no-users" style="color: #999;">-</span>
             </td>
           </tr>
           <tr class="total-row">

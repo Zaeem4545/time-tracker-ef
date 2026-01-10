@@ -21,8 +21,11 @@ interface ActivityRow {
   timeExceeded?: boolean; // Flag to indicate if time exceeded allocated time
   dailyTime: { [key: string]: number }; // Key: YYYY-MM-DD, Value: seconds
   totalTime: number; // Total time in seconds
-  users: { [key: string]: { name: string; email: string; time: number } }; // Key: user_id, Value: { name, email, time in seconds }
-  userList: string[]; // List of user names who worked on this task
+  userId: number | null; // User ID for this specific row
+  userName: string; // User name for this specific row
+  userEmail: string; // User email for this specific row
+  users: { [key: string]: { name: string; email: string; time: number } }; // Key: user_id, Value: { name, email, time in seconds } (kept for backward compatibility)
+  userList: string[]; // List of user names who worked on this task (kept for backward compatibility)
 }
 
 @Component({
@@ -291,40 +294,22 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       normalizedEntryDate.setHours(0, 0, 0, 0);
       
       if (normalizedEntryDate >= viewStart && normalizedEntryDate <= viewEnd) {
-        if (!activityMap.has(taskKey)) {
-          // Find project to get project_id
-          const project = this.projects.find(p => p.name === projectName);
-          const projectId = project ? project.id : entry.project_id;
-          
-          // Find task allocated_time
-          let allocatedTime: string | undefined = undefined;
-          let allocatedTimeSeconds: number = 0;
-          if (projectId && this.projectTasks[projectId]) {
-            const task = this.projectTasks[projectId].find((t: any) => t.title === taskName);
-            if (task && task.allocated_time) {
-              allocatedTime = task.allocated_time;
-              if (allocatedTime) {
-                allocatedTimeSeconds = this.timeToSeconds(allocatedTime);
-              }
+        // Find project to get project_id
+        const project = this.projects.find(p => p.name === projectName);
+        const projectId = project ? project.id : entry.project_id;
+        
+        // Find task allocated_time
+        let allocatedTime: string | undefined = undefined;
+        let allocatedTimeSeconds: number = 0;
+        if (projectId && this.projectTasks[projectId]) {
+          const task = this.projectTasks[projectId].find((t: any) => t.title === taskName);
+          if (task && task.allocated_time) {
+            allocatedTime = task.allocated_time;
+            if (allocatedTime) {
+              allocatedTimeSeconds = this.timeToSeconds(allocatedTime);
             }
           }
-          
-          activityMap.set(taskKey, {
-            taskName: taskName,
-            description: entry.description || '',
-            projectName: projectName,
-            projectId: projectId,
-            allocatedTime: allocatedTime,
-            allocatedTimeSeconds: allocatedTimeSeconds,
-            timeExceeded: false,
-            dailyTime: {},
-            totalTime: 0,
-            users: {},
-            userList: []
-          });
         }
-        
-        const activity = activityMap.get(taskKey)!;
         
         // Calculate time in seconds from start_time and end_time
         let seconds = 0;
@@ -353,8 +338,32 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           seconds = entry.total_time * 60;
         }
         
-        // Track user time
+        // Create unique key combining project, task, and user to create separate rows per user
         const userKey = userId ? String(userId) : userEmail;
+        const activityUserKey = `${taskKey}__USER__${userKey}`;
+        
+        if (!activityMap.has(activityUserKey)) {
+          activityMap.set(activityUserKey, {
+            taskName: taskName,
+            description: entry.description || '',
+            projectName: projectName,
+            projectId: projectId,
+            allocatedTime: allocatedTime,
+            allocatedTimeSeconds: allocatedTimeSeconds,
+            timeExceeded: false,
+            dailyTime: {},
+            totalTime: 0,
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            users: { [userKey]: { name: userName, email: userEmail, time: 0 } },
+            userList: [userName || userEmail]
+          });
+        }
+        
+        const activity = activityMap.get(activityUserKey)!;
+        
+        // Track user time
         if (!activity.users[userKey]) {
           activity.users[userKey] = { name: userName, email: userEmail, time: 0 };
         }
@@ -369,11 +378,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       }
     });
     
-    // Build user list for each activity and check if time exceeded
+    // Build activity rows - each user has their own row
     this.activityRows = Array.from(activityMap.values()).map(activity => {
-      activity.userList = Object.values(activity.users).map(u => u.name || u.email);
-      
-      // Check if total time exceeded allocated time
+      // Check if total time exceeded allocated time for this user
       if (activity.allocatedTimeSeconds && activity.allocatedTimeSeconds > 0) {
         activity.timeExceeded = activity.totalTime > activity.allocatedTimeSeconds;
       }
@@ -1760,15 +1767,13 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         // Get task allocated_time
         const taskAllocatedTime = this.formatAllocatedTime(activity.allocatedTime);
         
-        // Format time spent
+        // Format time spent (this is now per user)
         const timeSpent = this.formatTime(activity.totalTime);
         
-        // Format who worked (combine all users)
-        const whoWorked = activity.userList.length > 0 
-          ? activity.userList.join(', ') 
-          : Object.values(activity.users).map(u => u.name || u.email).join(', ') || '-';
+        // Get user name (each row is now per user)
+        const whoWorked = activity.userName || activity.userEmail || 'Unknown User';
         
-        // Add data row
+        // Add data row (each row represents one user)
         excelData.push([
           activity.projectName || '-',
           customerName,
