@@ -558,7 +558,17 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     const timeInSeconds = this.parseTimeHHMMSS(this.editingCellTime);
     const dateKey = this.formatDateKey(day.date);
     
-    // Find all time entries for this activity and day
+    // Get current time for this activity, day, and user
+    const currentTime = this.getTimeForDay(activity, day);
+    
+    // Check if time actually changed
+    if (timeInSeconds === currentTime) {
+      // No change, just cancel editing
+      this.cancelCellEdit();
+      return;
+    }
+    
+    // Find all time entries for this activity, day, and user
     const entriesForDay = this.timeEntries.filter(entry => {
       if (!entry.end_time) return false; // Skip active entries
       
@@ -567,12 +577,23 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       const activityKey = `${projectName} - ${taskName}`;
       const entryDateKey = this.formatDateKey(new Date(entry.start_time));
       
-      return activityKey === this.editingCell!.activityKey && entryDateKey === dateKey;
+      // Also filter by user since we now have separate rows per user
+      const matchesActivity = activityKey === this.editingCell!.activityKey && entryDateKey === dateKey;
+      const matchesUser = activity.userId ? entry.user_id === activity.userId : 
+                         (entry.employee_email === activity.userEmail || entry.employee_name === activity.userName);
+      
+      return matchesActivity && matchesUser;
     });
     
     if (entriesForDay.length === 0) {
-      // No entry exists, create a new one
-      this.createTimeEntryForCell(activity, day, timeInSeconds);
+      // No entry exists, only create if time is greater than 0
+      if (timeInSeconds > 0) {
+        this.createTimeEntryForCell(activity, day, timeInSeconds);
+      } else {
+        // Time is 0 and no entries exist, just cancel
+        this.cancelCellEdit();
+        return;
+      }
     } else {
       // Update existing entries
       const totalCurrentTime = entriesForDay.reduce((sum, entry) => {
@@ -624,15 +645,28 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     
     const endTime = new Date(dayDate.getTime() + (timeInSeconds * 1000)).toISOString();
     
-    const currentUserId = this.authService.getUserId();
-    if (!currentUserId) {
+    // Use the user from the activity row (since each row is now per user)
+    let userId = activity.userId;
+    
+    // If userId is not available, try to find user by email/name
+    if (!userId && activity.userEmail) {
+      const user = this.users.find(u => u.email === activity.userEmail || u.name === activity.userName);
+      userId = user ? user.id : null;
+    }
+    
+    // Fallback to current user if still not found (for backward compatibility)
+    if (!userId) {
+      userId = this.authService.getUserId();
+    }
+    
+    if (!userId) {
       alert('User not found');
       this.cancelCellEdit();
       return;
     }
     
     const entryData = {
-      user_id: currentUserId,
+      user_id: userId,
       project_id: project.id,
       task_name: activity.taskName,
       description: activity.description || '',
