@@ -63,32 +63,81 @@
         word-wrap: break-word;
         overflow-wrap: break-word;
         background: white;
-        padding: 0.75rem 0.5rem;
+        padding: 0.875rem 1rem;
         text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #333;
+        border-bottom: 2px solid #e0e0e0;
         
-        // Actions column - fixed width
+        // Date columns - center align
+        &:nth-child(5), // Start Date
+        &:nth-child(6) { // End Date
+          text-align: center;
+        }
+        
+        // Allocated Time - center align
+        &:nth-child(7) {
+          text-align: center;
+        }
+        
+        // Actions column - fixed width and center
         &.role-cell {
           width: 150px;
           min-width: 150px;
           max-width: 150px;
+          text-align: center;
         }
       }
     }
     
     tbody {
       tr {
+        border-bottom: 1px solid #f0f0f0;
+        
+        &:hover {
+          background: #f9f9f9;
+        }
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
         td {
           white-space: normal;
           word-wrap: break-word;
           overflow-wrap: break-word;
-          padding: 0.75rem 0.5rem;
-          vertical-align: top;
+          padding: 1rem;
+          vertical-align: middle;
+          color: #333;
+          font-size: 0.875rem;
+          line-height: 1.5;
           
-          // Actions column - fixed width
+          // Date columns - center align
+          &:nth-child(5), // Start Date
+          &:nth-child(6) { // End Date
+            text-align: center;
+            white-space: nowrap;
+          }
+          
+          // Allocated Time - center align
+          &:nth-child(7) {
+            text-align: center;
+          }
+          
+          // Actions column - fixed width and center
           &.role-cell {
             width: 150px;
             min-width: 150px;
             max-width: 150px;
+            text-align: center;
+          }
+          
+          // Empty cells styling
+          &:empty::before {
+            content: '-';
+            color: #bbb;
+            font-style: italic;
           }
         }
       }
