@@ -54,10 +54,39 @@ async function runMigrations() {
     
     if (allocatedTimeCheck[0].count === 0) {
       console.log('  → Adding allocated_time column...');
-      await connection.query('ALTER TABLE projects ADD COLUMN allocated_time INT NULL;');
-      console.log('  ✅ allocated_time column added');
+      try {
+        await connection.query('ALTER TABLE projects ADD COLUMN allocated_time INT NULL;');
+        console.log('  ✅ allocated_time column added');
+      } catch (err) {
+        if (err.code === 'ER_DUP_FIELDNAME') {
+          console.log('  ✓ allocated_time column already exists (duplicate detected)');
+        } else {
+          console.log('  ⚠️  Error adding allocated_time column:', err.message);
+          // Don't throw - continue with other migrations
+        }
+      }
     } else {
-      console.log('  ✓ allocated_time column already exists');
+      // Column exists, check if it needs to be modified to ensure it's INT NULL
+      const [columnInfo] = await connection.query(`
+        SELECT DATA_TYPE, IS_NULLABLE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'projects'
+          AND COLUMN_NAME = 'allocated_time'
+      `);
+      
+      if (columnInfo.length > 0 && (columnInfo[0].DATA_TYPE !== 'int' || columnInfo[0].IS_NULLABLE !== 'YES')) {
+        console.log('  → Modifying allocated_time column to INT NULL...');
+        try {
+          await connection.query('ALTER TABLE projects MODIFY COLUMN allocated_time INT NULL;');
+          console.log('  ✅ allocated_time column modified');
+        } catch (err) {
+          console.log('  ⚠️  Error modifying allocated_time column:', err.message);
+          // Don't throw - continue with other migrations
+        }
+      } else {
+        console.log('  ✓ allocated_time column already exists with correct type (INT NULL)');
+      }
     }
 
     // Migration 2: Add assigned_to column if it doesn't exist
