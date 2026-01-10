@@ -31,9 +31,9 @@
   }
 }
 
-// Table wrapper for horizontal and vertical scrolling - full page width
+// Table wrapper - full page width, no horizontal scroll
 .expertflow-table-wrapper {
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
   width: 100%;
   position: relative;
@@ -44,13 +44,12 @@
   
   .expertflow-table {
     width: 100%;
-    min-width: 100%;
     margin-top: 0;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     background: white;
     display: table;
-    table-layout: auto;
+    table-layout: auto; // Auto layout allows flexible column sizing
     
     thead {
       position: sticky;
@@ -60,15 +59,37 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       
       th {
-        white-space: nowrap;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
         background: white;
+        padding: 0.75rem 0.5rem;
+        text-align: left;
+        
+        // Actions column - fixed width
+        &.role-cell {
+          width: 150px;
+          min-width: 150px;
+          max-width: 150px;
+        }
       }
     }
     
     tbody {
       tr {
         td {
-          white-space: nowrap;
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          padding: 0.75rem 0.5rem;
+          vertical-align: top;
+          
+          // Actions column - fixed width
+          &.role-cell {
+            width: 150px;
+            min-width: 150px;
+            max-width: 150px;
+          }
         }
       }
     }
@@ -942,14 +963,17 @@
   
   .expertflow-table {
     font-size: 0.875rem;
-    overflow-x: auto;
-    display: block;
+    overflow-x: hidden;
+    display: table;
     width: 100%;
+    table-layout: fixed;
     
     th, td {
       padding: 0.5rem 0.25rem !important;
       font-size: 0.8rem;
-      white-space: nowrap;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
   }
   
@@ -999,7 +1023,7 @@
   .expertflow-table-wrapper {
     max-height: calc(100vh - 300px) !important;
     overflow-y: auto !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
   }
 }
 
