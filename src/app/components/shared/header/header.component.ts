@@ -171,6 +171,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   getUserDisplayName(): string {
+    // First try to get the actual user name from token
+    const userName = this.auth.getName();
+    if (userName) {
+      return userName;
+    }
+    
+    // Fallback to email username if name not available
+    const email = this.auth.getEmail();
+    if (email) {
+      return email.split('@')[0];
+    }
+    
+    // Final fallback to role
     const role = this.auth.getRole();
     if (!role) return 'User';
     
