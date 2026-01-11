@@ -1610,7 +1610,6 @@ export class DashboardComponent implements OnInit {
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
-<<<<<<< HEAD
 
   archiveProject(project: any): void {
     // Archive the project
@@ -1687,8 +1686,6 @@ export class DashboardComponent implements OnInit {
     this.updateProjectStatus(project, 'on-track');
     this.toastService.show('Project removed from maintenance', 'success');
   }
-=======
->>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 =======
 >>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 =======
