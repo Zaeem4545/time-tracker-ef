@@ -66,7 +66,7 @@ export class HeadManagerDashboardComponent implements OnInit {
     private notificationService: NotificationService,
     private toastService: ToastNotificationService,
     private authService: AuthService,
-    public router: Router
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1633,6 +1633,7 @@ export class HeadManagerDashboardComponent implements OnInit {
     }
     return 'task-type-not-assigned';
   }
+<<<<<<< HEAD
 
   archiveProject(project: any): void {
     // Archive the project
@@ -1709,5 +1710,7 @@ export class HeadManagerDashboardComponent implements OnInit {
     this.updateProjectStatus(project, 'on-track');
     this.toastService.show('Project removed from maintenance', 'success');
   }
+=======
+>>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 }
 
