@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener, OnDestroy, Output, EventEmitter } from
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService, Notification } from '../../../services/notification.service';
+import { AdminService } from '../../../services/admin.service';
 import { filter, interval, Subscription } from 'rxjs';
 
 @Component({
@@ -18,6 +19,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   unreadCount: number = 0;
   private refreshSubscription?: Subscription;
   isMobileView: boolean = false;
+  userName: string | null = null;
 
   private routeTitles: { [key: string]: string } = {
     '/dashboard': 'Dashboard',
@@ -37,7 +39,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     public auth: AuthService, 
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private adminService: AdminService
   ) {}
 
   ngOnInit(): void {
@@ -51,6 +54,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.updatePageTitle(this.router.url);
     this.loadNotifications();
     this.loadUnreadCount();
+    this.loadUserName();
     
     // Refresh notifications every 30 seconds
     this.refreshSubscription = interval(30000).subscribe(() => {
@@ -170,17 +174,48 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
   }
 
-  getUserDisplayName(): string {
-    // First try to get the actual user name from token
-    const userName = this.auth.getName();
-    if (userName) {
-      return userName;
+  loadUserName(): void {
+    const userId = this.auth.getUserId();
+    const userEmail = this.auth.getEmail();
+    
+    // First try to get name from token
+    const tokenName = this.auth.getName();
+    if (tokenName) {
+      this.userName = tokenName;
+      return;
     }
     
-    // Fallback to email username if name not available
-    const email = this.auth.getEmail();
-    if (email) {
-      return email.split('@')[0];
+    // If not in token, fetch from API
+    if (userId || userEmail) {
+      this.adminService.getUsers().subscribe({
+        next: (users) => {
+          const currentUser = users.find((u: any) => 
+            (userId && u.id === userId) || (userEmail && u.email === userEmail)
+          );
+          if (currentUser && currentUser.name) {
+            this.userName = currentUser.name;
+          } else {
+            // Fallback to role if name not found
+            this.userName = null;
+          }
+        },
+        error: () => {
+          this.userName = null;
+        }
+      });
+    }
+  }
+
+  getUserDisplayName(): string {
+    // First use the loaded user name
+    if (this.userName) {
+      return this.userName;
+    }
+    
+    // Try to get name from token
+    const tokenName = this.auth.getName();
+    if (tokenName) {
+      return tokenName;
     }
     
     // Final fallback to role
