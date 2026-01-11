@@ -432,7 +432,7 @@ export class EmployeeDashboardComponent implements OnInit {
       next: () => {
         project.archived = 1;
         this.toastService.show('Project moved to archived', 'success');
-        this.loadDashboardData();
+        this.loadProjects();
       },
       error: (err) => {
         const errorMessage = err?.error?.message || err?.message || 'Failed to archive project';
