@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastNotificationService } from '../../services/toast-notification.service';
 
 @Component({
   selector: 'app-admin-dashboard-page',
@@ -92,7 +93,8 @@ export class AdminDashboardPageComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -655,6 +657,52 @@ export class AdminDashboardPageComponent implements OnInit {
   toggleTaskStatusDropdown(taskId: number, event: Event): void {
     event.stopPropagation();
     this.taskStatusDropdownOpen = this.taskStatusDropdownOpen === taskId ? null : taskId;
+  }
+
+  // Check if project status is completed (case-insensitive)
+  isProjectCompleted(project: any): boolean {
+    const status = (project.status || '').toLowerCase().trim();
+    return status === 'completed';
+  }
+
+  // Check if project is archived
+  isProjectArchived(project: any): boolean {
+    return project.archived === 1 || project.archived === true || project.archived === '1' || project.archived === 'true';
+  }
+
+  // Check if project should show "Set to Archived" button
+  shouldShowArchiveButton(project: any): boolean {
+    return this.isProjectCompleted(project) && !this.isProjectArchived(project);
+  }
+
+  // Archive project
+  archiveProject(project: any): void {
+    const newArchivedStatus = true;
+    
+    const dataToSend: any = {
+      name: project.name,
+      description: project.description || '',
+      status: project.status || 'on-track',
+      start_date: project.start_date || null,
+      end_date: project.end_date || null,
+      manager_id: project.manager_id || null,
+      customer_id: project.customer_id || null,
+      region: project.region || null,
+      allocated_time: project.allocated_time || null,
+      archived: newArchivedStatus
+    };
+    
+    this.adminService.updateProject(project.id, dataToSend).subscribe({
+      next: () => {
+        project.archived = 1;
+        this.toastService.show('Project moved to archived', 'success');
+        this.loadDashboardData();
+      },
+      error: (err) => {
+        const errorMessage = err?.error?.message || err?.message || 'Failed to archive project';
+        this.toastService.show('Error archiving project: ' + errorMessage, 'error');
+      }
+    });
   }
 
   updateProjectStatus(project: any, newStatus: string): void {

@@ -55,7 +55,18 @@
     <h3 class="section-title">Projects</h3>
     <div class="projects-grid">
       <div class="project-card" *ngFor="let project of recentProjects" style="position: relative;">
+        <div *ngIf="isProjectArchived(project)" style="position: absolute; top: 0.5rem; left: 0.5rem; z-index: 10; background: #9c27b0; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+          Archived
+        </div>
         <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10;">
+          <button 
+            *ngIf="shouldShowArchiveButton(project)"
+            (click)="archiveProject(project)" 
+            class="btn-circle-icon" 
+            title="Archive Project"
+            style="width: 28px; height: 28px; border-radius: 50%; background: #9c27b0; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            📦
+          </button>
           <button 
             (click)="viewProjectDetails(project)" 
             class="btn-circle-icon" 

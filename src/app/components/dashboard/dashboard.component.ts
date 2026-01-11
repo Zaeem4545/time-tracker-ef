@@ -610,6 +610,50 @@ export class DashboardComponent implements OnInit {
     this.projectStatusDropdownOpen = null; // Close project dropdown if open
   }
 
+  // Check if project status is completed (case-insensitive)
+  isProjectCompleted(project: any): boolean {
+    const status = (project.status || '').toLowerCase().trim();
+    return status === 'completed';
+  }
+
+  // Check if project is archived
+  isProjectArchived(project: any): boolean {
+    return project.archived === 1 || project.archived === true || project.archived === '1' || project.archived === 'true';
+  }
+
+  // Check if project should show "Set to Archived" button
+  shouldShowArchiveButton(project: any): boolean {
+    return this.isProjectCompleted(project) && !this.isProjectArchived(project);
+  }
+
+  // Archive project
+  archiveProject(project: any): void {
+    const newArchivedStatus = true;
+    
+    const dataToSend: any = {
+      name: project.name,
+      description: project.description || '',
+      status: project.status || 'on-track',
+      start_date: project.start_date || null,
+      end_date: project.end_date || null,
+      manager_id: project.manager_id || null,
+      customer_id: project.customer_id || null,
+      archived: newArchivedStatus
+    };
+    
+    this.adminService.updateProject(project.id, dataToSend).subscribe({
+      next: () => {
+        project.archived = 1;
+        this.toastService.show('Project moved to archived', 'success');
+        this.loadProjects();
+      },
+      error: (err) => {
+        const errorMessage = err?.error?.message || err?.message || 'Failed to archive project';
+        this.toastService.show('Error archiving project: ' + errorMessage, 'error');
+      }
+    });
+  }
+
   updateProjectStatus(project: any, newStatus: string): void {
     if (project.status === newStatus) {
       this.projectStatusDropdownOpen = null;
