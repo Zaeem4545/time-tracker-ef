@@ -95,8 +95,12 @@ export class AdminDashboardPageComponent implements OnInit {
     private authService: AuthService,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     public router: Router,
     private toastService: ToastNotificationService
+=======
+    private router: Router
+>>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 =======
     private router: Router
 >>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
@@ -1445,6 +1449,7 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   archiveProject(project: any): void {
     // Archive the project
@@ -1521,6 +1526,8 @@ export class AdminDashboardPageComponent implements OnInit {
     this.updateProjectStatus(project, 'on-track');
     this.toastService.show('Project removed from maintenance', 'success');
   }
+=======
+>>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 =======
 >>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 =======
