@@ -756,6 +756,27 @@ export class ProjectsComponent implements OnInit {
     return statusNames[statusType] || statusType;
   }
 
+  // Check if project status is completed (case-insensitive)
+  isProjectCompleted(project: any): boolean {
+    const status = (project.status || '').toLowerCase().trim();
+    return status === 'completed';
+  }
+
+  // Check if project is archived
+  isProjectArchived(project: any): boolean {
+    return project.archived === 1 || project.archived === true || project.archived === '1' || project.archived === 'true';
+  }
+
+  // Check if project should show "Set to Archived" button
+  shouldShowArchiveButton(project: any): boolean {
+    return this.isProjectCompleted(project) && !this.isProjectArchived(project);
+  }
+
+  // Check if project should show "Remove Archived" button
+  shouldShowRemoveArchivedButton(project: any): boolean {
+    return this.isProjectArchived(project);
+  }
+
   // Get filter display name
   getFilterDisplayName(filterType: string): string {
     const filterNames: { [key: string]: string } = {

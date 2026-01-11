@@ -469,16 +469,16 @@
                       <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
                       <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
                       <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
-                      <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
-                      <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                      <button *ngIf="shouldShowArchiveButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                      <button *ngIf="shouldShowRemoveArchivedButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
                       <button *ngIf="(project.status || 'on-track') === 'maintenance'" (click)="toggleProjectMaintenance(project)" class="btn-expertflow btn-icon" title="Remove from Maintenance" style="color: #607d8b;">🔧</button>
                     </div>
                     <div *ngIf="editingProject !== project.id && (isEmployee || isManager)" class="action-buttons">
                       <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
                       <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
                       <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
-                      <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
-                      <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                      <button *ngIf="shouldShowArchiveButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                      <button *ngIf="shouldShowRemoveArchivedButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
                       <button *ngIf="(project.status || 'on-track') === 'maintenance'" (click)="toggleProjectMaintenance(project)" class="btn-expertflow btn-icon" title="Remove from Maintenance" style="color: #607d8b;">🔧</button>
                     </div>
                     <div *ngIf="editingProject !== project.id && isHeadManager" class="action-buttons">
@@ -486,8 +486,8 @@
                       <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
                       <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
                       <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
-                      <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
-                      <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                      <button *ngIf="shouldShowArchiveButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                      <button *ngIf="shouldShowRemoveArchivedButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
                       <button *ngIf="(project.status || 'on-track') === 'maintenance'" (click)="toggleProjectMaintenance(project)" class="btn-expertflow btn-icon" title="Remove from Maintenance" style="color: #607d8b;">🔧</button>
                     </div>
                     <div *ngIf="editingProject === project.id" class="action-buttons edit-mode">
@@ -712,16 +712,16 @@
                   <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
                   <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
                   <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
-                  <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
-                  <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                  <button *ngIf="shouldShowArchiveButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                  <button *ngIf="shouldShowRemoveArchivedButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
                   <button *ngIf="(project.status || 'on-track') === 'maintenance'" (click)="toggleProjectMaintenance(project)" class="btn-expertflow btn-icon" title="Remove from Maintenance" style="color: #607d8b;">🔧</button>
                 </div>
                 <div *ngIf="editingProject !== project.id && (isEmployee || isManager)" class="action-buttons">
                   <button (click)="viewProjectDetails(project)" class="btn-expertflow btn-icon" title="View Details">👁️</button>
                   <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
                   <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
-                  <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
-                  <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                  <button *ngIf="shouldShowArchiveButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                  <button *ngIf="shouldShowRemoveArchivedButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
                   <button *ngIf="(project.status || 'on-track') === 'maintenance'" (click)="toggleProjectMaintenance(project)" class="btn-expertflow btn-icon" title="Remove from Maintenance" style="color: #607d8b;">🔧</button>
                 </div>
                 <div *ngIf="editingProject !== project.id && isHeadManager" class="action-buttons">
@@ -729,8 +729,8 @@
                   <button (click)="openEditProjectModal(project)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
                   <button (click)="deleteProject(project.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
                   <button (click)="toggleTasks(project.id)" class="btn-expertflow btn-icon" [title]="expandedProjects.has(project.id) ? 'Hide Tasks' : 'View Tasks'">{{ expandedProjects.has(project.id) ? '📋' : '📋' }}</button>
-                  <button *ngIf="(project.status || 'on-track') === 'completed' && !(project.archived === 1 || project.archived === true)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
-                  <button *ngIf="project.archived === 1 || project.archived === true" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
+                  <button *ngIf="shouldShowArchiveButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Set to Archived" style="color: #9c27b0;">📦</button>
+                  <button *ngIf="shouldShowRemoveArchivedButton(project)" (click)="toggleProjectArchived(project)" class="btn-expertflow btn-icon" title="Remove Archived" style="color: #9c27b0;">📤</button>
                   <button *ngIf="(project.status || 'on-track') === 'maintenance'" (click)="toggleProjectMaintenance(project)" class="btn-expertflow btn-icon" title="Remove from Maintenance" style="color: #607d8b;">🔧</button>
                 </div>
                 <div *ngIf="editingProject === project.id" class="action-buttons edit-mode">
