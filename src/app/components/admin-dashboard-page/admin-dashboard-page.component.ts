@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { AdminService } from '../../services/admin.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastNotificationService } from '../../services/toast-notification.service';
 
 @Component({
   selector: 'app-admin-dashboard-page',
@@ -92,7 +93,8 @@ export class AdminDashboardPageComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private authService: AuthService,
-    public router: Router
+    public router: Router,
+    private toastService: ToastNotificationService
   ) {}
 
   ngOnInit(): void {
