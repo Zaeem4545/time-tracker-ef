@@ -626,6 +626,17 @@ export class DashboardComponent implements OnInit {
     return this.isProjectCompleted(project) && !this.isProjectArchived(project);
   }
 
+  // Check if project is in maintenance
+  isProjectInMaintenance(project: any): boolean {
+    const status = (project.status || '').toLowerCase().trim();
+    return status === 'maintenance';
+  }
+
+  // Check if project should show "Go to Maintenance" button
+  shouldShowMaintenanceButton(project: any): boolean {
+    return !this.isProjectInMaintenance(project) && !this.isProjectArchived(project) && !this.isProjectCompleted(project);
+  }
+
   // Archive project
   archiveProject(project: any): void {
     const newArchivedStatus = true;
@@ -650,6 +661,58 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         const errorMessage = err?.error?.message || err?.message || 'Failed to archive project';
         this.toastService.show('Error archiving project: ' + errorMessage, 'error');
+      }
+    });
+  }
+
+  // Set project to maintenance
+  goToMaintenance(project: any): void {
+    const dataToSend: any = {
+      name: project.name,
+      description: project.description || '',
+      status: 'maintenance',
+      start_date: project.start_date || null,
+      end_date: project.end_date || null,
+      manager_id: project.manager_id || null,
+      customer_id: project.customer_id || null,
+      archived: project.archived || false
+    };
+    
+    this.adminService.updateProject(project.id, dataToSend).subscribe({
+      next: () => {
+        project.status = 'maintenance';
+        this.toastService.show('Project moved to maintenance', 'success');
+        this.loadProjects();
+      },
+      error: (err) => {
+        const errorMessage = err?.error?.message || err?.message || 'Failed to set project to maintenance';
+        this.toastService.show('Error setting project to maintenance: ' + errorMessage, 'error');
+      }
+    });
+  }
+
+  // Remove project from maintenance
+  removeFromMaintenance(project: any): void {
+    const dataToSend: any = {
+      name: project.name,
+      description: project.description || '',
+      status: 'on-track',
+      start_date: project.start_date || null,
+      end_date: project.end_date || null,
+      manager_id: project.manager_id || null,
+      customer_id: project.customer_id || null,
+      archived: project.archived || false
+    };
+    
+    this.adminService.updateProject(project.id, dataToSend).subscribe({
+      next: () => {
+        project.status = 'on-track';
+        this.toastService.show('Project removed from maintenance', 'success');
+        this.loadProjects();
+      },
+      error: (err) => {
+        const errorMessage = err?.error?.message || err?.message || 'Failed to remove from maintenance';
+        this.toastService.show('Error removing from maintenance: ' + errorMessage, 'error');
       }
     });
   }
