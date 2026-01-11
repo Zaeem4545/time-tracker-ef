@@ -93,12 +93,8 @@ export class AdminDashboardPageComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private authService: AuthService,
-<<<<<<< HEAD
     public router: Router,
     private toastService: ToastNotificationService
-=======
-    private router: Router
->>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
   ) {}
 
   ngOnInit(): void {
@@ -1439,7 +1435,6 @@ export class AdminDashboardPageComponent implements OnInit {
     }
     return 'task-type-not-assigned';
   }
-<<<<<<< HEAD
 
   archiveProject(project: any): void {
     // Archive the project
@@ -1516,6 +1511,4 @@ export class AdminDashboardPageComponent implements OnInit {
     this.updateProjectStatus(project, 'on-track');
     this.toastService.show('Project removed from maintenance', 'success');
   }
-=======
->>>>>>> parent of 055afc6 (add archieved and maintainance button in dashboard)
 }
