@@ -418,7 +418,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
           // Store profile picture URL (you may want to save this to user profile in database)
           this.profilePictureUrl = response.file.path;
           // Save to localStorage for now (you can update this to save to database)
-          localStorage.setItem('profilePicture', this.profilePictureUrl);
+          if (this.profilePictureUrl) {
+            localStorage.setItem('profilePicture', this.profilePictureUrl);
+          }
           this.toastService.show('Profile picture updated successfully', 'success');
         }
       },
@@ -438,13 +440,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
       const userId = this.auth.getUserId();
       if (userId) {
         this.adminService.getUsers().subscribe({
-          next: (users) => {
-            const currentUser = users.find((u: any) => u.id === userId);
-            if (currentUser && currentUser.profile_picture) {
-              this.profilePictureUrl = currentUser.profile_picture;
+        next: (users) => {
+          const currentUser = users.find((u: any) => u.id === userId);
+          if (currentUser && currentUser.profile_picture) {
+            this.profilePictureUrl = currentUser.profile_picture;
+            if (this.profilePictureUrl) {
               localStorage.setItem('profilePicture', this.profilePictureUrl);
             }
-          },
+          }
+        },
           error: () => {
             // Silently fail
           }
