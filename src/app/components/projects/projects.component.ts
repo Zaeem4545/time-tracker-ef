@@ -72,6 +72,8 @@ export class ProjectsComponent implements OnInit {
   projectTasks: { [key: number]: any[] } = {};
   newTask: { [key: number]: any } = {};
   selectedProjectForTaskModal: number | null = null;
+  openTaskMenuId: number | null = null; // Track which task menu is open
+  openProjectMenuId: number | null = null; // Track which project menu is open
   showTaskModal: boolean = false;
   
   // Project details modal
@@ -638,6 +640,13 @@ export class ProjectsComponent implements OnInit {
     if (this.openTaskMenuId !== null) {
       if (!target.closest('.task-menu-container')) {
         this.openTaskMenuId = null;
+      }
+    }
+    
+    // Close project menu if clicking outside
+    if (this.openProjectMenuId !== null) {
+      if (!target.closest('.project-menu-container')) {
+        this.openProjectMenuId = null;
       }
     }
   }
@@ -2099,6 +2108,22 @@ export class ProjectsComponent implements OnInit {
   // Close task menu
   closeTaskMenu(): void {
     this.openTaskMenuId = null;
+  }
+
+  // Toggle project menu dropdown
+  toggleProjectMenu(projectId: number, event: Event): void {
+    event.stopPropagation();
+    if (this.openProjectMenuId === projectId) {
+      this.openProjectMenuId = null;
+    } else {
+      this.openProjectMenuId = projectId;
+      this.openTaskMenuId = null; // Close task menu when opening project menu
+    }
+  }
+
+  // Close project menu
+  closeProjectMenu(): void {
+    this.openProjectMenuId = null;
   }
   
   deleteProject(projectId: number) {
