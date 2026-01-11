@@ -989,7 +989,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       message: 'Stop time tracking?',
       confirmText: 'Stop',
       cancelText: 'Cancel'
-    }).subscribe(confirmed => {
+    }).then((confirmed: boolean) => {
       if (confirmed) {
         this.adminService.stopTime(this.activeEntry.id).subscribe({
           next: (response) => {
@@ -1058,7 +1058,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       message: 'Discard current time entry?',
       confirmText: 'Discard',
       cancelText: 'Cancel'
-    }).subscribe(confirmed => {
+    }).then((confirmed: boolean) => {
       if (confirmed) {
         // Stop the timer without saving
         this.activeEntry = null;
