@@ -3571,6 +3571,12 @@ export class ProjectsComponent implements OnInit {
   }
 
   // Toggle project maintenance status (remove from maintenance)
+  goToMaintenance(project: any): void {
+    // Set project status to maintenance
+    this.updateProjectStatus(project, 'maintenance');
+    this.toastService.show('Project moved to maintenance', 'success');
+  }
+
   toggleProjectMaintenance(project: any): void {
     // Change status from maintenance to on-track
     const dataToSend: any = {
