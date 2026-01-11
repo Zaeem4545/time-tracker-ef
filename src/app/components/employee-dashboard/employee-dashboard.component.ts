@@ -96,7 +96,7 @@ export class EmployeeDashboardComponent implements OnInit {
     private notificationService: NotificationService,
     private toastService: ToastNotificationService,
     private authService: AuthService,
-    public router: Router
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1136,14 +1136,6 @@ export class EmployeeDashboardComponent implements OnInit {
       return 'task-type-assigned';
     }
     return 'task-type-not-assigned';
-  }
-
-  goToArchived(): void {
-    this.router.navigate(['/projects'], { queryParams: { filter: 'archived' } });
-  }
-
-  goToMaintenance(): void {
-    this.router.navigate(['/projects'], { queryParams: { filter: 'maintenance' } });
   }
 }
 

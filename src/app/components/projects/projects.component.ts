@@ -247,18 +247,6 @@ export class ProjectsComponent implements OnInit {
         setTimeout(checkProject, 300);
       }
       
-      // Handle filter query parameter (for archived/maintenance navigation)
-      if (params['filter']) {
-        const filter = params['filter'];
-        if (filter === 'archived' && !this.isFilterActive('archived')) {
-          this.applyFilter('archived');
-        } else if (filter === 'maintenance' && !this.isFilterActive('maintenance')) {
-          this.applyFilter('maintenance');
-        }
-        // Clear query param after applying filter
-        this.router.navigate([], { queryParams: { filter: null }, queryParamsHandling: 'merge' });
-      }
-      
       if (params['viewTask'] && params['projectId']) {
         const taskId = parseInt(params['viewTask']);
         const projectId = parseInt(params['projectId']);

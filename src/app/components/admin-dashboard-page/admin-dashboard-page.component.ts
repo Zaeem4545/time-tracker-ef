@@ -92,7 +92,7 @@ export class AdminDashboardPageComponent implements OnInit {
   constructor(
     private adminService: AdminService,
     private authService: AuthService,
-    public router: Router
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1432,13 +1432,5 @@ export class AdminDashboardPageComponent implements OnInit {
       return 'task-type-assigned';
     }
     return 'task-type-not-assigned';
-  }
-
-  goToArchived(): void {
-    this.router.navigate(['/projects'], { queryParams: { filter: 'archived' } });
-  }
-
-  goToMaintenance(): void {
-    this.router.navigate(['/projects'], { queryParams: { filter: 'maintenance' } });
   }
 }
