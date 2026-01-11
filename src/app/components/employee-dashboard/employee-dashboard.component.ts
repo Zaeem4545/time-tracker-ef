@@ -1138,45 +1138,12 @@ export class EmployeeDashboardComponent implements OnInit {
     return 'task-type-not-assigned';
   }
 
-  archiveProject(project: any): void {
-    // Archive the project
-    const updateData: any = {
-      name: project.name,
-      description: project.description || '',
-      status: project.status || 'on-track',
-      start_date: project.start_date || null,
-      end_date: project.end_date || null,
-      manager_id: project.manager_id || null,
-      customer_id: project.customer_id || null,
-      archived: true
-    };
-
-    // Include optional fields if they exist
-    if (project.region) {
-      updateData.region = project.region;
-    }
-    if (project.allocated_time) {
-      updateData.allocated_time = project.allocated_time;
-    }
-
-    this.adminService.updateProject(project.id, updateData).subscribe({
-      next: () => {
-        project.archived = true;
-        this.toastService.show('Project archived successfully', 'success');
-        // Reload projects to update the list
-        this.loadProjects();
-      },
-      error: (err) => {
-        const errorMessage = err?.error?.message || err?.message || 'Failed to archive project';
-        this.toastService.show('Error archiving project: ' + errorMessage, 'error');
-      }
-    });
+  goToArchived(): void {
+    this.router.navigate(['/projects'], { queryParams: { filter: 'archived' } });
   }
 
-  goToMaintenanceProject(project: any): void {
-    // Set project status to maintenance
-    this.updateProjectStatus(project, 'maintenance');
-    this.toastService.show('Project moved to maintenance', 'success');
+  goToMaintenance(): void {
+    this.router.navigate(['/projects'], { queryParams: { filter: 'maintenance' } });
   }
 }
 

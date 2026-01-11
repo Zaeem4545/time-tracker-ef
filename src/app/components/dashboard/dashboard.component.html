@@ -55,23 +55,7 @@
     <h3 class="section-title">Projects</h3>
     <div class="projects-grid">
       <div class="project-card" *ngFor="let project of recentProjects" style="position: relative;">
-        <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10; flex-wrap: wrap; justify-content: flex-end;">
-          <button 
-            *ngIf="(project.status || 'on-track') === 'completed'"
-            (click)="archiveProject(project)" 
-            class="btn-go-to-archived-top" 
-            title="Archive Project"
-            style="padding: 0.375rem 0.75rem; border-radius: 4px; background: #607d8b; color: white; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            Go to Archived
-          </button>
-          <button 
-            *ngIf="(project.status || 'on-track') === 'maintenance'"
-            (click)="goToMaintenanceProject(project)" 
-            class="btn-go-to-maintenance-top" 
-            title="Go to Maintenance"
-            style="padding: 0.375rem 0.75rem; border-radius: 4px; background: #607d8b; color: white; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-            Go to Maintenance
-          </button>
+        <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10;">
           <button 
             (click)="viewProjectDetails(project)" 
             class="btn-circle-icon" 
@@ -116,6 +100,14 @@
                 <span>{{ option.label }}</span>
               </div>
             </div>
+          </div>
+          <div class="status-action-buttons" *ngIf="(project.status || 'on-track') === 'maintenance' || (project.status || 'on-track') === 'completed'">
+            <button class="btn-go-to-archived" (click)="goToArchived()" *ngIf="(project.status || 'on-track') === 'completed'">
+              Go to Archived
+            </button>
+            <button class="btn-go-to-maintenance" (click)="goToMaintenance()" *ngIf="(project.status || 'on-track') === 'maintenance'">
+              Go to Maintenance
+            </button>
           </div>
         </div>
       </div>
