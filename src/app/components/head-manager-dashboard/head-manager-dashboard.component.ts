@@ -1669,45 +1669,10 @@ export class HeadManagerDashboardComponent implements OnInit {
     });
   }
 
-  removeFromArchived(project: any): void {
-    // Remove from archived
-    const updateData: any = {
-      name: project.name,
-      description: project.description || '',
-      status: project.status || 'on-track',
-      start_date: project.start_date || null,
-      end_date: project.end_date || null,
-      manager_id: project.manager_id || null,
-      customer_id: project.customer_id || null,
-      archived: false
-    };
-
-    // Include optional fields if they exist
-    if (project.region) {
-      updateData.region = project.region;
-    }
-    if (project.allocated_time) {
-      updateData.allocated_time = project.allocated_time;
-    }
-
-    this.adminService.updateProject(project.id, updateData).subscribe({
-      next: () => {
-        project.archived = false;
-        this.toastService.show('Project removed from archived successfully', 'success');
-        // Reload projects to update the list
-        this.loadDashboardData();
-      },
-      error: (err) => {
-        const errorMessage = err?.error?.message || err?.message || 'Failed to remove from archived';
-        this.toastService.show('Error removing from archived: ' + errorMessage, 'error');
-      }
-    });
-  }
-
-  removeFromMaintenance(project: any): void {
-    // Remove from maintenance - set status back to on-track
-    this.updateProjectStatus(project, 'on-track');
-    this.toastService.show('Project removed from maintenance', 'success');
+  goToMaintenanceProject(project: any): void {
+    // Set project status to maintenance
+    this.updateProjectStatus(project, 'maintenance');
+    this.toastService.show('Project moved to maintenance', 'success');
   }
 }
 
