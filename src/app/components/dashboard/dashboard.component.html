@@ -101,6 +101,14 @@
               </div>
             </div>
           </div>
+          <div class="status-action-buttons" *ngIf="(project.status || 'on-track') === 'maintenance' || (project.status || 'on-track') === 'completed'">
+            <button class="btn-go-to-archived" (click)="goToArchived()" *ngIf="(project.status || 'on-track') === 'completed'">
+              Go to Archived
+            </button>
+            <button class="btn-go-to-maintenance" (click)="goToMaintenance()" *ngIf="(project.status || 'on-track') === 'maintenance'">
+              Go to Maintenance
+            </button>
+          </div>
         </div>
       </div>
       <div class="empty-state" *ngIf="recentProjects.length === 0">

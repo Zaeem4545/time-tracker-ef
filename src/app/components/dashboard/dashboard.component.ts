@@ -108,7 +108,7 @@ export class DashboardComponent implements OnInit {
     private adminService: AdminService,
     private authService: AuthService,
     private toastService: ToastNotificationService,
-    private router: Router
+    public router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1607,5 +1607,13 @@ export class DashboardComponent implements OnInit {
       return 'task-type-assigned';
     }
     return 'task-type-not-assigned';
+  }
+
+  goToArchived(): void {
+    this.router.navigate(['/projects'], { queryParams: { filter: 'archived' } });
+  }
+
+  goToMaintenance(): void {
+    this.router.navigate(['/projects'], { queryParams: { filter: 'maintenance' } });
   }
 }

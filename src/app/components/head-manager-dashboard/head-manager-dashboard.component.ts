@@ -66,7 +66,7 @@ export class HeadManagerDashboardComponent implements OnInit {
     private notificationService: NotificationService,
     private toastService: ToastNotificationService,
     private authService: AuthService,
-    private router: Router
+    public router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1632,6 +1632,14 @@ export class HeadManagerDashboardComponent implements OnInit {
       return 'task-type-assigned';
     }
     return 'task-type-not-assigned';
+  }
+
+  goToArchived(): void {
+    this.router.navigate(['/projects'], { queryParams: { filter: 'archived' } });
+  }
+
+  goToMaintenance(): void {
+    this.router.navigate(['/projects'], { queryParams: { filter: 'maintenance' } });
   }
 }
 
