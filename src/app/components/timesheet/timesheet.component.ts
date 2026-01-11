@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { AdminService } from '../../services/admin.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastNotificationService } from '../../services/toast-notification.service';
+import { ConfirmationModalService } from '../../services/confirmation-modal.service';
 
 interface WeekDay {
   date: Date;
@@ -97,7 +98,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   constructor(
     private adminService: AdminService,
     private authService: AuthService,
-    private toastService: ToastNotificationService
+    private toastService: ToastNotificationService,
+    private confirmationService: ConfirmationModalService
   ) {}
 
   ngOnInit(): void {
@@ -925,12 +927,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   startTime() {
     if (!this.selectedProjectId) {
-      alert('Please select a project');
+      this.toastService.show('Please select a project', 'warning');
       return;
     }
 
     if (!this.selectedTaskId) {
-      alert('Please select a task');
+      this.toastService.show('Please select a task', 'warning');
       return;
     }
 
@@ -938,21 +940,21 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     const taskId = typeof this.selectedTaskId === 'string' ? parseInt(this.selectedTaskId, 10) : this.selectedTaskId;
     
     if (isNaN(taskId)) {
-      alert('Invalid task selected');
+      this.toastService.show('Invalid task selected', 'error');
       return;
     }
 
     // Get task name from selected task
     const projectTasksList = this.projectTasks[this.selectedProjectId];
     if (!projectTasksList || projectTasksList.length === 0) {
-      alert('Tasks not loaded for this project. Please wait a moment and try again.');
+      this.toastService.show('Tasks not loaded for this project. Please wait a moment and try again.', 'warning');
       return;
     }
 
     const selectedTask = projectTasksList.find(t => t.id === taskId || t.id === this.selectedTaskId);
     if (!selectedTask) {
       console.error('Task not found. Selected Task ID:', this.selectedTaskId, 'Available tasks:', projectTasksList);
-      alert('Selected task not found. Please select a task from the dropdown.');
+      this.toastService.show('Selected task not found. Please select a task from the dropdown.', 'error');
       return;
     }
 
@@ -961,7 +963,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.adminService.startTime(this.selectedProjectId, taskName, this.description?.trim() || undefined).subscribe({
       next: (response) => {
         if (response.success) {
-          alert('Time tracking started successfully');
+          this.toastService.show('Time tracking started successfully', 'success');
           this.selectedProjectId = null;
           this.selectedTaskId = null;
           this.projectTasks = {};
@@ -971,41 +973,49 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        alert('Error starting time tracking: ' + (err.error?.message || 'Unknown error'));
+        this.toastService.show('Error starting time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
       }
     });
   }
 
   stopTime() {
     if (!this.activeEntry || !this.activeEntry.id) {
-      alert('No active time entry found');
+      this.toastService.show('No active time entry found', 'warning');
       return;
     }
 
-    if (confirm('Stop time tracking?')) {
-      this.adminService.stopTime(this.activeEntry.id).subscribe({
-        next: (response) => {
-          if (response.success) {
-            // Clear active entry first
-            this.activeEntry = null;
-            if (this.timerInterval) {
-              clearInterval(this.timerInterval);
-              this.timerInterval = null;
-            }
-            this.elapsedTime = 0;
-            
-            // Reload entries immediately and again after a short delay to ensure backend has updated
-            this.loadTimeEntries();
-            setTimeout(() => {
+    this.confirmationService.show({
+      title: 'Stop Time Tracking',
+      message: 'Stop time tracking?',
+      confirmText: 'Stop',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.adminService.stopTime(this.activeEntry.id).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.show('Time tracking stopped successfully', 'success');
+              // Clear active entry first
+              this.activeEntry = null;
+              if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+              }
+              this.elapsedTime = 0;
+              
+              // Reload entries immediately and again after a short delay to ensure backend has updated
               this.loadTimeEntries();
-            }, 500);
+              setTimeout(() => {
+                this.loadTimeEntries();
+              }, 500);
+            }
+          },
+          error: (err) => {
+            this.toastService.show('Error stopping time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
           }
-        },
-        error: (err) => {
-          alert('Error stopping time tracking: ' + (err.error?.message || 'Unknown error'));
-        }
-      });
-    }
+        });
+      }
+    });
   }
 
   // Format datetime for display (e.g., "Jan 15, 2024 10:30 AM")
@@ -1043,16 +1053,24 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   discardTime() {
     if (!this.activeEntry) return;
-    if (confirm('Discard current time entry?')) {
-      // Stop the timer without saving
-      this.activeEntry = null;
-      if (this.timerInterval) {
-        clearInterval(this.timerInterval);
-        this.timerInterval = null;
+    this.confirmationService.show({
+      title: 'Discard Time Entry',
+      message: 'Discard current time entry?',
+      confirmText: 'Discard',
+      cancelText: 'Cancel'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        // Stop the timer without saving
+        this.activeEntry = null;
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.elapsedTime = 0;
+        this.loadTimeEntries();
+        this.toastService.show('Time entry discarded', 'info');
       }
-      this.elapsedTime = 0;
-      this.loadTimeEntries();
-    }
+    });
   }
 
   getUserKey(activity: ActivityRow, userEmail: string): string {
@@ -1640,7 +1658,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     // Find project
     const project = this.projects.find(p => p.name === activity.projectName);
     if (!project) {
-      alert('Project not found: ' + activity.projectName);
+      this.toastService.show('Project not found: ' + activity.projectName, 'error');
       return;
     }
     
@@ -1648,6 +1666,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.adminService.startTime(project.id, activity.taskName, activity.description || '').subscribe({
       next: (response) => {
         if (response.success) {
+          this.toastService.show('Time tracking started successfully', 'success');
           // Start local timer
           const startTime = new Date();
           this.activeActivityTimers[key] = {
@@ -1669,7 +1688,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        alert('Error starting timer: ' + (err.error?.message || 'Unknown error'));
+        this.toastService.show('Error starting timer: ' + (err.error?.message || 'Unknown error'), 'error');
       }
     });
   }
@@ -1694,6 +1713,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.adminService.stopTime(this.activeEntry.id).subscribe({
       next: (response) => {
         if (response.success) {
+          this.toastService.show('Time tracking stopped successfully', 'success');
           // Clear local timer
           if (this.activeActivityTimers[key].interval) {
             clearInterval(this.activeActivityTimers[key].interval);
@@ -1706,7 +1726,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        alert('Error stopping timer: ' + (err.error?.message || 'Unknown error'));
+        this.toastService.show('Error stopping timer: ' + (err.error?.message || 'Unknown error'), 'error');
       }
     });
   }
