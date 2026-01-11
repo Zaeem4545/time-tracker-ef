@@ -241,8 +241,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       const filterDate = new Date(this.selectedDateFilter);
       filterDate.setHours(0, 0, 0, 0);
       filteredEntries = filteredEntries.filter(entry => {
-        if (!entry.start_time) return false;
-        const entryDate = new Date(entry.start_time);
+        // Try multiple date fields
+        const entryDateValue = entry.start_time || entry.date || entry.entry_date;
+        if (!entryDateValue) return false;
+        const entryDate = new Date(entryDateValue);
+        if (isNaN(entryDate.getTime())) return false;
         entryDate.setHours(0, 0, 0, 0);
         return entryDate.getTime() === filterDate.getTime();
       });
@@ -260,22 +263,27 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     }
     
     filteredEntries.forEach(entry => {
-      // Only process entries that have been completed (have end_time)
-      if (!entry.end_time) return; // Skip active entries
+      // Skip entries that have no time data at all (no start_time, end_time, or total_time)
+      if (!entry.start_time && !entry.end_time && !entry.total_time) {
+        return; // Skip entries with no time data
+      }
       
       // Create unique key combining project and task to show all details separately
       const projectName = entry.project_name || 'Unknown Project';
       const taskName = entry.task_name || 'Unnamed Task';
       const taskKey = `${projectName} - ${taskName}`;
       
-      const entryDate = new Date(entry.start_time);
+      // Use start_time for date, or fallback to date field, or use current date
+      const entryDate = entry.start_time ? new Date(entry.start_time) : 
+                       (entry.date ? new Date(entry.date) : 
+                       (entry.entry_date ? new Date(entry.entry_date) : new Date()));
       const userId = entry.user_id;
       const userName = entry.employee_name || entry.employee_email || 'Unknown User';
       const userEmail = entry.employee_email || 'Unknown User';
       
       // Check if date is valid
       if (isNaN(entryDate.getTime())) {
-        console.warn('Invalid start_time date:', entry.start_time);
+        console.warn('Invalid date:', entry.start_time || entry.date || entry.entry_date);
         return;
       }
       
@@ -323,9 +331,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             const diffMs = end.getTime() - start.getTime();
             seconds = Math.floor(diffMs / 1000); // Convert to seconds
             
-            // If total_time exists and is in minutes, use it as fallback
-            // But prefer calculated time from start/end for accuracy
-            if (entry.total_time && seconds === 0) {
+            // If calculated time is 0 or negative, use total_time as fallback
+            if (seconds <= 0 && entry.total_time) {
               // total_time is stored in minutes, convert to seconds
               seconds = entry.total_time * 60;
             }
@@ -336,8 +343,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             }
           }
         } else if (entry.total_time) {
-          // Fallback: use total_time if start/end times not available (convert minutes to seconds)
+          // Use total_time if start/end times not available (convert minutes to seconds)
           seconds = entry.total_time * 60;
+        } else if (entry.start_time && !entry.end_time) {
+          // Active entry (has start_time but no end_time) - calculate elapsed time if still running
+          // For active entries, we'll show 0 seconds in the timesheet (they're tracked separately)
+          seconds = 0;
         }
         
         // Create unique key combining project, task, and user to create separate rows per user
