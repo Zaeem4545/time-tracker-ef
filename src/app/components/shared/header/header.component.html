@@ -11,7 +11,11 @@
     <div class="header-right">
       <div class="user-info">
         <span class="user-name">{{ getUserDisplayName() }}</span>
-        <div class="user-avatar">{{ getUserDisplayName().charAt(0) }}</div>
+        <div class="user-avatar" (click)="openProfilePictureUpload()" title="Click to change profile picture">
+          <img *ngIf="profilePictureUrl" [src]="profilePictureUrl" alt="Profile" class="avatar-image" />
+          <span *ngIf="!profilePictureUrl">{{ getUserDisplayName().charAt(0) }}</span>
+          <input type="file" #fileInput accept="image/*" (change)="onProfilePictureChange($event)" style="display: none;" />
+        </div>
       </div>
       <div class="notifications-container">
         <button class="icon-btn" title="Notifications" (click)="toggleNotifications()">
@@ -45,6 +49,9 @@
         </button>
         <div class="dropdown menu-dropdown" *ngIf="showMenu">
           <div class="dropdown-content">
+            <div class="dropdown-item" (click)="openChangePasswordModal()">
+              Change Password
+            </div>
             <div class="dropdown-item" (click)="handleLogout()">
               Logout
             </div>
@@ -55,3 +62,34 @@
   </div>
 </header>
 
+<!-- Change Password Modal -->
+<div class="modal-overlay" *ngIf="showChangePasswordModal" (click)="closeChangePasswordModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Change Password</h3>
+      <button class="modal-close" (click)="closeChangePasswordModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form (ngSubmit)="changePassword()">
+        <div class="form-group">
+          <label>Current Password *</label>
+          <input type="password" [(ngModel)]="passwordData.currentPassword" name="currentPassword" required class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>New Password *</label>
+          <input type="password" [(ngModel)]="passwordData.newPassword" name="newPassword" required class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>Re-enter New Password *</label>
+          <input type="password" [(ngModel)]="passwordData.confirmPassword" name="confirmPassword" required class="form-input" />
+          <div *ngIf="passwordMismatch" class="error-message">Passwords do not match</div>
+        </div>
+        <div *ngIf="passwordError" class="error-message">{{ passwordError }}</div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeChangePasswordModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Change Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

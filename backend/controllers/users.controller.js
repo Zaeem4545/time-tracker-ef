@@ -114,20 +114,22 @@ async function updateUserInfo(req, res) {
   }
 }
 
-// Update user password only - admin only
+// Update user password only - admin can update any user, users can update their own password
 async function updateUserPassword(req, res) {
   try {
-    // Only admin can update user passwords
-    if (req.user.role.toLowerCase() !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Access denied. Only admins can update user passwords.' });
-    }
-
     const { id } = req.params;
     const { currentPassword, password } = req.body;
+    const requestingUserId = req.user.id;
+    const requestingUserRole = req.user.role?.toLowerCase();
 
     // Validate required fields
     if (!currentPassword || !password) {
       return res.status(400).json({ success: false, message: 'Current password and new password are required' });
+    }
+
+    // Check permissions: Admin can update any user's password, others can only update their own
+    if (requestingUserRole !== 'admin' && parseInt(id) !== requestingUserId) {
+      return res.status(403).json({ success: false, message: 'Access denied. You can only change your own password.' });
     }
 
     // Get user from database

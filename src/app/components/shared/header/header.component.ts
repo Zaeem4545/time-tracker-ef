@@ -1,8 +1,9 @@
-import { Component, OnInit, HostListener, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService, Notification } from '../../../services/notification.service';
 import { AdminService } from '../../../services/admin.service';
+import { ToastNotificationService } from '../../../services/toast-notification.service';
 import { filter, interval, Subscription } from 'rxjs';
 
 @Component({
@@ -20,6 +21,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private refreshSubscription?: Subscription;
   isMobileView: boolean = false;
   userName: string | null = null;
+  profilePictureUrl: string | null = null;
+  showChangePasswordModal: boolean = false;
+  passwordData = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
+  passwordMismatch: boolean = false;
+  passwordError: string = '';
+  @ViewChild('fileInput') fileInput!: ElementRef;
 
   private routeTitles: { [key: string]: string } = {
     '/dashboard': 'Dashboard',
@@ -40,7 +51,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     public auth: AuthService, 
     private router: Router,
     private notificationService: NotificationService,
-    private adminService: AdminService
+    private adminService: AdminService,
+    private toastService: ToastNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -55,6 +67,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.loadNotifications();
     this.loadUnreadCount();
     this.loadUserName();
+    this.loadProfilePicture();
     
     // Refresh notifications every 30 seconds
     this.refreshSubscription = interval(30000).subscribe(() => {
@@ -302,6 +315,141 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
     if (!target.closest('.menu-container') && !target.closest('.icon-btn[title="Menu"]')) {
       this.showMenu = false;
+    }
+  }
+
+  openChangePasswordModal(): void {
+    this.showMenu = false;
+    this.showChangePasswordModal = true;
+    this.passwordData = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    };
+    this.passwordMismatch = false;
+    this.passwordError = '';
+  }
+
+  closeChangePasswordModal(): void {
+    this.showChangePasswordModal = false;
+    this.passwordData = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    };
+    this.passwordMismatch = false;
+    this.passwordError = '';
+  }
+
+  changePassword(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    // Reset errors
+    this.passwordMismatch = false;
+    this.passwordError = '';
+
+    // Validate fields
+    if (!this.passwordData.currentPassword || !this.passwordData.newPassword || !this.passwordData.confirmPassword) {
+      this.passwordError = 'All fields are required';
+      return;
+    }
+
+    // Check if passwords match
+    if (this.passwordData.newPassword !== this.passwordData.confirmPassword) {
+      this.passwordMismatch = true;
+      this.passwordError = 'New passwords do not match';
+      return;
+    }
+
+    // Check if new password is different from current
+    if (this.passwordData.currentPassword === this.passwordData.newPassword) {
+      this.passwordError = 'New password must be different from current password';
+      return;
+    }
+
+    const userId = this.auth.getUserId();
+    if (!userId) {
+      this.passwordError = 'User ID not found';
+      return;
+    }
+
+    // Call API to change password
+    this.adminService.updateUserPassword(userId, {
+      currentPassword: this.passwordData.currentPassword,
+      password: this.passwordData.newPassword
+    }).subscribe({
+      next: () => {
+        this.toastService.show('Password changed successfully', 'success');
+        this.closeChangePasswordModal();
+      },
+      error: (err) => {
+        this.passwordError = err?.error?.message || err?.message || 'Failed to change password';
+      }
+    });
+  }
+
+  openProfilePictureUpload(): void {
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  onProfilePictureChange(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.toastService.show('Please select an image file', 'error');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.toastService.show('Image size must be less than 5MB', 'error');
+      return;
+    }
+
+    // Upload file
+    this.adminService.uploadFile(file).subscribe({
+      next: (response) => {
+        if (response.success && response.file) {
+          // Store profile picture URL (you may want to save this to user profile in database)
+          this.profilePictureUrl = response.file.path;
+          // Save to localStorage for now (you can update this to save to database)
+          localStorage.setItem('profilePicture', this.profilePictureUrl);
+          this.toastService.show('Profile picture updated successfully', 'success');
+        }
+      },
+      error: (err) => {
+        this.toastService.show('Failed to upload profile picture: ' + (err?.error?.message || 'Unknown error'), 'error');
+      }
+    });
+  }
+
+  loadProfilePicture(): void {
+    // Load from localStorage (you can update this to load from database)
+    const savedPicture = localStorage.getItem('profilePicture');
+    if (savedPicture) {
+      this.profilePictureUrl = savedPicture;
+    } else {
+      // Try to get from user data
+      const userId = this.auth.getUserId();
+      if (userId) {
+        this.adminService.getUsers().subscribe({
+          next: (users) => {
+            const currentUser = users.find((u: any) => u.id === userId);
+            if (currentUser && currentUser.profile_picture) {
+              this.profilePictureUrl = currentUser.profile_picture;
+              localStorage.setItem('profilePicture', this.profilePictureUrl);
+            }
+          },
+          error: () => {
+            // Silently fail
+          }
+        });
+      }
     }
   }
 }
