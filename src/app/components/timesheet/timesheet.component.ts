@@ -208,6 +208,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       return;
     }
     
+    console.log('Processing time entries:', this.timeEntries.length, 'entries, weekDays:', this.weekDays.length);
+    
     // Apply filters to time entries
     let filteredEntries = this.timeEntries;
     
@@ -400,6 +402,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       
       return activity;
     });
+    
+    console.log('Processed activity rows:', this.activityRows.length);
   }
 
   formatDateKey(date: Date): string {
@@ -762,6 +766,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       next: (entries) => {
         // Show all timesheets for all roles (Admin, Project Manager, Team Lead, Employee)
         this.timeEntries = entries || [];
+        console.log('Loaded time entries:', this.timeEntries.length);
+        
+        // Ensure weekDays is initialized before processing
+        if (!this.weekDays || this.weekDays.length === 0) {
+          this.updateWeekDays();
+        }
         
         // Load tasks for all projects that have time entries
         const projectIds = new Set<number>();
@@ -775,16 +785,22 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         let tasksLoadedCount = 0;
         const totalProjects = projectIds.size;
         
-        if (totalProjects === 0) {
-          // No projects, just process entries
+        const processEntriesAfterTasks = () => {
+          // Always process entries after tasks are loaded or if no projects
           if (this.weekDays && this.weekDays.length > 0) {
             this.processTimeEntries();
           } else {
+            // If weekDays still not set, update and process
             this.updateWeekDays();
           }
           if (this.activeEntry) {
             this.startTimer();
           }
+        };
+        
+        if (totalProjects === 0) {
+          // No projects, just process entries
+          processEntriesAfterTasks();
           return;
         }
         
@@ -798,28 +814,14 @@ export class TimesheetComponent implements OnInit, OnDestroy {
                 tasksLoadedCount++;
                 // When all tasks are loaded, process entries
                 if (tasksLoadedCount === totalProjects) {
-                  if (this.weekDays && this.weekDays.length > 0) {
-                    this.processTimeEntries();
-                  } else {
-                    this.updateWeekDays();
-                  }
-                  if (this.activeEntry) {
-                    this.startTimer();
-                  }
+                  processEntriesAfterTasks();
                 }
               },
               error: (err) => {
                 console.error(`Error loading tasks for project ${projectId}:`, err);
                 tasksLoadedCount++;
                 if (tasksLoadedCount === totalProjects) {
-                  if (this.weekDays && this.weekDays.length > 0) {
-                    this.processTimeEntries();
-                  } else {
-                    this.updateWeekDays();
-                  }
-                  if (this.activeEntry) {
-                    this.startTimer();
-                  }
+                  processEntriesAfterTasks();
                 }
               }
             });
@@ -827,14 +829,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             // Tasks already loaded for this project
             tasksLoadedCount++;
             if (tasksLoadedCount === totalProjects) {
-              if (this.weekDays && this.weekDays.length > 0) {
-                this.processTimeEntries();
-              } else {
-                this.updateWeekDays();
-              }
-              if (this.activeEntry) {
-                this.startTimer();
-              }
+              processEntriesAfterTasks();
             }
           }
         });
@@ -842,6 +837,10 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error loading time entries:', err);
         this.timeEntries = [];
+        // Still try to process even if loading failed
+        if (this.weekDays && this.weekDays.length > 0) {
+          this.processTimeEntries();
+        }
       }
     });
   }
@@ -1287,13 +1286,28 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     } else {
       // Hide create task input and set task name
       this.showCreateTaskInput = false;
-      if (this.newTimeEntry.task_id) {
+      if (this.newTimeEntry.task_id && this.newTimeEntry.project_id) {
         const selectedTask = this.projectTasks[this.newTimeEntry.project_id]?.find(
           (t: any) => t.id === this.newTimeEntry.task_id
         );
         if (selectedTask) {
           this.newTimeEntry.task_name = selectedTask.title;
+        } else {
+          // If task not found in cache, try to load it
+          this.adminService.getTasks(this.newTimeEntry.project_id).subscribe({
+            next: (tasks) => {
+              if (tasks && Array.isArray(tasks)) {
+                this.projectTasks[this.newTimeEntry.project_id!] = tasks;
+                const task = tasks.find((t: any) => t.id === this.newTimeEntry.task_id);
+                if (task) {
+                  this.newTimeEntry.task_name = task.title;
+                }
+              }
+            }
+          });
         }
+      } else {
+        this.newTimeEntry.task_name = '';
       }
     }
   }
@@ -1482,23 +1496,62 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.adminService.createTimeEntry(entryData).subscribe({
       next: (response) => {
         if (response.success) {
-          alert('Time entry added successfully');
-          this.cancelAddLine();
-          // Reload tasks for the project to include the new task
-          if (this.projectTasks[projectId]) {
-            this.adminService.getTasks(projectId).subscribe({
-              next: (tasks) => {
-                if (tasks && Array.isArray(tasks)) {
-                  this.projectTasks[projectId] = tasks;
-                }
-              }
-            });
+          this.toastService.show('Time entry added successfully', 'success');
+          
+          // Navigate to the date of the new entry to ensure it's visible
+          const entryDate = new Date(this.newTimeEntry.date);
+          if (this.selectedView === 'day') {
+            this.currentWeekStart = new Date(entryDate);
+          } else if (this.selectedView === 'week') {
+            const day = entryDate.getDay();
+            const diff = entryDate.getDate() - day + (day === 0 ? -6 : 1);
+            const newDate = new Date(entryDate);
+            newDate.setDate(diff);
+            this.currentWeekStart = newDate;
+          } else if (this.selectedView === 'month') {
+            this.currentWeekStart = new Date(entryDate.getFullYear(), entryDate.getMonth(), 1);
           }
-          this.loadTimeEntries();
+          this.currentWeekStart.setHours(0, 0, 0, 0);
+          
+          // Update week days first to ensure the view is set correctly
+          this.updateWeekDays();
+          
+          this.cancelAddLine();
+          
+          // Reload tasks for the project to include the new task
+          const loadTasksAndEntries = () => {
+            if (this.projectTasks[projectId]) {
+              this.adminService.getTasks(projectId).subscribe({
+                next: (tasks) => {
+                  if (tasks && Array.isArray(tasks)) {
+                    this.projectTasks[projectId] = tasks;
+                  }
+                  // Reload entries after tasks are loaded
+                  this.loadTimeEntries();
+                }
+              });
+            } else {
+              // If project tasks not loaded, load them first
+              this.adminService.getTasks(projectId).subscribe({
+                next: (tasks) => {
+                  if (tasks && Array.isArray(tasks)) {
+                    this.projectTasks[projectId] = tasks;
+                  }
+                  // Reload entries after tasks are loaded
+                  this.loadTimeEntries();
+                }
+              });
+            }
+          };
+          
+          // Small delay to ensure weekDays are updated
+          setTimeout(() => {
+            loadTasksAndEntries();
+          }, 100);
         }
       },
       error: (err) => {
-        alert('Error adding time entry: ' + (err.error?.message || 'Unknown error'));
+        this.toastService.show('Error adding time entry: ' + (err.error?.message || 'Unknown error'), 'error');
       }
     });
   }
