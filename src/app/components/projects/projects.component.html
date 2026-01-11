@@ -463,7 +463,7 @@
                   <input *ngIf="editingProject === project.id" type="text" [ngModel]="(editProjectData[project.id].custom_fields?.[fieldName] !== undefined && editProjectData[project.id].custom_fields?.[fieldName] !== null) ? editProjectData[project.id].custom_fields[fieldName] : getProjectCustomFieldValue(project, fieldName)" (ngModelChange)="editProjectData[project.id].custom_fields = editProjectData[project.id].custom_fields || {}; editProjectData[project.id].custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
                 </td>
                 <td class="role-cell" style="width: 200px; min-width: 200px; text-align: center;">
-                  <div class="role-content">
+                  <div class="role-content" style="display: flex; justify-content: flex-end; align-items: center;">
                     <div *ngIf="editingProject !== project.id" class="project-menu-container" style="position: relative; display: inline-block;">
                       <button class="task-menu-btn" (click)="toggleProjectMenu(project.id, $event)" title="Menu">
                         <span>⋮</span>
@@ -710,7 +710,7 @@
               <input *ngIf="editingProject === project.id" type="text" [ngModel]="(editProjectData[project.id].custom_fields?.[fieldName] !== undefined && editProjectData[project.id].custom_fields?.[fieldName] !== null) ? editProjectData[project.id].custom_fields[fieldName] : getProjectCustomFieldValue(project, fieldName)" (ngModelChange)="editProjectData[project.id].custom_fields = editProjectData[project.id].custom_fields || {}; editProjectData[project.id].custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
             </td>
             <td class="role-cell" style="width: 200px; min-width: 200px; text-align: center;">
-              <div class="role-content">
+              <div class="role-content" style="display: flex; justify-content: flex-end; align-items: center;">
                 <div *ngIf="editingProject !== project.id" class="project-menu-container" style="position: relative; display: inline-block;">
                   <button class="task-menu-btn" (click)="toggleProjectMenu(project.id, $event)" title="Menu">
                     <span>⋮</span>
