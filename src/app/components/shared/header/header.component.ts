@@ -395,6 +395,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
   }
 
+  openChangeProfilePicture(): void {
+    this.showMenu = false;
+    this.openProfilePictureUpload();
+  }
+
   onProfilePictureChange(event: any): void {
     const file = event.target.files[0];
     if (!file) return;

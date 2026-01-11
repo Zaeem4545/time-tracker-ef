@@ -49,6 +49,9 @@
         </button>
         <div class="dropdown menu-dropdown" *ngIf="showMenu">
           <div class="dropdown-content">
+            <div class="dropdown-item" (click)="openChangeProfilePicture()">
+              Change Profile Picture
+            </div>
             <div class="dropdown-item" (click)="openChangePasswordModal()">
               Change Password
             </div>
