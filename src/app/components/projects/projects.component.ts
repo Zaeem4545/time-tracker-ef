@@ -112,7 +112,6 @@ export class ProjectsComponent implements OnInit {
   selectedTaskForEdit: any | null = null; // Task being edited in modal
   selectedTaskForDetails: any | null = null; // Task being viewed in details modal
   showTaskDetailsModal: boolean = false;
-  openTaskMenuId: number | null = null; // Track which task menu is open
   taskComments: any[] = [];
   newTaskComment: string = '';
   loadingTaskComments: boolean = false;
