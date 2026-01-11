@@ -94,7 +94,6 @@
         </div>
         <div class="card-header">
           <h4 class="card-title">{{ project.name }}</h4>
-          <span class="card-date" *ngIf="project.end_date">{{ formatDate(project.end_date) }}</span>
         </div>
         <p class="card-description">{{ project.description || 'No description' }}</p>
         <div class="task-type-badge" [ngClass]="getProjectTypeClass(project)" style="margin-bottom: 0.75rem;">
@@ -205,7 +204,6 @@
         <div class="project-card" *ngFor="let project of allProjects" style="margin-bottom: 1rem;">
           <div class="card-header">
             <h4 class="card-title">{{ project.name }}</h4>
-            <span class="card-date" *ngIf="project.end_date">{{ formatDate(project.end_date) }}</span>
           </div>
           <p class="card-description">{{ project.description || 'No description' }}</p>
           <div class="card-footer">

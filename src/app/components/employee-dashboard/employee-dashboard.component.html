@@ -94,7 +94,6 @@
         </div>
         <div class="card-header">
           <h4 class="card-title">{{ project.name }}</h4>
-          <span class="card-date" *ngIf="project.due_date">{{ formatDate(project.due_date) }}</span>
         </div>
         <p class="card-description">{{ project.description || 'No description' }}</p>
         <div class="task-type-badge" [ngClass]="getProjectTypeClass(project)" style="margin-bottom: 0.75rem;">
