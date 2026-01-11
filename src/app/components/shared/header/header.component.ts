@@ -206,6 +206,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.logout();
   }
 
+  goToDashboard(): void {
+    const role = this.auth.getRole();
+    const roleLower = role?.toLowerCase();
+    
+    // Navigate to role-specific dashboard
+    if (roleLower === 'admin') {
+      this.router.navigate(['/admin-dashboard']);
+    } else if (roleLower === 'head manager') {
+      this.router.navigate(['/head-manager']);
+    } else if (roleLower === 'manager') {
+      this.router.navigate(['/dashboard']);
+    } else if (roleLower === 'employee') {
+      this.router.navigate(['/employee']);
+    } else {
+      // Default to general dashboard
+      this.router.navigate(['/dashboard']);
+    }
+  }
+
   formatNotificationTime(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();

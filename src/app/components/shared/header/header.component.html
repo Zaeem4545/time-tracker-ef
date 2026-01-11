@@ -4,7 +4,7 @@
       <button class="mobile-menu-btn" (click)="toggleSidebar()" *ngIf="isMobile()" aria-label="Toggle menu">
         <span>☰</span>
       </button>
-      <div class="logo">
+      <div class="logo" (click)="goToDashboard()" style="cursor: pointer;">
         <img src="assets/new-logo.png" alt="ExpertFlow" class="logo-image" />
       </div>
     </div>

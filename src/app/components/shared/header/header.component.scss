@@ -49,6 +49,12 @@
         display: flex;
         align-items: center;
         height: 100%;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+
+        &:hover {
+          opacity: 0.7;
+        }
 
         .logo-image {
           height: 40px;
