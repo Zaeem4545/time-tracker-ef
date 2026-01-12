@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { ConfirmationModalService } from '../../../services/confirmation-modal.service';
 
 @Component({
   selector: 'app-navbar',
@@ -8,7 +9,11 @@ import { AuthService } from '../../../services/auth.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  constructor(public auth: AuthService, private router: Router) {}
+  constructor(
+    public auth: AuthService, 
+    private router: Router,
+    private confirmationService: ConfirmationModalService
+  ) {}
 
   goToDashboard() {
     const role = this.auth.getRole();
@@ -30,20 +35,26 @@ export class NavbarComponent {
   }
 
   logout() {
-    const confirmLogout = window.confirm('Do you want to logout?');
-    if (confirmLogout) {
-      // Get role before logout
-      const role = this.auth.getRole();
-      const roleLower = role?.toLowerCase();
-      
-      // Logout first
-      this.auth.logout();
-      
-      // Redirect to login, then after login will redirect to role-specific dashboard
-      this.router.navigate(['/login']).then(() => {
-        history.replaceState({}, '', '/login');
-      });
-    } 
-    // else: do nothing, stay on the same page
+    this.confirmationService.show({
+      title: 'Logout',
+      message: 'Do you want to logout?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      type: 'warning'
+    }).then(confirmed => {
+      if (confirmed) {
+        // Get role before logout
+        const role = this.auth.getRole();
+        const roleLower = role?.toLowerCase();
+        
+        // Logout first
+        this.auth.logout();
+        
+        // Redirect to login, then after login will redirect to role-specific dashboard
+        this.router.navigate(['/login']).then(() => {
+          history.replaceState({}, '', '/login');
+        });
+      }
+    });
   }
 }

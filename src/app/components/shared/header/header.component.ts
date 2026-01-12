@@ -4,6 +4,7 @@ import { AuthService } from '../../../services/auth.service';
 import { NotificationService, Notification } from '../../../services/notification.service';
 import { AdminService } from '../../../services/admin.service';
 import { ToastNotificationService } from '../../../services/toast-notification.service';
+import { ConfirmationModalService } from '../../../services/confirmation-modal.service';
 import { filter, interval, Subscription } from 'rxjs';
 
 @Component({
@@ -52,7 +53,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private adminService: AdminService,
-    private toastService: ToastNotificationService
+    private toastService: ToastNotificationService,
+    private confirmationService: ConfirmationModalService
   ) {}
 
   ngOnInit(): void {
@@ -178,13 +180,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    const confirmLogout = window.confirm('Do you want to logout?');
-    if (confirmLogout) {
-      this.auth.logout();
-      this.router.navigate(['/login']).then(() => {
-        history.replaceState({}, '', '/login');
-      });
-    }
+    this.confirmationService.show({
+      title: 'Logout',
+      message: 'Do you want to logout?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      type: 'warning'
+    }).then(confirmed => {
+      if (confirmed) {
+        this.auth.logout();
+        this.router.navigate(['/login']).then(() => {
+          history.replaceState({}, '', '/login');
+        });
+      }
+    });
   }
 
   loadUserName(): void {

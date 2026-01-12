@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@ang
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { SidebarComponent } from './components/shared/sidebar/sidebar.component';
+import { ConfirmationModalService } from './services/confirmation-modal.service';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -33,18 +34,31 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // If user is logged in and not already on login page, confirm before going back
     if (isLoggedIn && !atLogin) {
-      const confirmLogout = window.confirm('Do you want to logout?');
-      if (confirmLogout) {
-        this.auth.logout();
-        this.router.navigate(['/login']);
-      } else {
-        // Cancel back navigation by moving forward again
-        history.forward();
-      }
+      // Push current state back to prevent navigation
+      history.pushState(null, '', this.router.url);
+      
+      this.confirmationService.show({
+        title: 'Logout',
+        message: 'Do you want to logout?',
+        confirmText: 'Logout',
+        cancelText: 'Cancel',
+        type: 'warning'
+      }).then(confirmed => {
+        if (confirmed) {
+          this.auth.logout();
+          this.router.navigate(['/login']);
+        }
+        // If cancelled, we've already pushed the state back, so user stays on current page
+      });
     }
   };
 
-  constructor(public auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(
+    public auth: AuthService, 
+    private router: Router, 
+    private cdr: ChangeDetectorRef,
+    private confirmationService: ConfirmationModalService
+  ) {}
 
   ngOnInit(): void {
     // Update navbar visibility based on route and login state
