@@ -46,7 +46,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   isHeadManager: boolean = false;
   currentUserId: number | null = null;
-  
+
   // Week view properties
   currentWeekStart: Date = new Date();
   weekDays: WeekDay[] = [];
@@ -54,18 +54,18 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   selectedView: 'day' | 'week' | 'month' = 'week';
   timerInterval: any = null;
   elapsedTime: number = 0; // in seconds
-  
+
   // Admin edit properties
   editingEntryId: number | null = null;
   editEntryData: any = {};
-  
+
   // Inline time cell editing
   editingCell: { activityKey: string; dateKey: string } | null = null;
   editingCellTime: string = ''; // Time in HH:MM:SS format
-  
+
   // Individual activity timers
   activeActivityTimers: { [key: string]: { startTime: Date; elapsedTime: number; interval: any } } = {};
-  
+
   // Add line properties
   showAddLineForm: boolean = false;
   isModalMaximized: boolean = false;
@@ -80,7 +80,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   users: any[] = [];
   showCreateTaskInput: boolean = false;
   newTaskTitle: string = '';
-  
+
   // Search and filter properties
   searchTerm: string = '';
   showSearchDropdown: boolean = false;
@@ -100,7 +100,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private toastService: ToastNotificationService,
     private confirmationService: ConfirmationModalService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const role = this.authService.getRole();
@@ -109,13 +109,13 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.isAdmin = roleLower === 'admin';
     this.isHeadManager = roleLower === 'head manager';
     this.currentUserId = this.authService.getUserId();
-    
+
     this.initializeWeek();
     this.loadTimeEntries();
     this.loadProjects(); // Load projects for all roles
     this.loadActiveTimeEntry(); // Load active entry for all roles
     this.startTimer();
-    
+
     // Load users for add line functionality (all users can add lines)
     this.loadUsers();
   }
@@ -129,7 +129,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   initializeWeek() {
     const today = new Date();
-    
+
     if (this.selectedView === 'day') {
       this.currentWeekStart = new Date(today);
     } else if (this.selectedView === 'week') {
@@ -141,7 +141,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       // Set to first day of current month
       this.currentWeekStart = new Date(today.getFullYear(), today.getMonth(), 1);
     }
-    
+
     this.currentWeekStart.setHours(0, 0, 0, 0);
     this.updateWeekDays();
   }
@@ -149,9 +149,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   updateWeekDays() {
     this.weekDays = [];
     let startDate = new Date(this.currentWeekStart);
-    
+
     let daysToShow = 7; // Default for week view
-    
+
     if (this.selectedView === 'day') {
       daysToShow = 1;
     } else if (this.selectedView === 'week') {
@@ -160,12 +160,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       // Get number of days in month
       const lastDay = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
       const daysInMonth = lastDay.getDate();
-      
+
       // Start from first day of month
       startDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
       daysToShow = daysInMonth;
     }
-    
+
     for (let i = 0; i < daysToShow; i++) {
       let date: Date;
       if (this.selectedView === 'day') {
@@ -180,12 +180,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
       }
-      
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const checkDate = new Date(date);
       checkDate.setHours(0, 0, 0, 0);
-      
+
       this.weekDays.push({
         date: date,
         dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -194,25 +194,25 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         isToday: checkDate.getTime() === today.getTime()
       });
     }
-    
+
     this.processTimeEntries();
   }
 
   processTimeEntries() {
     // Group time entries by task/activity
     const activityMap = new Map<string, ActivityRow>();
-    
+
     // Ensure weekDays is initialized
     if (!this.weekDays || this.weekDays.length === 0) {
       this.updateWeekDays();
       return;
     }
-    
+
     console.log('Processing time entries:', this.timeEntries.length, 'entries, weekDays:', this.weekDays.length);
-    
+
     // Apply filters to time entries
     let filteredEntries = this.timeEntries;
-    
+
     // Apply search filter
     if (this.searchTerm && this.searchTerm.trim() !== '') {
       const searchLower = this.searchTerm.toLowerCase().trim();
@@ -232,12 +232,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         return false;
       });
     }
-    
+
     // Apply project filter
     if (this.selectedProjectFilter !== null) {
       filteredEntries = filteredEntries.filter(entry => entry.project_id === this.selectedProjectFilter);
     }
-    
+
     // Apply date filter
     if (this.selectedDateFilter) {
       const filterDate = new Date(this.selectedDateFilter);
@@ -252,64 +252,64 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         return entryDate.getTime() === filterDate.getTime();
       });
     }
-    
+
     // Apply worked by filter
     if (this.selectedWorkedByFilter !== null) {
       filteredEntries = filteredEntries.filter(entry => entry.user_id === this.selectedWorkedByFilter);
     }
-    
+
     // Apply my-entries filter
     if (this.activeFilters.includes('my-entries')) {
       const currentUserId = this.authService.getUserId();
       filteredEntries = filteredEntries.filter(entry => entry.user_id === currentUserId);
     }
-    
+
     filteredEntries.forEach(entry => {
       // Skip entries that have no time data at all (no start_time, end_time, or total_time)
       if (!entry.start_time && !entry.end_time && !entry.total_time) {
         return; // Skip entries with no time data
       }
-      
+
       // Create unique key combining project and task to show all details separately
       const projectName = entry.project_name || 'Unknown Project';
       const taskName = entry.task_name || 'Unnamed Task';
       const taskKey = `${projectName} - ${taskName}`;
-      
+
       // Use start_time for date, or fallback to date field, or use current date
-      const entryDate = entry.start_time ? new Date(entry.start_time) : 
-                       (entry.date ? new Date(entry.date) : 
-                       (entry.entry_date ? new Date(entry.entry_date) : new Date()));
+      const entryDate = entry.start_time ? new Date(entry.start_time) :
+        (entry.date ? new Date(entry.date) :
+          (entry.entry_date ? new Date(entry.entry_date) : new Date()));
       const userId = entry.user_id;
       const userName = entry.employee_name || entry.employee_email || 'Unknown User';
       const userEmail = entry.employee_email || 'Unknown User';
-      
+
       // Check if date is valid
       if (isNaN(entryDate.getTime())) {
         console.warn('Invalid date:', entry.start_time || entry.date || entry.entry_date);
         return;
       }
-      
+
       const dateKey = this.formatDateKey(entryDate);
-      
+
       // Check if this entry falls within current view period (day/week/month)
       if (this.weekDays.length === 0) {
         return;
       }
-      
+
       const viewStart = new Date(this.weekDays[0].date);
       viewStart.setHours(0, 0, 0, 0);
       const viewEnd = new Date(this.weekDays[this.weekDays.length - 1].date);
       viewEnd.setHours(23, 59, 59, 999);
-      
+
       // Normalize entry date for comparison
       const normalizedEntryDate = new Date(entryDate);
       normalizedEntryDate.setHours(0, 0, 0, 0);
-      
+
       if (normalizedEntryDate >= viewStart && normalizedEntryDate <= viewEnd) {
         // Find project to get project_id
         const project = this.projects.find(p => p.name === projectName);
         const projectId = project ? project.id : entry.project_id;
-        
+
         // Find task allocated_time
         let allocatedTime: string | undefined = undefined;
         let allocatedTimeSeconds: number = 0;
@@ -322,17 +322,17 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             }
           }
         }
-        
+
         // Calculate time in seconds from start_time and end_time
         let seconds = 0;
         if (entry.start_time && entry.end_time) {
           const start = new Date(entry.start_time);
           const end = new Date(entry.end_time);
-          
+
           if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
             const diffMs = end.getTime() - start.getTime();
             seconds = Math.floor(diffMs / 1000); // Convert to seconds
-            
+
             // If calculated time is 0 or negative, use total_time as fallback
             if (seconds <= 0 && entry.total_time) {
               // total_time is stored in minutes, convert to seconds
@@ -352,11 +352,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           // For active entries, we'll show 0 seconds in the timesheet (they're tracked separately)
           seconds = 0;
         }
-        
+
         // Create unique key combining project, task, and user to create separate rows per user
         const userKey = userId ? String(userId) : userEmail;
         const activityUserKey = `${taskKey}__USER__${userKey}`;
-        
+
         if (!activityMap.has(activityUserKey)) {
           activityMap.set(activityUserKey, {
             taskName: taskName,
@@ -375,15 +375,15 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             userList: [userName || userEmail]
           });
         }
-        
+
         const activity = activityMap.get(activityUserKey)!;
-        
+
         // Track user time
         if (!activity.users[userKey]) {
           activity.users[userKey] = { name: userName, email: userEmail, time: 0 };
         }
         activity.users[userKey].time += seconds;
-        
+
         // Always add to activity, even if seconds is 0
         if (!activity.dailyTime[dateKey]) {
           activity.dailyTime[dateKey] = 0;
@@ -392,17 +392,17 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         activity.totalTime += seconds;
       }
     });
-    
+
     // Build activity rows - each user has their own row
     this.activityRows = Array.from(activityMap.values()).map(activity => {
       // Check if total time exceeded allocated time for this user
       if (activity.allocatedTimeSeconds && activity.allocatedTimeSeconds > 0) {
         activity.timeExceeded = activity.totalTime > activity.allocatedTimeSeconds;
       }
-      
+
       return activity;
     });
-    
+
     console.log('Processed activity rows:', this.activityRows.length);
   }
 
@@ -440,7 +440,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   goToToday() {
     const today = new Date();
-    
+
     if (this.selectedView === 'day') {
       this.currentWeekStart = new Date(today);
     } else if (this.selectedView === 'week') {
@@ -450,7 +450,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     } else if (this.selectedView === 'month') {
       this.currentWeekStart = new Date(today.getFullYear(), today.getMonth(), 1);
     }
-    
+
     this.currentWeekStart.setHours(0, 0, 0, 0);
     this.updateWeekDays();
     this.loadTimeEntries();
@@ -487,22 +487,22 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   formatTime(seconds: number): string {
     // Accepts seconds and formats as HH:MM:SS
     if (!seconds || seconds === 0) return '0:00:00';
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 
   formatAllocatedTime(allocatedTime: any): string {
     if (!allocatedTime) return '-';
-    
+
     // If it's already in HH:MM:SS format, return as is
     if (typeof allocatedTime === 'string' && allocatedTime.includes(':')) {
       return allocatedTime;
     }
-    
+
     // If it's a number (decimal hours), convert to HH:MM:SS
     if (typeof allocatedTime === 'number') {
       const totalSeconds = Math.round(allocatedTime * 3600);
@@ -511,7 +511,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       const seconds = totalSeconds % 60;
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
-    
+
     return allocatedTime ? String(allocatedTime) : '-';
   }
 
@@ -535,18 +535,18 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   formatTimeHHMMSS(seconds: number): string {
     // Formats as HH:MM:SS (for editing)
     if (!seconds || seconds === 0) return '0:00:00';
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 
   parseTimeHHMMSS(timeStr: string): number {
     // Converts HH:MM:SS or HH:MM format to seconds
     if (!timeStr || timeStr.trim() === '') return 0;
-    
+
     // Use existing timeToSeconds function which handles both formats
     return this.timeToSeconds(timeStr.trim());
   }
@@ -563,7 +563,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     const activityKey = `${activity.projectName} - ${activity.taskName}`;
     const dateKey = this.formatDateKey(day.date);
     const currentTime = this.getTimeForDay(activity, day);
-    
+
     this.editingCell = { activityKey, dateKey };
     this.editingCellTime = this.formatTimeHHMMSS(currentTime);
   }
@@ -575,37 +575,37 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   saveCellTime(activity: ActivityRow, day: WeekDay) {
     if (!this.editingCell) return;
-    
+
     const timeInSeconds = this.parseTimeHHMMSS(this.editingCellTime);
     const dateKey = this.formatDateKey(day.date);
-    
+
     // Get current time for this activity, day, and user
     const currentTime = this.getTimeForDay(activity, day);
-    
+
     // Check if time actually changed
     if (timeInSeconds === currentTime) {
       // No change, just cancel editing
       this.cancelCellEdit();
       return;
     }
-    
+
     // Find all time entries for this activity, day, and user
     const entriesForDay = this.timeEntries.filter(entry => {
       if (!entry.end_time) return false; // Skip active entries
-      
+
       const projectName = entry.project_name || 'Unknown Project';
       const taskName = entry.task_name || 'Unnamed Task';
       const activityKey = `${projectName} - ${taskName}`;
       const entryDateKey = this.formatDateKey(new Date(entry.start_time));
-      
+
       // Also filter by user since we now have separate rows per user
       const matchesActivity = activityKey === this.editingCell!.activityKey && entryDateKey === dateKey;
-      const matchesUser = activity.userId ? entry.user_id === activity.userId : 
-                         (entry.employee_email === activity.userEmail || entry.employee_name === activity.userName);
-      
+      const matchesUser = activity.userId ? entry.user_id === activity.userId :
+        (entry.employee_email === activity.userEmail || entry.employee_name === activity.userName);
+
       return matchesActivity && matchesUser;
     });
-    
+
     if (entriesForDay.length === 0) {
       // No entry exists, only create if time is greater than 0
       if (timeInSeconds > 0) {
@@ -620,15 +620,15 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       const totalCurrentTime = entriesForDay.reduce((sum, entry) => {
         return sum + this.getEntryTime(entry);
       }, 0);
-      
+
       const timeDifference = timeInSeconds - totalCurrentTime;
-      
+
       if (timeDifference === 0) {
         // No change needed
         this.cancelCellEdit();
         return;
       }
-      
+
       if (timeDifference > 0) {
         // Need to add time - extend the last entry or create new
         this.adjustTimeEntry(entriesForDay, timeDifference, activity, day);
@@ -637,7 +637,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         this.adjustTimeEntry(entriesForDay, timeDifference, activity, day);
       }
     }
-    
+
     this.cancelCellEdit();
     // Reload to reflect changes
     setTimeout(() => {
@@ -650,7 +650,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       this.cancelCellEdit();
       return;
     }
-    
+
     // Find project
     const project = this.projects.find(p => p.name === activity.projectName);
     if (!project) {
@@ -658,34 +658,34 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       this.cancelCellEdit();
       return;
     }
-    
+
     // task_name is just a string field, doesn't need to exist in tasks table
     const dayDate = new Date(day.date);
     dayDate.setHours(9, 0, 0, 0); // Set to 9 AM
     const startTime = dayDate.toISOString();
-    
+
     const endTime = new Date(dayDate.getTime() + (timeInSeconds * 1000)).toISOString();
-    
+
     // Use the user from the activity row (since each row is now per user)
     let userId = activity.userId;
-    
+
     // If userId is not available, try to find user by email/name
     if (!userId && activity.userEmail) {
       const user = this.users.find(u => u.email === activity.userEmail || u.name === activity.userName);
       userId = user ? user.id : null;
     }
-    
+
     // Fallback to current user if still not found (for backward compatibility)
     if (!userId) {
       userId = this.authService.getUserId();
     }
-    
+
     if (!userId) {
       alert('User not found');
       this.cancelCellEdit();
       return;
     }
-    
+
     const entryData = {
       user_id: userId,
       project_id: project.id,
@@ -694,7 +694,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       start_time: startTime,
       end_time: endTime
     };
-    
+
     this.adminService.createTimeEntry(entryData).subscribe({
       next: () => {
         this.loadTimeEntries();
@@ -708,16 +708,16 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   adjustTimeEntry(entries: any[], timeDifference: number, activity: ActivityRow, day: WeekDay) {
     if (entries.length === 0) return;
-    
+
     // Sort entries by start_time
     entries.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-    
+
     if (timeDifference > 0) {
       // Add time - extend the last entry
       const lastEntry = entries[entries.length - 1];
       const currentEndTime = new Date(lastEntry.end_time);
       const newEndTime = new Date(currentEndTime.getTime() + (timeDifference * 1000));
-      
+
       this.adminService.updateTimeEntry(lastEntry.id, {
         end_time: newEndTime.toISOString()
       }).subscribe({
@@ -732,7 +732,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       // Reduce time - adjust entries proportionally or delete if needed
       const totalTime = entries.reduce((sum, entry) => sum + this.getEntryTime(entry), 0);
       const newTotalTime = totalTime + timeDifference; // timeDifference is negative
-      
+
       if (newTotalTime <= 0) {
         // Delete all entries
         entries.forEach(entry => {
@@ -750,7 +750,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         const lastEntry = entries[entries.length - 1];
         const currentStartTime = new Date(lastEntry.start_time);
         const newEndTime = new Date(currentStartTime.getTime() + (newTotalTime * 1000));
-        
+
         this.adminService.updateTimeEntry(lastEntry.id, {
           end_time: newEndTime.toISOString()
         }).subscribe({
@@ -771,12 +771,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         // Show all timesheets for all roles (Admin, Project Manager, Team Lead, Engineer)
         this.timeEntries = entries || [];
         console.log('Loaded time entries:', this.timeEntries.length);
-        
+
         // Ensure weekDays is initialized before processing
         if (!this.weekDays || this.weekDays.length === 0) {
           this.updateWeekDays();
         }
-        
+
         // Load tasks for all projects that have time entries
         const projectIds = new Set<number>();
         this.timeEntries.forEach((entry: any) => {
@@ -784,11 +784,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             projectIds.add(entry.project_id);
           }
         });
-        
+
         // Load tasks for each project
         let tasksLoadedCount = 0;
         const totalProjects = projectIds.size;
-        
+
         const processEntriesAfterTasks = () => {
           // Always process entries after tasks are loaded or if no projects
           if (this.weekDays && this.weekDays.length > 0) {
@@ -801,13 +801,13 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             this.startTimer();
           }
         };
-        
+
         if (totalProjects === 0) {
           // No projects, just process entries
           processEntriesAfterTasks();
           return;
         }
-        
+
         projectIds.forEach(projectId => {
           if (!this.projectTasks[projectId]) {
             this.adminService.getTasks(projectId).subscribe({
@@ -865,7 +865,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     // Reset task selection when project changes
     this.selectedTaskId = null;
     this.projectTasks = {};
-    
+
     // Load tasks for the selected project
     if (this.selectedProjectId) {
       this.adminService.getTasks(this.selectedProjectId).subscribe({
@@ -894,7 +894,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         if (response.success && response.activeEntry) {
           this.activeEntry = response.activeEntry;
           this.startTimer();
-          
+
           // Sync with activity timer if it matches
           const project = this.projects.find(p => p.id === response.activeEntry.project_id);
           if (project && response.activeEntry.task_name) {
@@ -907,7 +907,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
                 elapsedTime: 0,
                 interval: null
               };
-              
+
               this.activeActivityTimers[key].interval = setInterval(() => {
                 if (this.activeActivityTimers[key]) {
                   const now = new Date();
@@ -952,7 +952,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
     // Convert selectedTaskId to number (select dropdowns return strings)
     const taskId = typeof this.selectedTaskId === 'string' ? parseInt(this.selectedTaskId, 10) : this.selectedTaskId;
-    
+
     if (isNaN(taskId)) {
       this.toastService.show('Invalid task selected', 'error');
       return;
@@ -974,20 +974,68 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
     const taskName = selectedTask.title;
 
-    this.adminService.startTime(this.selectedProjectId, taskName, this.description?.trim() || undefined).subscribe({
+    // Capture current time immediately for accurate tracking
+    const startTime = new Date();
+    const startTimeIso = startTime.toISOString();
+
+    // Optimistic UI Update: Immediately show the timer running
+    // Create a temporary active entry object
+    const optimisticEntry = {
+      project_id: this.selectedProjectId,
+      task_name: taskName,
+      description: this.description?.trim(),
+      start_time: startTimeIso,
+      project_name: this.projects.find(p => p.id === this.selectedProjectId)?.name || 'Loading...'
+    };
+
+    this.activeEntry = optimisticEntry;
+    this.startTimer();
+
+    // Clear selection inputs immediately
+    const capturedProjectId = this.selectedProjectId;
+    const capturedDescription = this.description;
+
+    this.selectedProjectId = null;
+    this.selectedTaskId = null;
+    this.projectTasks = {};
+    this.description = '';
+
+    this.adminService.startTime(capturedProjectId, taskName, capturedDescription?.trim() || undefined, startTimeIso).subscribe({
       next: (response) => {
         if (response.success) {
           this.toastService.show('Time tracking started successfully', 'success');
-          this.selectedProjectId = null;
-          this.selectedTaskId = null;
-          this.projectTasks = {};
-          this.description = '';
-          this.loadActiveTimeEntry();
+          // Start the activity timer separate from the main timer logic if needed
+          // The main timer is already running due to optimistic update
+
+          // Optionally reload to get the real ID, but the time is correct
+          // We can just update the ID if the response returns it
+          if (response.entryId && this.activeEntry) {
+            this.activeEntry.id = response.entryId;
+          } else {
+            this.loadActiveTimeEntry();
+          }
           this.loadTimeEntries();
         }
       },
       error: (err) => {
         this.toastService.show('Error starting time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
+        // Revert optimistic update on error
+        this.activeEntry = null;
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.elapsedTime = 0;
+
+        // Restore selection (optional, but helpful)
+        this.selectedProjectId = capturedProjectId;
+        this.description = capturedDescription || '';
+        // Note: Task selection might be lost because projectTasks might have been cleared, 
+        // but restoring Project ID is a good start. 
+        // We'd need to reload tasks to restore task selection fully, which might be overkill for now.
+        if (capturedProjectId) {
+          this.onProjectChange(); // Reload tasks
+        }
       }
     });
   }
@@ -1014,17 +1062,17 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           clearInterval(this.timerInterval);
           this.timerInterval = null;
         }
-        
+
         // Clear active entry immediately for UI responsiveness
         this.activeEntry = null;
         this.elapsedTime = 0;
-        
+
         // Call backend to stop time
         this.adminService.stopTime(entryId).subscribe({
           next: (response) => {
             if (response.success) {
               this.toastService.show('Time tracking stopped successfully', 'success');
-              
+
               // Reload entries immediately and again after a short delay to ensure backend has updated
               this.loadTimeEntries();
               setTimeout(() => {
@@ -1045,22 +1093,22 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   // Format datetime for display (e.g., "Jan 15, 2024 10:30 AM")
   formatDateTime(dateTimeStr: string): string {
     if (!dateTimeStr) return '-';
-    
+
     const date = new Date(dateTimeStr);
     if (isNaN(date.getTime())) return dateTimeStr; // Return original if invalid
-    
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = months[date.getMonth()];
     const day = date.getDate();
     const year = date.getFullYear();
-    
+
     let hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
     hours = hours ? hours : 12; // 0 should be 12
     const minutesStr = minutes < 10 ? '0' + minutes : minutes;
-    
+
     return `${month} ${day}, ${year} ${hours}:${minutesStr} ${ampm}`;
   }
 
@@ -1121,11 +1169,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   // Admin functions
   clearAllTimeEntries() {
     if (!this.isAdmin) return;
-    
+
     if (!confirm('Are you sure you want to clear ALL time entries? This action cannot be undone.')) {
       return;
     }
-    
+
     this.adminService.clearAllTimeEntries().subscribe({
       next: (response) => {
         alert((response as any).message || 'All time entries cleared successfully');
@@ -1139,7 +1187,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   editTimeEntry(entry: any) {
     if (!this.isAdmin) return;
-    
+
     this.editingEntryId = entry.id;
     this.editEntryData = {
       start_time: entry.start_time ? new Date(entry.start_time).toISOString().slice(0, 16) : '',
@@ -1152,9 +1200,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   saveTimeEntry(entryId: number) {
     if (!this.isAdmin) return;
-    
+
     const updateData: any = {};
-    
+
     if (this.editEntryData.start_time) {
       updateData.start_time = new Date(this.editEntryData.start_time).toISOString();
     }
@@ -1170,7 +1218,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     if (this.editEntryData.project_id !== undefined) {
       updateData.project_id = this.editEntryData.project_id;
     }
-    
+
     this.adminService.updateTimeEntry(entryId, updateData).subscribe({
       next: () => {
         alert('Time entry updated successfully');
@@ -1191,11 +1239,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   deleteTimeEntry(entryId: number) {
     if (!this.isAdmin) return;
-    
+
     if (!confirm('Are you sure you want to delete this time entry? This action cannot be undone.')) {
       return;
     }
-    
+
     this.adminService.deleteTimeEntry(entryId).subscribe({
       next: () => {
         alert('Time entry deleted successfully');
@@ -1272,7 +1320,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.newTimeEntry.task_id = null;
     this.showCreateTaskInput = false;
     this.newTaskTitle = '';
-    
+
     // Load tasks for the selected project
     if (this.newTimeEntry.project_id) {
       this.adminService.getTasks(this.newTimeEntry.project_id).subscribe({
@@ -1407,35 +1455,35 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
     // Parse time spent (HH:MM:SS format) - remove any spaces and validate
     let timeStr = this.newTimeEntry.time_spent.trim();
-    
+
     // Remove AM/PM if present
     timeStr = timeStr.replace(/\s*(AM|PM|am|pm)\s*/i, '');
-    
+
     // Validate HH:MM:SS format (also accept HH:MM for backward compatibility)
     const timePatternHHMMSS = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
     const timePatternHHMM = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    
+
     if (!timePatternHHMMSS.test(timeStr) && !timePatternHHMM.test(timeStr)) {
       alert('Invalid time format. Please use HH:MM:SS format (e.g., 02:45:30) or HH:MM format (e.g., 02:45)');
       return;
     }
-    
+
     // Convert to seconds using timeToSeconds (handles both HH:MM and HH:MM:SS)
     const timeInSeconds = this.timeToSeconds(timeStr);
-    
+
     if (timeInSeconds === 0) {
       alert('Time spent must be greater than 0');
       return;
     }
-    
+
     // Check if task exists, if not create it
     const taskName = this.newTimeEntry.task_name.trim();
     const projectId = parseInt(this.newTimeEntry.project_id);
-    
+
     // Check if task already exists in the project
     const existingTasks = this.projectTasks[projectId] || [];
     const taskExists = existingTasks.some(task => task.title === taskName);
-    
+
     if (!taskExists) {
       // Create the task first
       const taskData = {
@@ -1446,7 +1494,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         assigned_to: currentUserId, // Assign to current user
         assigned_by: null // User creating from timesheet
       };
-      
+
       this.adminService.createTask(taskData).subscribe({
         next: (taskResponse) => {
           // Task created successfully, now create time entry
@@ -1467,15 +1515,15 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     const selectedDate = new Date(this.newTimeEntry.date);
     selectedDate.setHours(9, 0, 0, 0); // Set to 9 AM as start time
     const startTime = selectedDate.toISOString();
-    
+
     // Calculate end time by adding time spent (in seconds)
     const timeSpentMs = timeInSeconds * 1000;
     const endTime = new Date(selectedDate.getTime() + timeSpentMs).toISOString();
-    
+
     // Validate dates
     const start = new Date(startTime);
     const end = new Date(endTime);
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       alert('Invalid date format');
       return;
@@ -1511,7 +1559,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success) {
           this.toastService.show('Time entry added successfully', 'success');
-          
+
           // Navigate to the date of the new entry to ensure it's visible
           const entryDate = new Date(this.newTimeEntry.date);
           if (this.selectedView === 'day') {
@@ -1526,12 +1574,12 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             this.currentWeekStart = new Date(entryDate.getFullYear(), entryDate.getMonth(), 1);
           }
           this.currentWeekStart.setHours(0, 0, 0, 0);
-          
+
           // Update week days first to ensure the view is set correctly
           this.updateWeekDays();
-          
+
           this.cancelAddLine();
-          
+
           // Reload tasks for the project to include the new task
           const loadTasksAndEntries = () => {
             if (this.projectTasks[projectId]) {
@@ -1557,7 +1605,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
               });
             }
           };
-          
+
           // Small delay to ensure weekDays are updated
           setTimeout(() => {
             loadTasksAndEntries();
@@ -1729,17 +1777,17 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   startActivityTimer(activity: ActivityRow) {
     const key = this.getActivityKey(activity);
-    
+
     // Stop any other active timers first
     this.stopAllActivityTimers();
-    
+
     // Find project
     const project = this.projects.find(p => p.name === activity.projectName);
     if (!project) {
       this.toastService.show('Project not found: ' + activity.projectName, 'error');
       return;
     }
-    
+
     // Start timer via API
     this.adminService.startTime(project.id, activity.taskName, activity.description || '').subscribe({
       next: (response) => {
@@ -1752,7 +1800,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             elapsedTime: 0,
             interval: null
           };
-          
+
           // Update timer every second
           this.activeActivityTimers[key].interval = setInterval(() => {
             if (this.activeActivityTimers[key]) {
@@ -1762,7 +1810,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
               this.activeActivityTimers[key].elapsedTime = Math.max(0, elapsed);
             }
           }, 1000);
-          
+
           // Reload active entry to sync with backend
           this.loadActiveTimeEntry();
         }
@@ -1775,11 +1823,11 @@ export class TimesheetComponent implements OnInit, OnDestroy {
 
   stopActivityTimer(activity: ActivityRow) {
     const key = this.getActivityKey(activity);
-    
+
     if (!this.activeActivityTimers[key]) {
       return;
     }
-    
+
     // Stop the timer via API - need active entry ID
     if (!this.activeEntry || !this.activeEntry.id) {
       // Clear local timer if no active entry
@@ -1789,7 +1837,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       delete this.activeActivityTimers[key];
       return;
     }
-    
+
     this.adminService.stopTime(this.activeEntry.id).subscribe({
       next: (response) => {
         if (response.success) {
@@ -1799,7 +1847,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             clearInterval(this.activeActivityTimers[key].interval);
           }
           delete this.activeActivityTimers[key];
-          
+
           // Reload time entries to show the new entry
           this.loadTimeEntries();
           this.loadActiveTimeEntry();
@@ -1865,10 +1913,10 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     try {
       // Dynamically import xlsx to avoid build issues
       const XLSX = await import('xlsx');
-      
+
       // Prepare data for Excel export
       const excelData: any[] = [];
-      
+
       // Add header row
       excelData.push([
         'Project Name',
@@ -1880,14 +1928,14 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         'Time Spent',
         'Who Worked'
       ]);
-      
+
       // Process each activity row
       this.activityRows.forEach(activity => {
         // Get project details
         let projectAllocatedTime = '-';
         let customerName = '-';
         let region = '-';
-        
+
         if (activity.projectId) {
           const project = this.projects.find(p => p.id === activity.projectId);
           if (project) {
@@ -1898,16 +1946,16 @@ export class TimesheetComponent implements OnInit, OnDestroy {
             region = project.region || '-';
           }
         }
-        
+
         // Get task allocated_time
         const taskAllocatedTime = this.formatAllocatedTime(activity.allocatedTime);
-        
+
         // Format time spent (this is now per user)
         const timeSpent = this.formatTime(activity.totalTime);
-        
+
         // Get user name (each row is now per user)
         const whoWorked = activity.userName || activity.userEmail || 'Unknown User';
-        
+
         // Add data row (each row represents one user)
         excelData.push([
           activity.projectName || '-',
@@ -1920,10 +1968,10 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           whoWorked
         ]);
       });
-      
+
       // Create worksheet
       const ws = XLSX.utils.aoa_to_sheet(excelData);
-      
+
       // Set column widths
       const colWidths = [
         { wch: 25 }, // Project Name
@@ -1936,19 +1984,19 @@ export class TimesheetComponent implements OnInit, OnDestroy {
         { wch: 30 }  // Who Worked
       ];
       ws['!cols'] = colWidths;
-      
+
       // Create workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Timesheet');
-      
+
       // Generate filename with current date
       const now = new Date();
       const dateStr = now.toISOString().split('T')[0];
       const filename = `timesheet_${dateStr}.xlsx`;
-      
+
       // Save file
       XLSX.writeFile(wb, filename);
-      
+
       // Show success message
       this.toastService.show('Timesheet exported to Excel successfully!', 'success');
     } catch (error) {

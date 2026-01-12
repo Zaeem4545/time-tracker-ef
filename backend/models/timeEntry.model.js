@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
-async function startTime(user_id, project_id, task_name, description) {
-    const startTime = new Date();
+async function startTime(user_id, project_id, task_name, description, startTimeProvided = null) {
+    const startTime = startTimeProvided ? new Date(startTimeProvided) : new Date();
 
     const [result] = await db.query(
         `INSERT INTO time_entries 

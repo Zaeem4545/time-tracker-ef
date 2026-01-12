@@ -14,7 +14,7 @@ const buildApi = (path: string) => {
 export class AdminService {
   private apiUrl = buildApi('');
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getUsers() { return this.http.get<any[]>(buildApi('users')); }
   createUser(user: any) { return this.http.post(buildApi('users'), user); }
@@ -32,7 +32,7 @@ export class AdminService {
   assignManagerToProject(id: number, managerId: number | null) { return this.http.put(buildApi(`projects/${id}/assign-manager`), { manager_id: managerId }); }
   selectProject(id: number) { return this.http.put<any>(buildApi(`projects/${id}/select`), {}); }
   deleteProject(id: number) { return this.http.delete(buildApi(`projects/${id}`)); }
-  
+
   // Comments
   getProjectComments(projectId: number) { return this.http.get<any>(buildApi(`projects/${projectId}/comments`)); }
   createProjectComment(projectId: number, comment: string) { return this.http.post<any>(buildApi(`projects/${projectId}/comments`), { comment }); }
@@ -53,29 +53,34 @@ export class AdminService {
 
   getTimeEntries() { return this.http.get<any[]>(buildApi('time-entries')); }
   getActiveTimeEntry() { return this.http.get<any>(buildApi('time-entries/active')); }
-  startTime(projectId: number, taskName?: string, description?: string) { 
-    return this.http.post<any>(buildApi('time-entries/start'), { project_id: projectId, task_name: taskName, description }); 
+  startTime(projectId: number, taskName?: string, description?: string, startTime?: string) {
+    return this.http.post<any>(buildApi('time-entries/start'), {
+      project_id: projectId,
+      task_name: taskName,
+      description,
+      start_time: startTime
+    });
   }
-  stopTime(entryId: number) { 
-    return this.http.post<any>(buildApi(`time-entries/stop/${entryId}`), {}); 
+  stopTime(entryId: number) {
+    return this.http.post<any>(buildApi(`time-entries/stop/${entryId}`), {});
   }
-  updateTimeEntry(id: number, data: any) { 
-    return this.http.put<any>(buildApi(`time-entries/${id}`), data); 
+  updateTimeEntry(id: number, data: any) {
+    return this.http.put<any>(buildApi(`time-entries/${id}`), data);
   }
-  deleteTimeEntry(id: number) { 
-    return this.http.delete(buildApi(`time-entries/${id}`)); 
+  deleteTimeEntry(id: number) {
+    return this.http.delete(buildApi(`time-entries/${id}`));
   }
-  clearAllTimeEntries() { 
-    return this.http.delete(buildApi('time-entries')); 
+  clearAllTimeEntries() {
+    return this.http.delete(buildApi('time-entries'));
   }
-  createTimeEntry(entry: any) { 
-    return this.http.post<any>(buildApi('time-entries'), entry); 
+  createTimeEntry(entry: any) {
+    return this.http.post<any>(buildApi('time-entries'), entry);
   }
-  getHeadManagerTeam(managerIds: number[]) { 
-    return this.http.post<any[]>(buildApi('users/head-manager-team'), { managerIds }); 
+  getHeadManagerTeam(managerIds: number[]) {
+    return this.http.post<any[]>(buildApi('users/head-manager-team'), { managerIds });
   }
   getEmployeeTasks() { return this.http.get<any[]>(buildApi('tasks/employee/my-tasks')); }
-  
+
   // Team management methods
   assignEmployeeToManager(employeeId: number, managerId: number) {
     return this.http.put(buildApi(`users/${employeeId}`), { manager_id: managerId });
@@ -86,7 +91,7 @@ export class AdminService {
   createCustomer(customer: any) { return this.http.post(buildApi('customers'), customer); }
   updateCustomer(id: number, customer: any) { return this.http.put(buildApi(`customers/${id}`), customer); }
   deleteCustomer(id: number) { return this.http.delete(buildApi(`customers/${id}`)); }
-  
+
   // File upload methods
   uploadFile(file: File) {
     const formData = new FormData();

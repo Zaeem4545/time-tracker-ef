@@ -4,25 +4,25 @@ const TimeEntry = require('../models/timeEntry.model');
 // Helper function to convert ISO datetime string to MySQL DATETIME format
 function formatDateTimeForMySQL(isoString) {
   if (!isoString) return null;
-  
+
   // If already in MySQL format (YYYY-MM-DD HH:MM:SS), return as is
   if (typeof isoString === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(isoString)) {
     return isoString;
   }
-  
+
   // Convert ISO string to MySQL format
   const date = new Date(isoString);
   if (isNaN(date.getTime())) {
     return null;
   }
-  
+
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
@@ -52,7 +52,7 @@ async function getTimeEntries(req, res) {
 async function startTime(req, res) {
   try {
     const userId = req.user.id;
-    const { project_id, task_name, description } = req.body;
+    const { project_id, task_name, description, start_time } = req.body;
 
     if (!project_id) {
       return res.status(400).json({ success: false, message: 'Project ID is required' });
@@ -78,8 +78,15 @@ async function startTime(req, res) {
       return res.status(400).json({ success: false, message: 'Invalid project ID' });
     }
 
-    const entryId = await TimeEntry.startTime(userId, project_id, task_name || null, description || null);
-    
+    // Pass start_time (if provided) to the model. 
+    // The formatDateTimeForMySQL helper is available in this file.
+    let formattedStartTime = null;
+    if (start_time) {
+      formattedStartTime = formatDateTimeForMySQL(start_time);
+    }
+
+    const entryId = await TimeEntry.startTime(userId, project_id, task_name || null, description || null, formattedStartTime);
+
     res.json({ success: true, message: 'Time tracking started', entryId });
   } catch (err) {
     console.error('Error starting time:', err);
@@ -104,7 +111,7 @@ async function stopTime(req, res) {
     }
 
     const totalTime = await TimeEntry.stopTime(id);
-    
+
     res.json({ success: true, message: 'Time tracking stopped', totalTime });
   } catch (err) {
     console.error('Error stopping time:', err);
@@ -142,66 +149,66 @@ async function getActiveTimeEntry(req, res) {
 async function updateTimeEntry(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
-    
+
     // Only admin can update time entries
     if (userRole !== 'admin') {
       return res.status(403).json({ success: false, message: 'Access denied. Only admins can edit time entries.' });
     }
-    
+
     const { id } = req.params;
     const { start_time, end_time, task_name, description, project_id } = req.body;
-    
+
     // Verify time entry exists
     const [entryRows] = await db.query('SELECT id FROM time_entries WHERE id = ?', [id]);
     if (entryRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Time entry not found' });
     }
-    
+
     // Build update query dynamically based on provided fields
     const updates = [];
     const params = [];
-    
+
     if (start_time !== undefined) {
       updates.push('start_time = ?');
       params.push(formatDateTimeForMySQL(start_time));
     }
-    
+
     if (end_time !== undefined) {
       updates.push('end_time = ?');
       params.push(formatDateTimeForMySQL(end_time));
     }
-    
+
     if (task_name !== undefined) {
       updates.push('task_name = ?');
       params.push(task_name);
     }
-    
+
     if (description !== undefined) {
       updates.push('description = ?');
       params.push(description);
     }
-    
+
     if (project_id !== undefined) {
       updates.push('project_id = ?');
       params.push(project_id);
     }
-    
+
     if (updates.length === 0) {
       return res.status(400).json({ success: false, message: 'No fields to update' });
     }
-    
+
     // Recalculate total_time if start_time or end_time changed
     if (start_time !== undefined || end_time !== undefined) {
       const [currentEntryRows] = await db.query('SELECT start_time, end_time FROM time_entries WHERE id = ?', [id]);
       if (currentEntryRows.length === 0) {
         return res.status(404).json({ success: false, message: 'Time entry not found' });
       }
-      
+
       const currentEntry = currentEntryRows[0];
       // Get the start and end times - use provided values or fall back to current values
       const start = start_time !== undefined ? new Date(start_time) : (currentEntry.start_time ? new Date(currentEntry.start_time) : null);
       const end = end_time !== undefined ? new Date(end_time) : (currentEntry.end_time ? new Date(currentEntry.end_time) : null);
-      
+
       // Only calculate total_time if both start and end are valid
       if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
         if (end > start) {
@@ -216,22 +223,22 @@ async function updateTimeEntry(req, res) {
         console.warn('Could not calculate total_time for entry', id, 'start:', start, 'end:', end);
       }
     }
-    
+
     params.push(id);
-    
+
     const updateQuery = `UPDATE time_entries SET ${updates.join(', ')} WHERE id = ?`;
     console.log('Update query:', updateQuery);
     console.log('Update params:', params);
-    
+
     await db.query(updateQuery, params);
-    
+
     res.json({ success: true, message: 'Time entry updated successfully' });
   } catch (err) {
     console.error('Error updating time entry:', err);
     console.error('Error stack:', err.stack);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to update time entry: ' + (err.message || 'Unknown error') 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update time entry: ' + (err.message || 'Unknown error')
     });
   }
 }
@@ -240,22 +247,22 @@ async function updateTimeEntry(req, res) {
 async function deleteTimeEntry(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
-    
+
     // Only admin can delete time entries
     if (userRole !== 'admin') {
       return res.status(403).json({ success: false, message: 'Access denied. Only admins can delete time entries.' });
     }
-    
+
     const { id } = req.params;
-    
+
     // Verify time entry exists
     const [entryRows] = await db.query('SELECT id FROM time_entries WHERE id = ?', [id]);
     if (entryRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Time entry not found' });
     }
-    
+
     await db.query('DELETE FROM time_entries WHERE id = ?', [id]);
-    
+
     res.json({ success: true, message: 'Time entry deleted successfully' });
   } catch (err) {
     console.error('Error deleting time entry:', err);
@@ -267,14 +274,14 @@ async function deleteTimeEntry(req, res) {
 async function clearAllTimeEntries(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
-    
+
     // Only admin can clear all time entries
     if (userRole !== 'admin') {
       return res.status(403).json({ success: false, message: 'Access denied. Only admins can clear all time entries.' });
     }
-    
+
     const [result] = await db.query('DELETE FROM time_entries');
-    
+
     res.json({ success: true, message: `All time entries cleared successfully. ${result.affectedRows} entries deleted.` });
   } catch (err) {
     console.error('Error clearing all time entries:', err);
@@ -287,56 +294,56 @@ async function createTimeEntry(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
     const currentUserId = req.user.id;
-    
+
     const { user_id, project_id, task_name, description, start_time, end_time } = req.body;
-    
+
     // All roles can create time entries, but they can only create entries for themselves
     // Admin can create entries for any user
     const targetUserId = user_id || currentUserId;
-    
+
     if (userRole !== 'admin' && targetUserId !== currentUserId) {
       return res.status(403).json({ success: false, message: 'Access denied. You can only create time entries for yourself.' });
     }
-    
+
     // Validate required fields (user_id is optional, defaults to current user)
     if (!project_id || !task_name || !start_time || !end_time) {
       return res.status(400).json({ success: false, message: 'project_id, task_name, start_time, and end_time are required' });
     }
-    
+
     // Verify user exists
     const [userRows] = await db.query('SELECT id FROM users WHERE id = ?', [targetUserId]);
     if (userRows.length === 0) {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
     }
-    
+
     // Verify project exists
     const [projectRows] = await db.query('SELECT id FROM projects WHERE id = ?', [project_id]);
     if (projectRows.length === 0) {
       return res.status(400).json({ success: false, message: 'Invalid project ID' });
     }
-    
+
     // Validate dates
     const start = new Date(start_time);
     const end = new Date(end_time);
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return res.status(400).json({ success: false, message: 'Invalid date format for start_time or end_time' });
     }
-    
+
     if (end <= start) {
       return res.status(400).json({ success: false, message: 'end_time must be after start_time' });
     }
-    
+
     // Calculate total time in minutes
     const totalTimeMinutes = Math.floor((end.getTime() - start.getTime()) / 60000);
-    
+
     // Insert time entry (status will use default value if column exists)
     const [result] = await db.query(
       `INSERT INTO time_entries (user_id, project_id, task_name, description, start_time, end_time, total_time)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [targetUserId, project_id, task_name.trim(), description?.trim() || null, formatDateTimeForMySQL(start_time), formatDateTimeForMySQL(end_time), totalTimeMinutes]
     );
-    
+
     res.json({ success: true, message: 'Time entry created successfully', entryId: result.insertId });
   } catch (err) {
     console.error('Error creating time entry:', err);
