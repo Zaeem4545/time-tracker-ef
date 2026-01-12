@@ -65,9 +65,14 @@ export class AdminDashboardPageComponent implements OnInit {
   // Current admin info
   currentAdminId: number | null = null;
   currentAdminEmail: string | null = null;
+  currentAdminName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
+  
+  // Track projects and tasks worked on by admin
+  workedOnProjectIds: Set<number> = new Set();
+  workedOnTaskNames: Set<string> = new Set();
 
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
@@ -100,8 +105,24 @@ export class AdminDashboardPageComponent implements OnInit {
   ngOnInit(): void {
     this.currentAdminId = this.authService.getUserId();
     this.currentAdminEmail = this.authService.getEmail();
-    this.loadUsers();
-    this.loadDashboardData();
+    // Load users first to get admin name, then load dashboard data
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        this.users = users;
+        const currentUser = users.find((u: any) => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
+        if (currentUser && currentUser.name) {
+          this.currentAdminName = currentUser.name;
+        } else {
+          this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
+        }
+        this.loadDashboardData();
+      },
+      error: (err) => {
+        console.error('Error loading users:', err);
+        this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
+        this.loadDashboardData();
+      }
+    });
   }
 
   checkAndShowWelcome(): void {
@@ -117,6 +138,7 @@ export class AdminDashboardPageComponent implements OnInit {
       const currentUser = this.users.find(u => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
       if (currentUser && currentUser.name) {
         this.welcomeUserName = currentUser.name;
+        this.currentAdminName = currentUser.name;
         this.showWelcomeMessage = true;
         setTimeout(() => {
           this.showWelcomeMessage = false;
@@ -127,11 +149,14 @@ export class AdminDashboardPageComponent implements OnInit {
 
     this.adminService.getUsers().subscribe({
       next: (users) => {
+        this.users = users;
         const currentUser = users.find((u: any) => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
         if (currentUser && currentUser.name) {
           this.welcomeUserName = currentUser.name;
+          this.currentAdminName = currentUser.name;
         } else {
           this.welcomeUserName = this.currentAdminEmail?.split('@')[0] || 'User';
+          this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
         }
         this.showWelcomeMessage = true;
         setTimeout(() => {
@@ -140,6 +165,7 @@ export class AdminDashboardPageComponent implements OnInit {
       },
       error: () => {
         this.welcomeUserName = this.currentAdminEmail?.split('@')[0] || 'User';
+        this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
         this.showWelcomeMessage = true;
         setTimeout(() => {
           this.showWelcomeMessage = false;
