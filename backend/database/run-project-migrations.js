@@ -30,175 +30,82 @@ async function waitForDatabase(maxRetries = 30, delay = 2000) {
   return false;
 }
 
-async function runMigrations() {
-  let connection;
-  
-  try {
-    console.log('🔄 Waiting for database to be ready...');
-    await waitForDatabase();
-    console.log('✅ Database is ready');
-    
-    console.log('🔄 Connecting to database...');
-    connection = await mysql.createConnection(dbConfig);
-    console.log('✅ Connected to database');
+// Helper to check and add column
+async function ensureColumn(connection, table, column, definition) {
+  const [check] = await connection.query(`
+    SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
+  `, [table, column]);
 
-    // Migration 1: Add allocated_time column if it doesn't exist
-    console.log('📝 Checking allocated_time column...');
-    const [allocatedTimeCheck] = await connection.query(`
-      SELECT COUNT(*) as count
-      FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'projects'
-        AND COLUMN_NAME = 'allocated_time'
-    `);
-    
-    if (allocatedTimeCheck[0].count === 0) {
-      console.log('  → Adding allocated_time column...');
-      try {
-        await connection.query('ALTER TABLE projects ADD COLUMN allocated_time INT NULL;');
-        console.log('  ✅ allocated_time column added');
-      } catch (err) {
-        if (err.code === 'ER_DUP_FIELDNAME') {
-          console.log('  ✓ allocated_time column already exists (duplicate detected)');
-        } else {
-          console.log('  ⚠️  Error adding allocated_time column:', err.message);
-          // Don't throw - continue with other migrations
-        }
-      }
-    } else {
-      // Column exists, check if it needs to be modified to ensure it's INT NULL
-      const [columnInfo] = await connection.query(`
-        SELECT DATA_TYPE, IS_NULLABLE
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'projects'
-          AND COLUMN_NAME = 'allocated_time'
-      `);
-      
-      if (columnInfo.length > 0 && (columnInfo[0].DATA_TYPE !== 'int' || columnInfo[0].IS_NULLABLE !== 'YES')) {
-        console.log('  → Modifying allocated_time column to INT NULL...');
-        try {
-          await connection.query('ALTER TABLE projects MODIFY COLUMN allocated_time INT NULL;');
-          console.log('  ✅ allocated_time column modified');
-        } catch (err) {
-          console.log('  ⚠️  Error modifying allocated_time column:', err.message);
-          // Don't throw - continue with other migrations
-        }
-      } else {
-        console.log('  ✓ allocated_time column already exists with correct type (INT NULL)');
-      }
+  if (check[0].count === 0) {
+    console.log(`  → Adding ${column} column to ${table}...`);
+    try {
+      await connection.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+      console.log(`  ✅ ${column} column added`);
+    } catch (err) {
+      if (err.code !== 'ER_DUP_FIELDNAME') console.warn(`  ⚠️ Error adding ${column}: ${err.message}`);
     }
-
-    // Migration 2: Add assigned_to column if it doesn't exist
-    console.log('📝 Checking assigned_to column...');
-    const [assignedToCheck] = await connection.query(`
-      SELECT COUNT(*) as count
-      FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'projects'
-        AND COLUMN_NAME = 'assigned_to'
-    `);
-    
-    if (assignedToCheck[0].count === 0) {
-      console.log('  → Adding assigned_to column...');
-      await connection.query(`
-        ALTER TABLE projects 
-        ADD COLUMN assigned_to INT NULL,
-        ADD FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
-      `);
-      console.log('  ✅ assigned_to column and foreign key added');
-    } else {
-      console.log('  ✓ assigned_to column already exists');
-      
-      // Check if foreign key exists
-      const [fkCheck] = await connection.query(`
-        SELECT COUNT(*) as count
-        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'projects'
-          AND CONSTRAINT_NAME LIKE '%assigned_to%'
-      `);
-      
-      if (fkCheck[0].count === 0) {
-        console.log('  → Adding assigned_to foreign key...');
-        try {
-          await connection.query(`
-            ALTER TABLE projects 
-            ADD FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
-          `);
-          console.log('  ✅ assigned_to foreign key added');
-        } catch (err) {
-          if (err.code !== 'ER_DUP_KEY') {
-            console.log('  ⚠️  Foreign key may already exist or error:', err.message);
-          }
-        }
-      } else {
-        console.log('  ✓ assigned_to foreign key already exists');
-      }
-    }
-
-    // Migration 3: Add created_by column if it doesn't exist
-    console.log('📝 Checking created_by column...');
-    const [createdByCheck] = await connection.query(`
-      SELECT COUNT(*) as count
-      FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'projects'
-        AND COLUMN_NAME = 'created_by'
-    `);
-    
-    if (createdByCheck[0].count === 0) {
-      console.log('  → Adding created_by column...');
-      await connection.query('ALTER TABLE projects ADD COLUMN created_by INT NULL AFTER assigned_to;');
-      console.log('  ✅ created_by column added');
-    } else {
-      console.log('  ✓ created_by column already exists');
-    }
-
-    // Migration 4: Add created_by foreign key if it doesn't exist
-    console.log('📝 Checking created_by foreign key...');
-    const [createdByFkCheck] = await connection.query(`
-      SELECT COUNT(*) as count
-      FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'projects'
-        AND CONSTRAINT_NAME = 'fk_projects_created_by'
-    `);
-    
-    if (createdByFkCheck[0].count === 0) {
-      console.log('  → Adding created_by foreign key...');
-      try {
-        await connection.query(`
-          ALTER TABLE projects 
-          ADD CONSTRAINT fk_projects_created_by 
-          FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-        `);
-        console.log('  ✅ created_by foreign key added');
-      } catch (err) {
-        if (err.code !== 'ER_DUP_KEY') {
-          console.log('  ⚠️  Foreign key error:', err.message);
-        }
-      }
-    } else {
-      console.log('  ✓ created_by foreign key already exists');
-    }
-
-    console.log('✅ All project migrations completed successfully!');
-    
-  } catch (error) {
-    console.error('❌ Migration error:', error);
-    process.exit(1);
-  } finally {
-    if (connection) {
-      await connection.end();
-      console.log('🔌 Database connection closed');
-    }
+  } else {
+    console.log(`  ✓ ${column} column already exists`);
   }
 }
 
-// Run migrations
-runMigrations().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+// Helper to check and add FK
+async function ensureFK(connection, table, constraintName, definition) {
+  const [check] = await connection.query(`
+    SELECT COUNT(*) as count FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?
+  `, [table, constraintName]);
 
+  if (check[0].count === 0) {
+    console.log(`  → Adding FK ${constraintName} to ${table}...`);
+    try {
+      await connection.query(`ALTER TABLE ${table} ADD CONSTRAINT ${constraintName} ${definition}`);
+      console.log(`  ✅ FK ${constraintName} added`);
+    } catch (err) {
+      if (err.code !== 'ER_DUP_KEY') console.warn(`  ⚠️ Error adding FK ${constraintName}: ${err.message}`);
+    }
+  } else {
+    console.log(`  ✓ FK ${constraintName} already exists`);
+  }
+}
+
+async function runMigrations() {
+  let connection;
+  try {
+    console.log('🔄 [Self-Healing] Checking database schema...');
+    await waitForDatabase(5, 2000); // Wait briefly
+    
+    connection = await mysql.createConnection(dbConfig);
+    
+    // 1. PROJECT Columns
+    await ensureColumn(connection, 'projects', 'allocated_time', "VARCHAR(20) NULL COMMENT 'Time allocated in HH:MM:SS'");
+    await ensureColumn(connection, 'projects', 'assigned_to', "INT NULL");
+    await ensureColumn(connection, 'projects', 'created_by', "INT NULL");
+    await ensureColumn(connection, 'projects', 'custom_fields', "TEXT NULL");
+    await ensureColumn(connection, 'projects', 'customer_id', "INT NULL");
+    await ensureColumn(connection, 'projects', 'archived', "TINYINT(1) DEFAULT 0");
+    await ensureColumn(connection, 'projects', 'region', "VARCHAR(100) NULL");
+
+    // Foreign Keys for Projects
+    await ensureFK(connection, 'projects', 'fk_projects_assigned_to', "FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL");
+    await ensureFK(connection, 'projects', 'fk_projects_created_by', "FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL");
+    await ensureFK(connection, 'projects', 'fk_projects_customer_id', "FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL");
+
+    console.log('✅ [Self-Healing] Database schema verified/repaired.');
+
+  } catch (error) {
+    console.error('❌ [Self-Healing] Migration error:', error.message);
+    // Don't exit process, allow server to try starting anyway
+  } finally {
+    if (connection) await connection.end();
+  }
+}
+
+// Export for server usage
+module.exports = runMigrations;
+
+// Auto-run if executed directly
+if (require.main === module) {
+  runMigrations().then(() => process.exit(0)).catch(() => process.exit(1));
+}

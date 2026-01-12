@@ -12,6 +12,11 @@ const uploadRoutes = require('./routes/upload.routes');
 const historyRoutes = require('./routes/history.routes');
 const db = require('./config/db'); // your database config
 require('dotenv').config();
+const runProjectMigrations = require('./database/run-project-migrations');
+
+// Run migrations on startup (Self-Healing)
+runProjectMigrations();
+
 
 
 
@@ -19,7 +24,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ✅ Middleware
-app.use(cors({ 
+app.use(cors({
   origin: [
     'http://localhost:4200',           // Local dev
     'http://localhost',                // Direct localhost
@@ -43,7 +48,7 @@ try {
   app.use('/api/customers', customersRoutes);
   app.use('/api/upload', uploadRoutes);
   app.use('/api/history', historyRoutes);
-  
+
   console.log('✅ Routes registered successfully:');
   console.log('  POST /api/users - Create user');
   console.log('  GET /api/users - Get all users');

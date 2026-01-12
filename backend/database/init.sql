@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  allocated_time INT NULL,
+  allocated_time VARCHAR(20) NULL COMMENT 'Time allocated for project in HH:MM:SS format',
   manager_id INT,
   head_manager_id INT,
   region VARCHAR(100),
