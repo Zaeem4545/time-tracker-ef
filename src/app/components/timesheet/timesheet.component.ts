@@ -894,8 +894,14 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     this.adminService.getActiveTimeEntry().subscribe({
       next: (response) => {
         if (response.success && response.activeEntry) {
+          // Only update timer if entry ID changed or timer wasn't running
+          const entryChanged = !this.activeEntry || this.activeEntry.id !== response.activeEntry.id;
           this.activeEntry = response.activeEntry;
-          this.startTimer();
+          
+          // Restart timer to sync with backend time (only if entry changed or timer not running)
+          if (entryChanged || !this.timerInterval) {
+            this.startTimer();
+          }
           
           // Sync with activity timer if it matches
           const project = this.projects.find(p => p.id === response.activeEntry.project_id);
@@ -932,13 +938,16 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error loading active time entry:', err);
-        this.activeEntry = null;
-        if (this.timerInterval) {
-          clearInterval(this.timerInterval);
-          this.timerInterval = null;
+        // Only clear timer if we don't have an optimistic entry
+        if (!this.activeEntry || this.activeEntry.id !== null) {
+          this.activeEntry = null;
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+          this.elapsedTime = 0;
+          this.stopAllActivityTimers();
         }
-        this.elapsedTime = 0;
-        this.stopAllActivityTimers();
       }
     });
   }
@@ -977,30 +986,65 @@ export class TimesheetComponent implements OnInit, OnDestroy {
     }
 
     const taskName = selectedTask.title;
+    const project = this.projects.find(p => p.id === this.selectedProjectId);
+    const projectName = project ? project.name : '';
 
+    // Start timer immediately (optimistic UI update)
+    const startTimeNow = new Date();
+    this.activeEntry = {
+      id: null, // Will be updated when API responds
+      start_time: startTimeNow.toISOString(),
+      project_id: this.selectedProjectId,
+      task_name: taskName,
+      description: this.description?.trim() || null,
+      project_name: projectName
+    };
+    this.elapsedTime = 0;
+    this.startTimer(); // Start timer immediately
+
+    // Make API call
     this.adminService.startTime(this.selectedProjectId, taskName, this.description?.trim() || undefined).subscribe({
       next: (response) => {
         if (response.success) {
           this.toastService.show('Time tracking started successfully', 'success');
+          // Update activeEntry with real data from backend
+          this.loadActiveTimeEntry();
           this.selectedProjectId = null;
           this.selectedTaskId = null;
           this.projectTasks = {};
           this.description = '';
-          this.loadActiveTimeEntry();
           this.loadTimeEntries();
+        } else {
+          // If API call failed, reset the timer
+          this.activeEntry = null;
+          if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+          }
+          this.elapsedTime = 0;
         }
       },
       error: (err) => {
+        // If API call failed, reset the timer
+        this.activeEntry = null;
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.elapsedTime = 0;
         this.toastService.show('Error starting time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
       }
     });
   }
 
   stopTime() {
-    if (!this.activeEntry || !this.activeEntry.id) {
+    if (!this.activeEntry) {
       this.toastService.show('No active time entry found', 'warning');
       return;
     }
+
+    // Store entry ID before clearing
+    const entryId = this.activeEntry.id;
 
     this.confirmationService.show({
       title: 'Stop Time Tracking',
@@ -1009,29 +1053,39 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       cancelText: 'Cancel'
     }).then((confirmed: boolean) => {
       if (confirmed) {
-        this.adminService.stopTime(this.activeEntry.id).subscribe({
-          next: (response) => {
-            if (response.success) {
-              this.toastService.show('Time tracking stopped successfully', 'success');
-              // Clear active entry first
-              this.activeEntry = null;
-              if (this.timerInterval) {
-                clearInterval(this.timerInterval);
-                this.timerInterval = null;
-              }
-              this.elapsedTime = 0;
-              
-              // Reload entries immediately and again after a short delay to ensure backend has updated
-              this.loadTimeEntries();
-              setTimeout(() => {
+        // Stop timer immediately (optimistic UI update)
+        this.activeEntry = null;
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        this.elapsedTime = 0;
+        this.stopAllActivityTimers();
+
+        // Make API call to stop time
+        if (entryId) {
+          this.adminService.stopTime(entryId).subscribe({
+            next: (response) => {
+              if (response.success) {
+                this.toastService.show('Time tracking stopped successfully', 'success');
+                // Reload entries immediately and again after a short delay to ensure backend has updated
                 this.loadTimeEntries();
-              }, 500);
+                setTimeout(() => {
+                  this.loadTimeEntries();
+                }, 500);
+              }
+            },
+            error: (err) => {
+              this.toastService.show('Error stopping time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
+              // Reload active entry in case stop failed
+              this.loadActiveTimeEntry();
             }
-          },
-          error: (err) => {
-            this.toastService.show('Error stopping time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
-          }
-        });
+          });
+        } else {
+          // If no entry ID (optimistic start), just reload entries
+          this.loadTimeEntries();
+          this.loadActiveTimeEntry();
+        }
       }
     });
   }
