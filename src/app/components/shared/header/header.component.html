@@ -53,7 +53,7 @@
         <div class="dropdown menu-dropdown" *ngIf="showMenu">
           <div class="dropdown-content">
             <div class="dropdown-item" (click)="openChangeProfilePicture()">
-              Change Profile Picture
+              Change or Adjust Profile Picture
             </div>
             <div class="dropdown-item" (click)="openChangePasswordModal()">
               Change Password
@@ -133,8 +133,60 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button type="button" class="btn-primary" (click)="openChangeProfilePicture()">Change Profile Picture</button>
+      <button type="button" class="btn-primary" (click)="openChangeProfilePicture()">Change or Adjust Profile Picture</button>
       <button type="button" class="btn-cancel" (click)="closeProfileViewModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Profile Picture Modal (Image Cropper) -->
+<div class="modal-overlay" *ngIf="showProfilePictureModal" (click)="closeProfilePictureModal()">
+  <div class="modal-content profile-picture-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Adjust Your Picture</h3>
+      <button class="modal-close" (click)="closeProfilePictureModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Initial state: Click to set picture -->
+      <div *ngIf="!selectedImageFile && !existingImageUrl" class="image-select-area" (click)="triggerFileInput()">
+        <div class="image-select-content">
+          <span class="image-select-icon">📷</span>
+          <p class="image-select-text">Click to set picture</p>
+          <input type="file" #profileFileInput accept="image/*" (change)="onImageSelected($event)" style="display: none;" />
+        </div>
+      </div>
+
+      <!-- Image cropper/adjuster -->
+      <div *ngIf="selectedImageFile || existingImageUrl" class="image-cropper-container">
+        <div class="image-preview-wrapper">
+          <canvas #imageCanvas 
+                  class="image-canvas"
+                  (mousedown)="onMouseDown($event)"
+                  (mouseleave)="onMouseUp()"
+                  (touchstart)="onTouchStart($event)"
+                  (touchmove)="onTouchMove($event)"
+                  (touchend)="onTouchEnd()"></canvas>
+          <div class="crop-overlay"></div>
+          <input type="file" #profileFileInput accept="image/*" (change)="onImageSelected($event)" style="display: none;" />
+        </div>
+        <div class="image-controls">
+          <div class="control-group">
+            <label>Zoom</label>
+            <input type="range" [(ngModel)]="imageZoom" min="0.5" max="3" step="0.1" (input)="updateImagePreview()" class="zoom-slider" />
+            <span class="zoom-value">{{ (imageZoom * 100).toFixed(0) }}%</span>
+          </div>
+          <div class="control-group">
+            <label>Drag the image to adjust position</label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" *ngIf="selectedImageFile || existingImageUrl">
+      <button type="button" class="btn-select-new-image" (click)="triggerFileInput()">Select New Image</button>
+      <div class="footer-right">
+        <button type="button" class="btn-cancel" (click)="closeProfilePictureModal()">Cancel</button>
+        <button type="button" class="btn-primary" (click)="saveProfilePicture()">Save</button>
+      </div>
     </div>
   </div>
 </div>
