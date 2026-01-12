@@ -464,7 +464,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       const startTime = new Date(this.activeEntry.start_time);
       const updateTimer = () => {
         const now = new Date();
-        this.elapsedTime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        // Clamp to 0 if negative (prevents negative time display)
+        this.elapsedTime = Math.max(0, elapsed);
       };
       updateTimer();
       this.timerInterval = setInterval(updateTimer, 1000);
@@ -474,6 +476,10 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   }
 
   formatTimer(seconds: number): string {
+    // Clamp to 0 if negative to prevent "-1 : -1 : -1" display
+    if (seconds < 0) {
+      seconds = 0;
+    }
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -907,7 +913,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
               this.activeActivityTimers[key].interval = setInterval(() => {
                 if (this.activeActivityTimers[key]) {
                   const now = new Date();
-                  this.activeActivityTimers[key].elapsedTime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+                  const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+                  // Clamp to 0 if negative (prevents negative time display)
+                  this.activeActivityTimers[key].elapsedTime = Math.max(0, elapsed);
                 }
               }, 1000);
             }
@@ -1743,7 +1751,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           this.activeActivityTimers[key].interval = setInterval(() => {
             if (this.activeActivityTimers[key]) {
               const now = new Date();
-              this.activeActivityTimers[key].elapsedTime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+              const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+              // Clamp to 0 if negative (prevents negative time display)
+              this.activeActivityTimers[key].elapsedTime = Math.max(0, elapsed);
             }
           }, 1000);
           
@@ -1807,7 +1817,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   getActivityElapsedTime(activity: ActivityRow): number {
     const key = this.getActivityKey(activity);
     if (this.activeActivityTimers[key]) {
-      return this.activeActivityTimers[key].elapsedTime;
+      // Ensure non-negative elapsed time
+      return Math.max(0, this.activeActivityTimers[key].elapsedTime);
     }
     return 0;
   }
