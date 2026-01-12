@@ -236,18 +236,15 @@ export class DashboardComponent implements OnInit {
         
         // Filter projects: show only those created by or assigned to the manager
         const managerProjects = projects.filter((project: any) => {
-          // Check if manager is assigned to project (manager_id)
-          const isAssignedAsManager = project.manager_id === this.currentUserId;
-          
-          // Check if project is assigned to manager (assigned_to field)
-          const isAssignedTo = project.assigned_to === this.currentUserId;
+          // Check if manager is assigned to project
+          const isAssigned = project.manager_id === this.currentUserId;
           
           // Check if project was created by manager
           const isCreated = project.created_by === managerEmail || 
                           project.created_by === this.currentUserId ||
                           project.created_by_id === this.currentUserId;
           
-          return isAssignedAsManager || isAssignedTo || isCreated;
+          return isAssigned || isCreated;
         });
 
         this.updateProjectMetrics(managerProjects);
@@ -291,12 +288,11 @@ export class DashboardComponent implements OnInit {
       next: (projects) => {
         // Filter projects: only those created by or assigned to manager
         const managerProjects = projects.filter((project: any) => {
-          const isAssignedAsManager = project.manager_id === this.currentUserId;
-          const isAssignedTo = project.assigned_to === this.currentUserId;
+          const isAssigned = project.manager_id === this.currentUserId;
           const isCreated = project.created_by === managerEmail || 
                           project.created_by === this.currentUserId ||
                           project.created_by_id === this.currentUserId;
-          return isAssignedAsManager || isAssignedTo || isCreated;
+          return isAssigned || isCreated;
         });
 
         const managerProjectIds = managerProjects.map((p: any) => p.id);

@@ -231,19 +231,16 @@ export class HeadManagerDashboardComponent implements OnInit {
             // Filter projects: 
             // 1. Selected by head manager (which means created by head manager)
             // 2. Assigned to head manager (manager_id matches)
-            // 3. Assigned to head manager (assigned_to field)
-            // 4. Created by head manager (selected_by_head_manager_id matches)
+            // 3. Created by head manager (selected_by_head_manager_id matches)
             const relevantProjects = allProjects.filter((project: any) => {
               // Check if project is selected by this head manager
               const isSelected = selectedProjects.some((sp: any) => sp.id === project.id);
-              // Check if project is assigned to this head manager (manager_id)
-              const isAssignedAsManager = project.manager_id === this.currentUserId;
-              // Check if project is assigned to head manager (assigned_to field)
-              const isAssignedTo = project.assigned_to === this.currentUserId;
+              // Check if project is assigned to this head manager (assigned by admin)
+              const isAssigned = project.manager_id === this.currentUserId;
               // Check if project was created by this head manager
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
               
-              return isSelected || isAssignedAsManager || isAssignedTo || isCreatedByHeadManager;
+              return isSelected || isAssigned || isCreatedByHeadManager;
             });
             
             this.totalProjects = relevantProjects.length;

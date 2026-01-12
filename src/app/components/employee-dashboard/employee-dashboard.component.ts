@@ -177,16 +177,14 @@ export class EmployeeDashboardComponent implements OnInit {
     this.adminService.getProjects().subscribe(projects => {
       // Filter projects: show only those assigned to user or created by user
       const relevantProjects = projects.filter((project: any) => {
-        // Check if assigned to user (manager_id)
-        const isAssignedAsManager = project.manager_id === this.currentUserId;
-        // Check if project is assigned to user (assigned_to field)
-        const isAssignedTo = project.assigned_to === this.currentUserId;
+        // Check if assigned to user
+        const isAssigned = project.manager_id === this.currentUserId;
         // Check if created by user
         const isCreated = project.created_by === this.currentUserEmail ||
                         project.created_by === this.currentUserId ||
                         project.created_by_id === this.currentUserId;
         
-        return isAssignedAsManager || isAssignedTo || isCreated;
+        return isAssigned || isCreated;
       });
 
       this.projects = relevantProjects;
