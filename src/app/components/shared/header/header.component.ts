@@ -445,14 +445,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.showMenu = false;
     this.closeProfileViewModal();
     this.showProfilePictureModal = true;
-    
+
     // If there's an existing profile picture, load it for adjustment
     if (this.profilePictureUrl) {
       this.existingImageUrl = this.profilePictureUrl;
       this.selectedImageFile = null;
       this.imageZoom = 1;
       this.imagePosition = { x: 0, y: 0 };
-      
+
       // Load existing image after modal opens
       setTimeout(() => {
         this.loadExistingImageToCanvas();
@@ -501,7 +501,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.existingImageUrl = null; // Clear existing image when new one is selected
     this.imageZoom = 1;
     this.imagePosition = { x: 0, y: 0 };
-    
+
     // Store the original file for later use
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -509,7 +509,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       localStorage.setItem('profilePictureOriginal', base64String);
     };
     reader.readAsDataURL(file);
-    
+
     // Load image and draw on canvas
     setTimeout(() => {
       this.loadImageToCanvas();
@@ -525,18 +525,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     // First, try to load the original uncropped image from localStorage
     const originalImageData = localStorage.getItem('profilePictureOriginal');
-    
+
     if (originalImageData) {
       // Load the original uncropped image
       const img = new Image();
       img.onload = () => {
         this.imageElement = img;
-        
+
         // Set canvas size (square for profile picture)
         const size = 400;
         canvas.width = size;
         canvas.height = size;
-        
+
         // Restore zoom and position if available, otherwise fit to box
         const savedZoom = localStorage.getItem('profilePictureZoom');
         const savedPosition = localStorage.getItem('profilePicturePosition');
@@ -557,7 +557,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         } else {
           this.imagePosition = { x: 0, y: 0 };
         }
-        
+
         this.updateImagePreview();
       };
       img.onerror = () => {
@@ -582,18 +582,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
     img.crossOrigin = 'anonymous'; // Handle CORS if needed
     img.onload = () => {
       this.imageElement = img;
-      
+
       // Set canvas size (square for profile picture)
       const size = 400;
       canvas.width = size;
       canvas.height = size;
-      
+
       // Calculate initial zoom to fit image fully in square box
       const fitWidth = size / img.width;
       const fitHeight = size / img.height;
       this.imageZoom = Math.min(fitWidth, fitHeight);
       this.imagePosition = { x: 0, y: 0 };
-      
+
       this.updateImagePreview();
     };
     img.onerror = () => {
@@ -613,18 +613,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const img = new Image();
     img.onload = () => {
       this.imageElement = img;
-      
+
       // Set canvas size (square for profile picture)
       const size = 400;
       canvas.width = size;
       canvas.height = size;
-      
+
       // Calculate initial zoom to fit image fully in square box
       const fitWidth = size / img.width;
       const fitHeight = size / img.height;
       this.imageZoom = Math.min(fitWidth, fitHeight);
       this.imagePosition = { x: 0, y: 0 };
-      
+
       this.updateImagePreview();
     };
     img.src = URL.createObjectURL(this.selectedImageFile);
@@ -662,9 +662,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     // Store the offset from mouse position to current image position
-    this.dragStart = { 
-      x: event.clientX - centerX - this.imagePosition.x, 
-      y: event.clientY - centerY - this.imagePosition.y 
+    this.dragStart = {
+      x: event.clientX - centerX - this.imagePosition.x,
+      y: event.clientY - centerY - this.imagePosition.y
     };
     event.preventDefault();
     event.stopPropagation();
@@ -700,9 +700,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     // Store the offset from touch position to current image position
-    this.dragStart = { 
-      x: touch.clientX - centerX - this.imagePosition.x, 
-      y: touch.clientY - centerY - this.imagePosition.y 
+    this.dragStart = {
+      x: touch.clientX - centerX - this.imagePosition.x,
+      y: touch.clientY - centerY - this.imagePosition.y
     };
     event.preventDefault();
     event.stopPropagation();
@@ -766,7 +766,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Store the current zoom and position for restoration when reopening
     localStorage.setItem('profilePictureZoom', this.imageZoom.toString());
     localStorage.setItem('profilePicturePosition', JSON.stringify(this.imagePosition));
-    
+
     // If we have a selected file, the original is already stored in onImageSelected
     // If we're adjusting an existing image, we need to store the original imageElement
     if (!this.selectedImageFile && this.imageElement) {
@@ -838,7 +838,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
             // Persist to database
             // Get current user name using getUserDisplayName which has proper fallbacks
             const currentName = this.getUserDisplayName();
-            
+
             this.userService.updateProfile({
               name: currentName,
               profile_picture: this.profilePictureUrl
@@ -962,12 +962,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
   // Helper to ensure profile URL is absolute if it's a relative path from our backend
   getFullProfileUrl(path: string): string {
     if (!path) return '';
-    if (path.startsWith('http')) return path; // Already absolute
+
+    // Fix for legacy bad URLs in production DB (stripping internal docker host)
+    if (path.includes('host.docker.internal')) {
+      path = path.replace('http://host.docker.internal:3000', '');
+      path = path.replace('http://host.docker.internal', '');
+    }
+
+    if (path.startsWith('http')) return path; // Already absolute and valid
 
     // Construct absolute URL using environment apiBase
-    // Assume apiBase doesn't end with slash and path starts with slash or not
     const base = environment.apiBase.replace(/\/$/, ''); // Remove trailing slash if any
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    // If base is relative (like '/api') and we are in dev (localhost:3000), we might need care,
+    // but usually /api is proxied.
     return `${base}${cleanPath}`;
   }
 }
