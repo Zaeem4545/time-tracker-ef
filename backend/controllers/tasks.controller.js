@@ -109,7 +109,7 @@ async function createTask(req, res) {
     
     // If employee creates a task and doesn't assign it to anyone, assign it to themselves
     // This ensures the task shows up in their "My Tasks" dashboard immediately
-    if (userRole === 'employee' && !assignedToValue) {
+    if (userRole === 'engineer' && !assignedToValue) {
       assignedToValue = userId;
     }
     
@@ -189,7 +189,7 @@ async function createTask(req, res) {
     }
 
     // Notify admin, manager, and head manager if task is created by an employee
-    if (userRole === 'employee') {
+    if (userRole === 'engineer') {
       try {
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
@@ -225,7 +225,7 @@ async function createTask(req, res) {
     
     // Notify all admins about task creation (for non-employee roles)
     // Employee notifications are handled separately above
-    if (userRole !== 'employee') {
+    if (userRole !== 'engineer') {
       try {
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
@@ -367,7 +367,7 @@ async function updateTask(req, res) {
     }
     
     // Send notification to manager if status changed and user is an employee
-    if (statusChanged && req.user.role?.toLowerCase() === 'employee' && currentTask && currentTask.assigned_to) {
+    if (statusChanged && req.user.role?.toLowerCase() === 'engineer' && currentTask && currentTask.assigned_to) {
       try {
         // Get employee's manager
         const [employeeRows] = await db.query('SELECT manager_id FROM users WHERE id = ?', [currentTask.assigned_to]);
@@ -436,7 +436,7 @@ async function updateTask(req, res) {
 
     // Notify admin, manager, and head manager if task is updated by an employee
     const updaterRole = req.user.role?.toLowerCase();
-    if (updaterRole === 'employee') {
+    if (updaterRole === 'engineer') {
       try {
         const employeeId = req.user.id;
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
@@ -490,7 +490,7 @@ async function updateTask(req, res) {
     }
     
     // Notify all admins about task update (for non-employee roles)
-    if (updaterRole !== 'employee') {
+    if (updaterRole !== 'engineer') {
       try {
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
@@ -559,7 +559,7 @@ async function deleteTask(req, res) {
     }
     
     // Notify admin, manager, and head manager if task is deleted by an employee
-    if (userRole === 'employee' && currentTask) {
+    if (userRole === 'engineer' && currentTask) {
       try {
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
@@ -655,8 +655,8 @@ async function getEmployeeTasks(req, res) {
     const userId = req.user.id;
     
     // Only employees can access this endpoint
-    if (userRole !== 'employee') {
-      return res.status(403).json({ message: 'Access denied. Only employees can view their tasks.' });
+    if (userRole !== 'engineer') {
+      return res.status(403).json({ message: 'Access denied. Only engineers can view their tasks.' });
     }
     
     // Get employee's manager information

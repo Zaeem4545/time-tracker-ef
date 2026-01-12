@@ -36,15 +36,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
     '/dashboard': 'Dashboard',
     '/admin-dashboard': 'Admin Dashboard',
     '/admin': 'Create User',
-    '/manager': 'Add Employee',
+    '/manager': 'Add Engineer',
     '/head-manager': 'Select Team Leads',
-    '/employee': 'Employee Dashboard',
+    '/employee': 'Engineer Dashboard',
     '/projects': 'Manage Projects',
     '/my-projects-tasks': 'My Projects and Tasks',
     '/calendar': 'Calendar',
     '/timesheet': 'Timesheet',
     '/customer-details': 'Add Customer',
-    '/employee-details': 'Employee Details'
+    '/employee-details': 'Engineer Details'
   };
 
   constructor(
@@ -278,7 +278,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.router.navigate(['/head-manager']);
     } else if (roleLower === 'manager') {
       this.router.navigate(['/dashboard']);
-    } else if (roleLower === 'employee') {
+    } else if (roleLower === 'engineer') {
       this.router.navigate(['/employee']);
     } else {
       // Default to general dashboard

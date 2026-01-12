@@ -16,7 +16,7 @@ async function getAllUsers(req, res) {
 // Create new user (admin only)
 async function createUser(req, res) {
   try {
-    const { email, password, role = 'Employee', contact_number, name } = req.body;
+    const { email, password, role = 'Engineer', contact_number, name } = req.body;
     
     // Validate required fields
     if (!email || !password) {
@@ -38,7 +38,7 @@ async function createUser(req, res) {
 
     // Normalize role
     const normalizedRole = role.toLowerCase();
-    const validRoles = ['admin', 'head manager', 'manager', 'employee'];
+    const validRoles = ['admin', 'head manager', 'manager', 'engineer'];
     if (!validRoles.includes(normalizedRole)) {
       return res.status(400).json({ success: false, message: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
     }
@@ -92,7 +92,7 @@ async function updateUserInfo(req, res) {
 
     // Normalize role
     const normalizedRole = role.toLowerCase();
-    const validRoles = ['admin', 'head manager', 'manager', 'employee'];
+    const validRoles = ['admin', 'head manager', 'manager', 'engineer'];
     if (!validRoles.includes(normalizedRole)) {
       return res.status(400).json({ success: false, message: `Invalid role. Must be one of: ${validRoles.join(', ')}` });
     }
@@ -293,7 +293,7 @@ async function getAllEmployees(req, res) {
     }
 
     const [employees] = await db.query(
-      "SELECT id, email, contact_number FROM users WHERE LOWER(role) = 'employee' ORDER BY email"
+      "SELECT id, email, contact_number FROM users WHERE LOWER(role) = 'engineer' ORDER BY email"
     );
 
     res.json({ success: true, employees });
@@ -359,7 +359,7 @@ async function getHeadManagerTeam(req, res) {
       const [employeeRows] = await db.query(
         `SELECT id, email, contact_number, role, manager_id 
          FROM users 
-         WHERE manager_id IN (${placeholders}) AND LOWER(role) = 'employee'
+         WHERE manager_id IN (${placeholders}) AND LOWER(role) = 'engineer'
          ORDER BY manager_id, email`,
         managerIds
       );
@@ -369,7 +369,7 @@ async function getHeadManagerTeam(req, res) {
     // Combine managers and employees
     const teamMembers = [
       ...managerRows.map(m => ({ ...m, role: 'manager' })),
-      ...employees.map(e => ({ ...e, role: 'employee' }))
+      ...employees.map(e => ({ ...e, role: 'engineer' }))
     ];
 
     res.json(teamMembers);
@@ -397,7 +397,7 @@ async function assignEmployeeToManager(req, res) {
 
     // Verify employee exists and is an employee
     const [employeeRows] = await db.query(
-      "SELECT id, email FROM users WHERE id = ? AND LOWER(role) = 'employee'",
+      "SELECT id, email FROM users WHERE id = ? AND LOWER(role) = 'engineer'",
       [employeeId]
     );
 

@@ -68,7 +68,7 @@ async function googleLogin(req, res) {
     // Find existing user or create new
     let user = await User.findByEmail(email);
     if (!user) {
-      user = await User.create({ email, role: 'Employee' });
+      user = await User.create({ email, role: 'Engineer' });
     }
 
 

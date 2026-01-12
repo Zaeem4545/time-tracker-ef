@@ -19,9 +19,9 @@ import { AdminDashboardPageComponent } from './components/admin-dashboard-page/a
 import { RoleGuard } from './guards/role.guard';
 
 const routes: Routes = [
-  { path: 'employee', component: EmployeeDashboardComponent, canActivate: [RoleGuard], data: { roles: ['employee'] } },
+  { path: 'employee', component: EmployeeDashboardComponent, canActivate: [RoleGuard], data: { roles: ['engineer'] } },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] }, // General dashboard page for all authenticated users
-  { path: 'create-project', component: ProjectsComponent, canActivate: [RoleGuard], data: { roles: ['head manager', 'admin', 'manager', 'employee'], mode: 'create' } },
+  { path: 'create-project', component: ProjectsComponent, canActivate: [RoleGuard], data: { roles: ['head manager', 'admin', 'manager', 'engineer'], mode: 'create' } },
   { path: 'my-projects-tasks', component: ProjectsComponent, canActivate: [RoleGuard], data: { roles: ['head manager'], mode: 'my-projects' } },
   { path: 'projects', component: ProjectsComponent, canActivate: [AuthGuard] },
   { path: 'timesheet', component: TimesheetComponent, canActivate: [AuthGuard] },

@@ -105,7 +105,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const role = this.authService.getRole();
     const roleLower = role?.toLowerCase();
-    this.isEmployee = roleLower === 'employee';
+    this.isEmployee = roleLower === 'engineer';
     this.isAdmin = roleLower === 'admin';
     this.isHeadManager = roleLower === 'head manager';
     this.currentUserId = this.authService.getUserId();
@@ -764,7 +764,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   loadTimeEntries() {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
-        // Show all timesheets for all roles (Admin, Project Manager, Team Lead, Employee)
+        // Show all timesheets for all roles (Admin, Project Manager, Team Lead, Engineer)
         this.timeEntries = entries || [];
         console.log('Loaded time entries:', this.timeEntries.length);
         

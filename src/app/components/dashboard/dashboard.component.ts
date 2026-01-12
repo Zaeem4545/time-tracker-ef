@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit {
     this.isManager = roleLower === 'manager';
     this.isAdmin = roleLower === 'admin';
     this.isHeadManager = roleLower === 'head manager';
-    this.isEmployee = roleLower === 'employee';
+    this.isEmployee = roleLower === 'engineer';
 
     // Redirect admin to admin dashboard if they access /dashboard
     if (this.isAdmin) {

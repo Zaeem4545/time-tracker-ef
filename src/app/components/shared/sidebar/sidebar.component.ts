@@ -81,7 +81,7 @@ export class SidebarComponent implements OnInit {
         { label: 'Admin Dashboard', route: '/admin-dashboard', icon: '📊', active: false },
         { label: 'Create User', route: '/admin', icon: '👥', active: false }
       );
-    } else if (role === 'employee') {
+    } else if (role === 'engineer') {
       // Employees only see Employee Dashboard, not the simple dashboard
       this.menuItems.push(
         { label: 'Employee Dashboard', route: '/employee', icon: '👤', active: false }

@@ -80,36 +80,36 @@ export class ManagerDashboardComponent implements OnInit {
 
   addEmployee() {
     if (!this.selectedEmployeeId) {
-      alert('Please select an employee');
+      alert('Please select an engineer');
       return;
     }
 
     this.managerService.assignEmployee(this.selectedEmployeeId).subscribe({
       next: (response: any) => {
         if (response.success) {
-          alert('Employee added to team successfully');
+          alert('Engineer added to team successfully');
           this.selectedEmployeeId = null;
           this.showAddEmployeeForm = false;
           this.loadTeamMembers();
         }
       },
       error: (err) => {
-        alert('Error adding employee: ' + (err.error?.message || 'Unknown error'));
+        alert('Error adding engineer: ' + (err.error?.message || 'Unknown error'));
       }
     });
   }
 
   removeEmployee(employeeId: number) {
-    if (confirm('Are you sure you want to remove this employee from your team?')) {
+    if (confirm('Are you sure you want to remove this engineer from your team?')) {
       this.managerService.removeEmployee(employeeId).subscribe({
         next: (response: any) => {
           if (response.success) {
-            alert('Employee removed from team successfully');
+            alert('Engineer removed from team successfully');
             this.loadTeamMembers();
           }
         },
         error: (err) => {
-          alert('Error removing employee: ' + (err.error?.message || 'Unknown error'));
+          alert('Error removing engineer: ' + (err.error?.message || 'Unknown error'));
         }
       });
     }

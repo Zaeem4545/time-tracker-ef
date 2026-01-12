@@ -150,7 +150,7 @@ Required in `backend/.env`:
 
 ### 9. **Testing Before Deployment**
 **Checklist**:
-- [ ] Test all user roles (Admin, Head Manager, Manager, Employee)
+- [ ] Test all user roles (Admin, Head Manager, Manager, Engineer)
 - [ ] Test all CRUD operations (Create, Read, Update, Delete)
 - [ ] Test file uploads (attachments)
 - [ ] Test time tracking functionality

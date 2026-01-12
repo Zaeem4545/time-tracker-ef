@@ -72,7 +72,7 @@ export class TeamDetailsComponent implements OnInit {
           
           // Separate managers and employees
           const managers = normalizedMembers.filter((m: any) => m.role === 'manager');
-          const employees = normalizedMembers.filter((m: any) => m.role === 'employee');
+          const employees = normalizedMembers.filter((m: any) => m.role === 'engineer');
           
           // Create a map for quick lookup
           const managerMap = new Map(managers.map(m => [m.id, m]));

@@ -34,7 +34,7 @@ export class RoleGuard implements CanActivate {
 
       // redirect normal users based on their role
       const roleLower = normalizedRole;
-      if (roleLower === 'employee') {
+      if (roleLower === 'engineer') {
         this.router.navigate(['/employee']);
       } else if (roleLower === 'manager') {
         this.router.navigate(['/manager']);

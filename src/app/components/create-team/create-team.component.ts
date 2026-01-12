@@ -51,7 +51,7 @@ export class CreateTeamComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.employees = (users || []).filter((user: any) => 
-          user.role?.toLowerCase() === 'employee'
+          user.role?.toLowerCase() === 'engineer'
         );
       },
       error: (err) => {
@@ -87,7 +87,7 @@ export class CreateTeamComponent implements OnInit {
     }
 
     if (this.selectedEmployeeIds.size === 0) {
-      this.toastService.show('Please select at least one employee', 'error');
+      this.toastService.show('Please select at least one engineer', 'error');
       return;
     }
 
@@ -107,7 +107,7 @@ export class CreateTeamComponent implements OnInit {
           assignedCount++;
           if (assignedCount + errorCount === employeeIds.length) {
             if (errorCount === 0) {
-              this.toastService.show(`Team created successfully! ${assignedCount} employee(s) assigned to manager.`, 'success');
+              this.toastService.show(`Team created successfully! ${assignedCount} engineer(s) assigned to manager.`, 'success');
               this.resetForm();
               this.loadEmployees(); // Reload to reflect changes
             } else {

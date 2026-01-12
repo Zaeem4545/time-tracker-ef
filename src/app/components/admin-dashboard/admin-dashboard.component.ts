@@ -13,7 +13,7 @@ export class AdminDashboardComponent implements OnInit {
   users: any[] = [];
   filteredUsers: any[] = []; // Filtered users based on search
   searchTerm: string = ''; // Search input
-  newUser = { email: '', password: '', role: 'Employee', contact_number: '', name: '' };
+  newUser = { email: '', password: '', role: 'Engineer', contact_number: '', name: '' };
   
   // User form expansion
   showCreateUserForm: boolean = false;
@@ -172,7 +172,7 @@ export class AdminDashboardComponent implements OnInit {
       next: (response) => {
         console.log('User created successfully:', response);
         this.toastService.show('User created successfully', 'success');
-        this.newUser = { email: '', password: '', role: 'Employee', contact_number: '', name: '' };
+        this.newUser = { email: '', password: '', role: 'Engineer', contact_number: '', name: '' };
         this.showCreateUserForm = false; // Collapse form after creation
         this.loadUsers(); // This will call applySearch() automatically
       },

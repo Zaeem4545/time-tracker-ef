@@ -163,7 +163,7 @@ export class ProjectsComponent implements OnInit {
     this.isHeadManager = this.currentUserRole?.toLowerCase() === 'head manager';
     this.isManager = this.currentUserRole?.toLowerCase() === 'manager';
     this.isAdmin = this.currentUserRole?.toLowerCase() === 'admin';
-    this.isEmployee = this.currentUserRole?.toLowerCase() === 'employee';
+    this.isEmployee = this.currentUserRole?.toLowerCase() === 'engineer';
     
     // Don't auto-open create form in create mode - let user click button to show it
     // Form will be hidden by default, user clicks "Create Project" to show it
@@ -448,13 +448,13 @@ export class ProjectsComponent implements OnInit {
     if (this.isManager) {
       // For managers, show only employees assigned to them (team members)
       employees = this.teamMembers.filter((member: any) => 
-        member.role && member.role.toLowerCase() === 'employee'
+        member.role && member.role.toLowerCase() === 'engineer'
       );
       
       // If editing a task and the assigned employee is not in teamMembers, include them from users list
       if (task && task.assigned_to) {
         const assignedEmployee = this.users.find((u: any) => 
-          u.id === task.assigned_to && u.role && u.role.toLowerCase() === 'employee'
+          u.id === task.assigned_to && u.role && u.role.toLowerCase() === 'engineer'
         );
         if (assignedEmployee && !employees.find((e: any) => e.id === assignedEmployee.id)) {
           employees.push(assignedEmployee);
@@ -463,7 +463,7 @@ export class ProjectsComponent implements OnInit {
     } else {
       // For admin, head manager, and employee, show all employees
       employees = this.users.filter((user: any) => 
-        user.role && user.role.toLowerCase() === 'employee'
+        user.role && user.role.toLowerCase() === 'engineer'
       );
     }
     
@@ -3247,7 +3247,7 @@ export class ProjectsComponent implements OnInit {
     // For other roles, validate assigned_to is required
     if (!this.isEmployee) {
       if (!task.assigned_to || task.assigned_to === null || task.assigned_to === '') {
-        this.toastService.show('Assigned To is required. Please select an employee.', 'warning');
+        this.toastService.show('Assigned To is required. Please select an engineer.', 'warning');
         return;
       }
       
@@ -3255,7 +3255,7 @@ export class ProjectsComponent implements OnInit {
       const assignedToValue = typeof task.assigned_to === 'string' ? parseInt(task.assigned_to) : Number(task.assigned_to);
       
       if (isNaN(assignedToValue) || assignedToValue <= 0) {
-        this.toastService.show('Please select a valid employee.', 'warning');
+        this.toastService.show('Please select a valid engineer.', 'warning');
         return;
       }
     }

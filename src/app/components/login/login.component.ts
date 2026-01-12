@@ -46,7 +46,7 @@ export class LoginComponent implements AfterViewInit {
           targetRoute = '/dashboard';
         } else if (role === 'manager') {
           targetRoute = '/dashboard';
-        } else if (role === 'employee') {
+        } else if (role === 'engineer') {
           targetRoute = '/employee';
         }
 
@@ -127,7 +127,7 @@ export class LoginComponent implements AfterViewInit {
             targetRoute = '/dashboard';
           } else if (role === 'manager') {
             targetRoute = '/dashboard';
-          } else if (role === 'employee') {
+          } else if (role === 'engineer') {
             targetRoute = '/employee';
           }
 

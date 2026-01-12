@@ -29,7 +29,7 @@ function formatDateTimeForMySQL(isoString) {
 // Get all time entries (Admin sees all, Manager/Head Manager see their team's entries, Employee sees their own and tasks they're assigned to)
 async function getTimeEntries(req, res) {
   try {
-    // All roles (Admin, Project Manager, Team Lead, Employee) see ALL time entries with no privacy restrictions
+    // All roles (Admin, Project Manager, Team Lead, Engineer) see ALL time entries with no privacy restrictions
     const query = `
       SELECT t.id, t.start_time, t.end_time, t.status, t.total_time, t.task_name, t.description,
              t.user_id, u.email as employee_email, u.name as employee_name, u.id as user_id, u.role as user_role,

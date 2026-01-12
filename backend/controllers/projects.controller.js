@@ -99,7 +99,7 @@ async function createProject(req, res) {
   try {
     // Admin, Manager, Employee, and Head Manager can create projects
     const userRole = req.user.role?.toLowerCase();
-    if (!["admin", "manager", "employee", "head manager"].includes(userRole)) {
+    if (!["admin", "manager", "engineer", "head manager"].includes(userRole)) {
       return res
         .status(403)
         .json({
@@ -283,7 +283,7 @@ async function createProject(req, res) {
     }
     const creatorEmail = req.user.email;
     // Notify admin, manager, and head manager if project is created by an employee
-    if (creatorRole === "employee") {
+    if (creatorRole === "engineer") {
       try {
         const projectMessage = `Employee ${creatorEmail} has created a new project "${name}"`;
 
@@ -740,7 +740,7 @@ async function updateProject(req, res) {
       // Notify all employees under this manager about the project assignment
       try {
         const [employeeRows] = await db.query(
-          "SELECT id, email FROM users WHERE manager_id = ? AND LOWER(role) = 'employee'",
+          "SELECT id, email FROM users WHERE manager_id = ? AND LOWER(role) = 'engineer'",
           [normalizedManagerId]
         );
 
@@ -804,7 +804,7 @@ async function updateProject(req, res) {
 
     // Notify admin, manager, and head manager if project is updated by an employee
     const userRole = req.user.role?.toLowerCase();
-    if (userRole === "employee") {
+    if (userRole === "engineer") {
       try {
         const employeeId = req.user.id;
         // Get updater name and email
@@ -1132,7 +1132,7 @@ async function assignManagerToProject(req, res) {
       // Notify all employees under this manager about the project assignment
       try {
         const [employeeRows] = await db.query(
-          "SELECT id, email FROM users WHERE manager_id = ? AND LOWER(role) = 'employee'",
+          "SELECT id, email FROM users WHERE manager_id = ? AND LOWER(role) = 'engineer'",
           [normalizedManagerId]
         );
 

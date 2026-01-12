@@ -552,7 +552,7 @@
                           <td>
                             <span *ngIf="editingTask !== task.id">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
                             <select *ngIf="editingTask === task.id && !isEmployee" [(ngModel)]="task.assigned_to">
-                              <option value="">Select Employee (Optional)</option>
+                              <option value="">Select Engineer (Optional)</option>
                               <option *ngFor="let employee of getEmployees(task)" [value]="employee.id">{{ employee.email }} ({{ employee.role | roleDisplay }})</option>
                             </select>
                             <span *ngIf="editingTask === task.id && isEmployee">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>

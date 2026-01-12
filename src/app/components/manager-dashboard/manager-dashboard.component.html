@@ -2,34 +2,34 @@
   <div class="content-card">
     <h2 class="page-title-main">
       <span class="arrow">►</span>
-      <span class="title-text">Add Employee</span>
+      <span class="title-text">Add Engineer</span>
     </h2>
     
     <div class="dashboard-sections">
       <!-- Add Employee Section -->
       <div class="section-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 class="section-title">Add Employee to Team</h3>
+          <h3 class="section-title">Add Engineer to Team</h3>
           <button (click)="toggleAddEmployeeForm()" class="create-btn">
-            {{ showAddEmployeeForm ? '− Hide Form' : '+ Add Employee' }}
+            {{ showAddEmployeeForm ? '− Hide Form' : '+ Add Engineer' }}
           </button>
         </div>
 
         <!-- Add Employee Form (Expandable) -->
         <div *ngIf="showAddEmployeeForm" style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
           <div style="margin-bottom: 1rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 0.875rem; font-weight: 600;">Select Employee:</label>
+            <label style="display: block; margin-bottom: 0.5rem; color: #666; font-size: 0.875rem; font-weight: 600;">Select Engineer:</label>
             <select [(ngModel)]="selectedEmployeeId" style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; width: 100%; font-size: 0.875rem;">
-              <option [value]="null">-- Select an employee --</option>
+              <option [value]="null">-- Select an engineer --</option>
               <option *ngFor="let employee of availableEmployees" [value]="employee.id">
                 {{ employee.email }} (ID: {{ employee.id }}) - {{ employee.contact_number || 'No contact' }}
               </option>
             </select>
             <div *ngIf="availableEmployees.length === 0" style="padding: 1rem; color: #999; font-style: italic; text-align: center;">
-              No employees available to add. All employees are already assigned to managers.
+              No engineers available to add. All engineers are already assigned to managers.
             </div>
           </div>
-          <button (click)="addEmployee()" class="btn-expertflow btn-primary" [disabled]="!selectedEmployeeId">+ Add Employee</button>
+          <button (click)="addEmployee()" class="btn-expertflow btn-primary" [disabled]="!selectedEmployeeId">+ Add Engineer</button>
         </div>
       </div>
 

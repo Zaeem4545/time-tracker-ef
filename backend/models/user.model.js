@@ -15,7 +15,7 @@ async function updateRole(id, role) {
 }
 
 // ✅ Add create method (for Google users; password can be NULL)
-async function create({ email, role = 'Employee' }) {
+async function create({ email, role = 'Engineer' }) {
     const [result] = await db.query(
         'INSERT INTO users (email, role) VALUES (?, ?)',
         [email, role]
