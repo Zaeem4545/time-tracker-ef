@@ -83,6 +83,10 @@ export class DashboardComponent implements OnInit {
   isAdmin: boolean = false;
   isHeadManager: boolean = false;
   isEmployee: boolean = false;
+  
+  // Track projects and tasks worked on by user
+  workedOnProjectIds: Set<number> = new Set();
+  workedOnTaskNames: Set<string> = new Set();
 
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
