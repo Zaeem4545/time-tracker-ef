@@ -482,6 +482,7 @@
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 
     .btn-today {
       background: #f5f5f5;
@@ -519,6 +520,21 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.9rem;
+    }
+
+    // Admin controls wrapper
+    > div:last-child {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-left: auto;
+      
+      @media (max-width: 768px) {
+        margin-left: 0;
+        width: 100%;
+        margin-top: 0.5rem;
+        justify-content: flex-start;
+      }
     }
   }
 
@@ -1202,6 +1218,67 @@
       background: #d32f2f !important;
     }
   }
+
+  // Admin controls buttons
+  .admin-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+    
+    @media (max-width: 768px) {
+      margin-left: 0;
+      width: 100%;
+      margin-top: 0.5rem;
+      justify-content: flex-start;
+    }
+
+    .btn-spreadsheet {
+      background: #2196F3;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #1976d2;
+      }
+
+      .spreadsheet-text {
+        @media (max-width: 480px) {
+          display: none;
+        }
+      }
+    }
+
+    .btn-add-line {
+      background: #4caf50;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #45a049;
+      }
+
+      @media (max-width: 480px) {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+      }
+    }
+  }
 }
 
 // Responsive design
@@ -1210,6 +1287,55 @@
     .week-header,
     .week-table {
       min-width: 1000px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .timesheet-container {
+    padding: 1rem;
+    
+    .content-card {
+      padding: 1rem;
+    }
+
+    .week-navigation {
+      gap: 0.25rem;
+      
+      .btn-today,
+      .btn-nav,
+      .week-select {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .timesheet-container {
+    padding: 0.5rem;
+    
+    .content-card {
+      padding: 0.75rem;
+    }
+
+    .page-title-main {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .week-navigation {
+      .btn-today,
+      .week-select {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .btn-nav {
+        padding: 0.4rem 0.5rem;
+        font-size: 1rem;
+      }
     }
   }
 }
