@@ -10,11 +10,12 @@
     </div>
     <div class="header-right">
       <div class="user-info">
-        <span class="user-name">{{ getUserDisplayName() }}</span>
-        <div class="user-avatar" (click)="openProfilePictureUpload()" title="Click to change profile picture">
+        <span class="user-name" (click)="viewProfile()">{{ getUserDisplayName() }}</span>
+        <div class="user-avatar" (click)="viewProfile()" title="View profile">
           <img *ngIf="profilePictureUrl" [src]="profilePictureUrl" alt="Profile" class="avatar-image" />
           <span *ngIf="!profilePictureUrl">{{ getUserDisplayName().charAt(0) }}</span>
-          <input type="file" #fileInput accept="image/*" (change)="onProfilePictureChange($event)" style="display: none;" />
+          <input type="file" #fileInput accept="image/*" (change)="onProfilePictureChange($event)"
+            style="display: none;" />
         </div>
       </div>
       <div class="notifications-container">
@@ -26,15 +27,17 @@
           <div class="dropdown-content">
             <div class="notifications-header">
               <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #333;">Notifications</h4>
-              <button *ngIf="unreadCount > 0" (click)="markAllAsRead(); $event.stopPropagation(); $event.preventDefault()" class="mark-all-read-btn" style="background: none; border: none; color: #1976d2; cursor: pointer; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: background 0.15s ease;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">Mark all as read</button>
+              <button *ngIf="unreadCount > 0"
+                (click)="markAllAsRead(); $event.stopPropagation(); $event.preventDefault()" class="mark-all-read-btn"
+                style="background: none; border: none; color: #1976d2; cursor: pointer; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: background 0.15s ease;"
+                onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">Mark all as
+                read</button>
             </div>
             <div *ngIf="notifications.length === 0" class="dropdown-item no-notifications">
               No notifications
             </div>
-            <div *ngFor="let notification of notifications" 
-                 class="dropdown-item notification-item" 
-                 [class.unread]="!notification.is_read"
-                 (click)="markAsRead(notification)">
+            <div *ngFor="let notification of notifications" class="dropdown-item notification-item"
+              [class.unread]="!notification.is_read" (click)="markAsRead(notification)">
               <div class="notification-content">
                 <p class="notification-message">{{ notification.message }}</p>
                 <span class="notification-time">{{ formatNotificationTime(notification.created_at) }}</span>
@@ -76,15 +79,18 @@
       <form (ngSubmit)="changePassword()">
         <div class="form-group">
           <label>Current Password *</label>
-          <input type="password" [(ngModel)]="passwordData.currentPassword" name="currentPassword" required class="form-input" />
+          <input type="password" [(ngModel)]="passwordData.currentPassword" name="currentPassword" required
+            class="form-input" />
         </div>
         <div class="form-group">
           <label>New Password *</label>
-          <input type="password" [(ngModel)]="passwordData.newPassword" name="newPassword" required class="form-input" />
+          <input type="password" [(ngModel)]="passwordData.newPassword" name="newPassword" required
+            class="form-input" />
         </div>
         <div class="form-group">
           <label>Re-enter New Password *</label>
-          <input type="password" [(ngModel)]="passwordData.confirmPassword" name="confirmPassword" required class="form-input" />
+          <input type="password" [(ngModel)]="passwordData.confirmPassword" name="confirmPassword" required
+            class="form-input" />
           <div *ngIf="passwordMismatch" class="error-message">Passwords do not match</div>
         </div>
         <div *ngIf="passwordError" class="error-message">{{ passwordError }}</div>
@@ -93,6 +99,42 @@
           <button type="submit" class="btn-primary">Change Password</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Profile View Modal -->
+<div class="modal-overlay" *ngIf="showProfileViewModal" (click)="closeProfileViewModal()">
+  <div class="modal-content profile-view-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>My Profile</h3>
+      <button class="modal-close" (click)="closeProfileViewModal()">×</button>
+    </div>
+    <div class="modal-body profile-view-body">
+      <div class="profile-picture-container">
+        <div class="profile-picture-large">
+          <img *ngIf="profilePictureUrl" [src]="profilePictureUrl" alt="Profile" class="profile-image-large" />
+          <div *ngIf="!profilePictureUrl" class="profile-initial-large">{{ getUserDisplayName().charAt(0) }}</div>
+        </div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-info-item">
+          <label>Name</label>
+          <div class="profile-info-value">{{ getUserDisplayName() }}</div>
+        </div>
+        <div class="profile-info-item">
+          <label>Email</label>
+          <div class="profile-info-value">{{ auth.getEmail() || 'N/A' }}</div>
+        </div>
+        <div class="profile-info-item">
+          <label>Role</label>
+          <div class="profile-info-value">{{ auth.getRole() || 'N/A' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-primary" (click)="openChangeProfilePicture()">Change Profile Picture</button>
+      <button type="button" class="btn-cancel" (click)="closeProfileViewModal()">Close</button>
     </div>
   </div>
 </div>

@@ -27,6 +27,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   userName: string | null = null;
   profilePictureUrl: string | null = null;
   showChangePasswordModal: boolean = false;
+  showProfileViewModal: boolean = false;
   passwordData = {
     currentPassword: '',
     newPassword: '',
@@ -402,6 +403,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
 
+  viewProfile(): void {
+    this.showProfileViewModal = true;
+  }
+
+  closeProfileViewModal(): void {
+    this.showProfileViewModal = false;
+  }
+
   openProfilePictureUpload(): void {
     if (this.fileInput && this.fileInput.nativeElement) {
       this.fileInput.nativeElement.click();
@@ -410,6 +419,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   openChangeProfilePicture(): void {
     this.showMenu = false;
+    this.closeProfileViewModal();
     this.openProfilePictureUpload();
   }
 
