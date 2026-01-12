@@ -57,6 +57,7 @@ export class CustomerDetailsComponent implements OnInit {
     this.isManager = this.currentUserRole?.toLowerCase() === 'manager';
     
     // Initialize customer form fields with countries dropdown
+    // Standard fields are marked as non-deletable - only custom fields can be deleted
     this.customerFormFields = [
       {
         id: 'name',
@@ -65,7 +66,8 @@ export class CustomerDetailsComponent implements OnInit {
         type: 'text',
         placeholder: 'Customer Name',
         required: true,
-        order: 0
+        order: 0,
+        nonDeletable: true
       },
       {
         id: 'email',
@@ -74,7 +76,8 @@ export class CustomerDetailsComponent implements OnInit {
         type: 'email',
         placeholder: 'customer@example.com',
         required: false,
-        order: 1
+        order: 1,
+        nonDeletable: true
       },
       {
         id: 'phone',
@@ -83,7 +86,8 @@ export class CustomerDetailsComponent implements OnInit {
         type: 'text',
         placeholder: '+1234567890',
         required: false,
-        order: 2
+        order: 2,
+        nonDeletable: true
       },
       {
         id: 'region',
@@ -93,7 +97,8 @@ export class CustomerDetailsComponent implements OnInit {
         placeholder: 'Select Region/Country',
         required: false,
         order: 3,
-        options: this.getAllCountries()
+        options: this.getAllCountries(),
+        nonDeletable: true
       },
       {
         id: 'notes',
@@ -102,7 +107,8 @@ export class CustomerDetailsComponent implements OnInit {
         type: 'textarea',
         placeholder: 'Additional notes...',
         required: false,
-        order: 5
+        order: 5,
+        nonDeletable: true
       }
     ];
     

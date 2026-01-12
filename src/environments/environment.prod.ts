@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
   // This will be injected by Docker build arg
-  apiBase: '/api'
+  apiBase: 'http://host.docker.internal:3000'
 };
