@@ -36,6 +36,7 @@ app.use(cors({
 })); // allow Angular frontend
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded files
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve uploaded files at /api/uploads for production Nginx proxying
 
 // 🔹 Register routes with error handling
 try {
