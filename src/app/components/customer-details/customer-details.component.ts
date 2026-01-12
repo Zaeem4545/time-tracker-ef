@@ -504,6 +504,12 @@ export class CustomerDetailsComponent implements OnInit {
   }
 
   deleteCustomer(customer: any): void {
+    // Only admin can delete customers
+    if (!this.isAdmin) {
+      this.toastService.show('You do not have permission to delete customers', 'error');
+      return;
+    }
+
     this.confirmationService.show({
       title: 'Delete Customer',
       message: `Are you sure you want to delete ${customer.name}?`,
@@ -542,7 +548,7 @@ export class CustomerDetailsComponent implements OnInit {
   }
 
   canDelete(): boolean {
-    return this.isAdmin || this.isHeadManager;
+    return this.isAdmin;
   }
 
   openProjectsModal(customer: any): void {

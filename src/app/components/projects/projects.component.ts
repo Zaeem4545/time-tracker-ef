@@ -2126,8 +2126,9 @@ export class ProjectsComponent implements OnInit {
   }
   
   deleteProject(projectId: number) {
-    // Employees cannot delete projects
-    if (this.isEmployee) {
+    // Only admin can delete projects
+    if (!this.isAdmin) {
+      this.toastService.show('You do not have permission to delete projects', 'error');
       return;
     } 
     this.confirmationService.show({

@@ -108,6 +108,11 @@ async function updateCustomer(req, res) {
 // Delete a customer
 async function deleteCustomer(req, res) {
   try {
+    // Only admin can delete customers
+    if (req.user.role?.toLowerCase() !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Access denied. Only admins can delete customers.' });
+    }
+
     const { id } = req.params;
     
     // Check if customer exists

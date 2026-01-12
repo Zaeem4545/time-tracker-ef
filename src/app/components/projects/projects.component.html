@@ -476,7 +476,7 @@
                           <div class="task-menu-item" (click)="openEditProjectModal(project); closeProjectMenu()">
                             Edit
                           </div>
-                          <div *ngIf="!isEmployee && !isManager" class="task-menu-item" (click)="deleteProject(project.id); closeProjectMenu()">
+                          <div *ngIf="isAdmin" class="task-menu-item" (click)="deleteProject(project.id); closeProjectMenu()">
                             Delete
                           </div>
                           <div class="task-menu-item" (click)="toggleTasks(project.id); closeProjectMenu()">
@@ -723,7 +723,7 @@
                       <div class="task-menu-item" (click)="openEditProjectModal(project); closeProjectMenu()">
                         Edit
                       </div>
-                      <div *ngIf="!isEmployee && !isManager" class="task-menu-item" (click)="deleteProject(project.id); closeProjectMenu()">
+                      <div *ngIf="isAdmin" class="task-menu-item" (click)="deleteProject(project.id); closeProjectMenu()">
                         Delete
                       </div>
                       <div class="task-menu-item" (click)="toggleTasks(project.id); closeProjectMenu()">

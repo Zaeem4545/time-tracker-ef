@@ -901,9 +901,14 @@ async function updateProject(req, res) {
   }
 }
 
-// Delete project - DELETE
+// Delete project - DELETE (Admin only)
 async function deleteProject(req, res) {
   try {
+    // Only admin can delete projects
+    if (req.user.role?.toLowerCase() !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Access denied. Only admins can delete projects.' });
+    }
+
     const { id } = req.params;
 
     // Get project details before deletion (including customer_id)
