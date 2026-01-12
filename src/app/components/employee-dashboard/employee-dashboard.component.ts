@@ -20,10 +20,6 @@ export class EmployeeDashboardComponent implements OnInit {
   showWelcomeMessage = false;
   welcomeUserName = '';
   
-  // Track projects and tasks worked on by employee
-  workedOnProjectIds: Set<number> = new Set();
-  workedOnTaskNames: Set<string> = new Set();
-  
   // Summary metrics
   totalProjects: number = 0;
   myProjects: number = 0;
@@ -179,7 +175,7 @@ export class EmployeeDashboardComponent implements OnInit {
   loadProjects() {
     // Load projects and filter: only show projects created by or assigned to the user
     this.adminService.getProjects().subscribe(projects => {
-      // Filter projects: show only those assigned to user, created by user, or worked on by user
+      // Filter projects: show only those assigned to user or created by user
       const relevantProjects = projects.filter((project: any) => {
         // Check if assigned to user (manager_id)
         const isAssignedAsManager = project.manager_id === this.currentUserId;
@@ -189,10 +185,8 @@ export class EmployeeDashboardComponent implements OnInit {
         const isCreated = project.created_by === this.currentUserEmail ||
                         project.created_by === this.currentUserId ||
                         project.created_by_id === this.currentUserId;
-        // Check if employee has worked on this project (has time entries)
-        const isWorkedOn = this.workedOnProjectIds.has(project.id);
         
-        return isAssignedAsManager || isAssignedTo || isCreated || isWorkedOn;
+        return isAssignedAsManager || isAssignedTo || isCreated;
       });
 
       this.projects = relevantProjects;
@@ -235,7 +229,7 @@ export class EmployeeDashboardComponent implements OnInit {
     projectIdsArray.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Filter tasks: show only tasks assigned to user, created/assigned by user, or worked on by user
+          // Filter tasks: show only tasks assigned to user or created/assigned by user
           // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
           const relevantTasks = tasks.filter((task: any) => {
             // Check if task is assigned to employee
@@ -248,10 +242,8 @@ export class EmployeeDashboardComponent implements OnInit {
             const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
                                          task.created_by === this.currentUserId ||
                                          task.created_by_id === this.currentUserId;
-            // Check if employee has worked on this task (has time entries with this task name)
-            const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
             
-            return isAssignedToEmployee || isAssignedByEmployee || isCreatedByCurrentUser || isWorkedOn;
+            return isAssignedToEmployee || isAssignedByEmployee || isCreatedByCurrentUser;
           });
           
           allTasks.push(...relevantTasks);
@@ -318,18 +310,6 @@ export class EmployeeDashboardComponent implements OnInit {
           return entry.user_id === this.currentUserId;
         });
         
-        // Collect project IDs and task names that employee worked on
-        this.workedOnProjectIds.clear();
-        this.workedOnTaskNames.clear();
-        currentUserEntries.forEach((entry: any) => {
-          if (entry.project_id) {
-            this.workedOnProjectIds.add(entry.project_id);
-          }
-          if (entry.task_name) {
-            this.workedOnTaskNames.add(entry.task_name.toLowerCase());
-          }
-        });
-        
         // Store all time entries for modal (but only count current user's entries)
         this.allTimeEntries = entries.sort((a: any, b: any) => {
           const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
@@ -340,7 +320,7 @@ export class EmployeeDashboardComponent implements OnInit {
         // Only count current user's entries for dashboard
         this.totalTimeEntries = currentUserEntries.length;
         
-        // Load all projects (will include worked-on projects)
+        // Load all projects (not filtered by worked projects)
         this.loadProjects();
       },
       error: (err) => {

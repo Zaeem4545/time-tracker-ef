@@ -69,10 +69,6 @@ export class AdminDashboardPageComponent implements OnInit {
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
-  
-  // Track projects and tasks worked on by admin
-  workedOnProjectIds: Set<number> = new Set();
-  workedOnTaskNames: Set<string> = new Set();
 
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
@@ -154,11 +150,9 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   loadDashboardData(): void {
-    // Load time entries first to get projects/tasks admin has worked on
-    this.loadTimeEntries();
-    // Then load projects and tasks (they will use worked-on data)
     this.loadProjects();
     this.loadTasks();
+    this.loadTimeEntries();
   }
 
   loadProjects(): void {
@@ -206,7 +200,7 @@ export class AdminDashboardPageComponent implements OnInit {
     // Load admin's projects first to filter tasks from
     this.adminService.getProjects().subscribe({
       next: (allProjects) => {
-        // Filter projects: Show projects where admin is manager, head manager, assigned to admin, created by admin, or worked on by admin
+        // Filter projects: Show projects where admin is manager, head manager, assigned to admin, or created by admin
         const adminProjects = allProjects.filter((project: any) => {
           const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
                                     project.created_by === this.currentAdminId ||
@@ -214,10 +208,8 @@ export class AdminDashboardPageComponent implements OnInit {
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
           const isAssignedTo = project.assigned_to === this.currentAdminId;
           const isHeadManager = project.head_manager_id === this.currentAdminId;
-          // Check if admin has worked on this project (has time entries)
-          const isWorkedOn = this.workedOnProjectIds.has(project.id);
-          // Show projects where admin is assigned, created, or worked on
-          return isCreatedByAdmin || isAssignedToAdmin || isAssignedTo || isHeadManager || isWorkedOn;
+          // Show projects where admin is assigned or created
+          return isCreatedByAdmin || isAssignedToAdmin || isAssignedTo || isHeadManager;
         });
 
         if (adminProjects.length === 0) {
@@ -233,7 +225,7 @@ export class AdminDashboardPageComponent implements OnInit {
         adminProjects.forEach((project: any) => {
           this.adminService.getTasks(project.id).subscribe({
             next: (tasks) => {
-              // Filter tasks: created/assigned by admin, assigned to admin, or worked on by admin
+              // Filter tasks: created/assigned by admin OR assigned to admin
               // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
               const adminTasks = tasks.filter((task: any) => {
                 // Check if task was assigned by the admin (created/assigned by them)
@@ -247,10 +239,7 @@ export class AdminDashboardPageComponent implements OnInit {
                 // Check if task is assigned to admin
                 const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
                 
-                // Check if admin has worked on this task (has time entries with this task name)
-                const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
-                
-                return isAssignedByAdmin || isCreatedByAdmin || isAssignedToAdmin || isWorkedOn;
+                return isAssignedByAdmin || isCreatedByAdmin || isAssignedToAdmin;
               });
 
               allTasks.push(...adminTasks);
@@ -288,52 +277,7 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   loadTimeEntries(): void {
-    // Load time entries first to collect worked-on projects and tasks
-    this.adminService.getTimeEntries().subscribe({
-      next: (entries) => {
-        // Filter to only get current admin's time entries
-        const currentAdminEntries = entries.filter((entry: any) => {
-          return entry.user_id === this.currentAdminId;
-        });
-        
-        // Collect project IDs and task names that admin worked on
-        this.workedOnProjectIds.clear();
-        this.workedOnTaskNames.clear();
-        currentAdminEntries.forEach((entry: any) => {
-          if (entry.project_id) {
-            this.workedOnProjectIds.add(entry.project_id);
-          }
-          if (entry.task_name) {
-            this.workedOnTaskNames.add(entry.task_name.toLowerCase());
-          }
-        });
-        
-        // Store all time entries for modal, sorted by date (newest first)
-        this.allTimeEntries = entries.sort((a: any, b: any) => {
-          const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
-          const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
-          return dateB - dateA; // Newest first
-        });
-        
-        // Count only admin's entries for dashboard
-        this.totalTimeEntries = currentAdminEntries.length;
-        
-        // Reload projects and tasks now that we have worked-on data
-        this.loadProjects();
-        this.loadTasks();
-      },
-      error: (err) => {
-        console.error('Error loading time entries:', err);
-        this.allTimeEntries = [];
-        this.totalTimeEntries = 0;
-        // Still try to load projects and tasks
-        this.loadProjects();
-        this.loadTasks();
-      }
-    });
-    
-    // Old code below - keeping for reference but not using it
-    /* First get admin's projects to filter time entries
+    // First get admin's projects to filter time entries
     this.adminService.getProjects().subscribe({
       next: (allProjects) => {
         // Filter projects: Only show projects where this admin is the manager or head manager
