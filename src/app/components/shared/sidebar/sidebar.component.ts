@@ -82,9 +82,9 @@ export class SidebarComponent implements OnInit {
         { label: 'Create User', route: '/admin', icon: '👥', active: false }
       );
     } else if (role === 'engineer') {
-      // Employees only see Employee Dashboard, not the simple dashboard
+      // Engineers only see Engineer Dashboard, not the simple dashboard
       this.menuItems.push(
-        { label: 'Employee Dashboard', route: '/employee', icon: '👤', active: false }
+        { label: 'Engineer Dashboard', route: '/employee', icon: '👤', active: false }
       );
     } else {
       // For other roles, add general dashboard
@@ -115,7 +115,7 @@ export class SidebarComponent implements OnInit {
     if (role === 'admin') {
       // Create Team and Team Details removed
     } else if (role === 'manager') {
-      // Employee Details removed from team lead portal
+      // Engineer Details removed from team lead portal
     }
   }
 

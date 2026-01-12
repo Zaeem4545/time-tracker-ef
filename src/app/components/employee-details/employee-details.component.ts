@@ -24,8 +24,8 @@ export class EmployeeDetailsComponent implements OnInit {
         }));
       },
       error: (err) => {
-        console.error('Error loading employees:', err);
-        alert('Error loading employees: ' + (err.error?.message || err.message || 'Unknown error'));
+        console.error('Error loading engineers:', err);
+        alert('Error loading engineers: ' + (err.error?.message || err.message || 'Unknown error'));
       }
     });
   }

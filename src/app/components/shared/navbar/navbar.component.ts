@@ -24,7 +24,7 @@ export class NavbarComponent {
     } else if (roleLower === 'engineer') {
       this.router.navigate(['/employee']);
     } else {
-      // Default to employee dashboard
+      // Default to engineer dashboard
       this.router.navigate(['/employee']);
     }
   }
