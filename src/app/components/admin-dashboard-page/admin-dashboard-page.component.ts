@@ -149,19 +149,22 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   loadDashboardData(): void {
-    this.loadProjects();
-    this.loadTasks();
+    // Load time entries first to get worked-on projects/tasks
     this.loadTimeEntries();
+    // Projects and tasks will be loaded by loadTimeEntries after collecting worked-on data
   }
 
   loadProjects(): void {
     // Load projects and filter: only show projects created by or assigned to the admin
     this.adminService.getProjects().subscribe({
       next: (projects) => {
-        // Filter projects: Show projects where admin is manager, head manager, or created by admin
+        // Filter projects: Show projects where admin is manager, head manager, assigned to admin, created by admin, or worked on by admin
         const adminProjects = projects.filter((project: any) => {
           // Check if project is assigned to this admin (manager_id)
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          
+          // Check if project is assigned to admin (assigned_to field)
+          const isAssignedTo = project.assigned_to === this.currentAdminId;
           
           // Check if project has head_manager_id and it matches this admin
           const isHeadManager = project.head_manager_id === this.currentAdminId;
@@ -171,8 +174,11 @@ export class AdminDashboardPageComponent implements OnInit {
                                     project.created_by === this.currentAdminId ||
                                     project.created_by_id === this.currentAdminId;
           
-          // Show projects where admin is assigned or created
-          return isAssignedToAdmin || isHeadManager || isCreatedByAdmin;
+          // Check if admin has worked on this project (has time entries)
+          const isWorkedOn = this.workedOnProjectIds.has(project.id);
+          
+          // Show projects where admin is assigned, created, or worked on
+          return isAssignedToAdmin || isAssignedTo || isHeadManager || isCreatedByAdmin || isWorkedOn;
         });
 
         // Store all projects for modal
@@ -196,15 +202,18 @@ export class AdminDashboardPageComponent implements OnInit {
     // Load admin's projects first to filter tasks from
     this.adminService.getProjects().subscribe({
       next: (allProjects) => {
-        // Filter projects: Show projects where admin is manager, head manager, or created by admin
+        // Filter projects: Show projects where admin is manager, head manager, assigned to admin, created by admin, or worked on by admin
         const adminProjects = allProjects.filter((project: any) => {
           const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
                                     project.created_by === this.currentAdminId ||
                                     project.created_by_id === this.currentAdminId;
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          const isAssignedTo = project.assigned_to === this.currentAdminId;
           const isHeadManager = project.head_manager_id === this.currentAdminId;
-          // Show projects where admin is assigned or created
-          return isCreatedByAdmin || isAssignedToAdmin || isHeadManager;
+          // Check if admin has worked on this project (has time entries)
+          const isWorkedOn = this.workedOnProjectIds.has(project.id);
+          // Show projects where admin is assigned, created, or worked on
+          return isCreatedByAdmin || isAssignedToAdmin || isAssignedTo || isHeadManager || isWorkedOn;
         });
 
         if (adminProjects.length === 0) {
@@ -220,14 +229,21 @@ export class AdminDashboardPageComponent implements OnInit {
         adminProjects.forEach((project: any) => {
           this.adminService.getTasks(project.id).subscribe({
             next: (tasks) => {
-              // Filter tasks: created by admin OR assigned to admin
+              // Filter tasks: created by admin, assigned to admin, assigned by admin, or worked on by admin
               const adminTasks = tasks.filter((task: any) => {
+                // Check if task was created by admin
                 const isCreatedByAdmin = task.created_by === this.currentAdminEmail || 
                                          task.created_by === this.currentAdminId ||
                                          task.created_by_id === this.currentAdminId;
+                // Check if task is assigned to admin
                 const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
+                // Check if task was assigned by admin (assigned_by stores the name/email of the person who assigned/created the task)
+                const isAssignedByAdmin = task.assigned_by === this.currentAdminName ||
+                                         task.assigned_by === this.currentAdminEmail;
+                // Check if admin has worked on this task (has time entries with this task name)
+                const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
                 
-                return isCreatedByAdmin || isAssignedToAdmin;
+                return isCreatedByAdmin || isAssignedToAdmin || isAssignedByAdmin || isWorkedOn;
               });
 
               allTasks.push(...adminTasks);
@@ -308,14 +324,21 @@ export class AdminDashboardPageComponent implements OnInit {
         adminProjects.forEach((project: any) => {
           this.adminService.getTasks(project.id).subscribe({
             next: (tasks) => {
-              // Filter tasks: created by admin OR assigned by admin OR assigned to admin
+              // Filter tasks: created by admin, assigned to admin, assigned by admin, or worked on by admin
               const adminTasks = tasks.filter((task: any) => {
+                // Check if task was created by admin
                 const isCreatedByAdmin = task.created_by === this.currentAdminEmail || 
                                          task.created_by === this.currentAdminId ||
                                          task.created_by_id === this.currentAdminId;
-                const isAssignedByAdmin = task.assigned_by === this.currentAdminEmail;
+                // Check if task is assigned to admin
                 const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
-                return isCreatedByAdmin || isAssignedByAdmin || isAssignedToAdmin;
+                // Check if task was assigned by admin (assigned_by stores the name/email of the person who assigned/created the task)
+                const isAssignedByAdmin = task.assigned_by === this.currentAdminName ||
+                                         task.assigned_by === this.currentAdminEmail;
+                // Check if admin has worked on this task (has time entries with this task name)
+                const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
+                
+                return isCreatedByAdmin || isAssignedToAdmin || isAssignedByAdmin || isWorkedOn;
               });
 
               adminTasks.forEach((task: any) => {

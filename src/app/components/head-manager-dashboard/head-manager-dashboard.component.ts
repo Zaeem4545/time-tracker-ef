@@ -13,6 +13,7 @@ import { AuthService } from '../../services/auth.service';
 export class HeadManagerDashboardComponent implements OnInit {
   private currentUserId: number | null = null;
   private currentUserEmail: string | null = null;
+  currentUserName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
@@ -160,12 +161,20 @@ export class HeadManagerDashboardComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
+        // Set current user name
+        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
+        if (currentUser && currentUser.name) {
+          this.currentUserName = currentUser.name;
+        } else {
+          this.currentUserName = this.currentUserEmail?.split('@')[0] || null;
+        }
         // Check welcome message after users are loaded
         this.checkAndShowWelcome();
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.users = [];
+        this.currentUserName = this.currentUserEmail?.split('@')[0] || null;
         // Still check welcome message even if users load fails
         this.checkAndShowWelcome();
       }
@@ -225,16 +234,22 @@ export class HeadManagerDashboardComponent implements OnInit {
             // Filter projects: 
             // 1. Selected by head manager (which means created by head manager)
             // 2. Assigned to head manager (manager_id matches)
-            // 3. Created by head manager (selected_by_head_manager_id matches)
+            // 3. Assigned to head manager (assigned_to field)
+            // 4. Created by head manager (selected_by_head_manager_id matches)
+            // 5. Worked on by head manager (has time entries)
             const relevantProjects = allProjects.filter((project: any) => {
               // Check if project is selected by this head manager
               const isSelected = selectedProjects.some((sp: any) => sp.id === project.id);
-              // Check if project is assigned to this head manager (assigned by admin)
-              const isAssigned = project.manager_id === this.currentUserId;
+              // Check if project is assigned to this head manager (manager_id)
+              const isAssignedAsManager = project.manager_id === this.currentUserId;
+              // Check if project is assigned to head manager (assigned_to field)
+              const isAssignedTo = project.assigned_to === this.currentUserId;
               // Check if project was created by this head manager
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
+              // Check if head manager has worked on this project (has time entries)
+              const isWorkedOn = this.workedOnProjectIds.has(project.id);
               
-              return isSelected || isAssigned || isCreatedByHeadManager;
+              return isSelected || isAssignedAsManager || isAssignedTo || isCreatedByHeadManager || isWorkedOn;
             });
             
             this.totalProjects = relevantProjects.length;
@@ -255,11 +270,14 @@ export class HeadManagerDashboardComponent implements OnInit {
         // Fallback: load all projects if getSelectedProjects fails
         this.adminService.getProjects().subscribe({
           next: (projects) => {
-            // Filter to include projects created by head manager or assigned to them
+            // Filter to include projects created by head manager, assigned to them, or worked on by them
             const relevantProjects = projects.filter((project: any) => {
-              const isAssigned = project.manager_id === this.currentUserId;
+              const isAssignedAsManager = project.manager_id === this.currentUserId;
+              const isAssignedTo = project.assigned_to === this.currentUserId;
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
-              return isAssigned || isCreatedByHeadManager;
+              // Check if head manager has worked on this project (has time entries)
+              const isWorkedOn = this.workedOnProjectIds.has(project.id);
+              return isAssignedAsManager || isAssignedTo || isCreatedByHeadManager || isWorkedOn;
             });
             
             this.totalProjects = relevantProjects.length;
@@ -285,12 +303,15 @@ export class HeadManagerDashboardComponent implements OnInit {
         // Also get all projects to check for projects assigned by admin or created by head manager
         this.adminService.getProjects().subscribe({
           next: (allProjects) => {
-            // Filter projects: selected by head manager OR assigned to head manager by admin OR created by head manager
+            // Filter projects: selected by head manager OR assigned to head manager by admin OR created by head manager OR worked on by head manager
             const relevantProjects = allProjects.filter((project: any) => {
               const isSelected = selectedProjects.some((sp: any) => sp.id === project.id);
-              const isAssigned = project.manager_id === this.currentUserId;
+              const isAssignedAsManager = project.manager_id === this.currentUserId;
+              const isAssignedTo = project.assigned_to === this.currentUserId;
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
-              return isSelected || isAssigned || isCreatedByHeadManager;
+              // Check if head manager has worked on this project (has time entries)
+              const isWorkedOn = this.workedOnProjectIds.has(project.id);
+              return isSelected || isAssignedAsManager || isAssignedTo || isCreatedByHeadManager || isWorkedOn;
             });
 
             const allTasks: any[] = [];
@@ -308,15 +329,22 @@ export class HeadManagerDashboardComponent implements OnInit {
             relevantProjects.forEach((project: any) => {
               this.adminService.getTasks(project.id).subscribe({
                 next: (tasks) => {
-                  // Filter tasks: show only tasks assigned to head manager or created by head manager
+                  // Filter tasks: show only tasks assigned to head manager, created by head manager, or worked on by head manager
                   tasks.forEach((task: any) => {
-                    const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase() ||
-                                                   task.created_by === headManagerEmail ||
+                    // Check if task was assigned by the head manager (created/assigned by them)
+                    // assigned_by stores the name of the person who assigned/created the task
+                    const isAssignedByHeadManager = task.assigned_by === this.currentUserName ||
+                                                   task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase();
+                    // Check if task was created by head manager (legacy check for created_by field if it exists)
+                    const isCreatedByHeadManager = task.created_by === headManagerEmail ||
                                                    task.created_by === this.currentUserId ||
                                                    task.created_by_id === this.currentUserId;
+                    // Check if task is assigned to head manager
                     const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
+                    // Check if head manager has worked on this task (has time entries with this task name)
+                    const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
                     
-                    if (isCreatedByHeadManager || isAssignedToHeadManager) {
+                    if (isAssignedByHeadManager || isCreatedByHeadManager || isAssignedToHeadManager || isWorkedOn) {
                       taskMap.set(task.id, task);
                     }
                   });

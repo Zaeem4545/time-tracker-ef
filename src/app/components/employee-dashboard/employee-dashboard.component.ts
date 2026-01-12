@@ -172,18 +172,22 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   loadProjects() {
-    // Load projects and filter: only show projects created by or assigned to the user
+    // Load projects and filter: only show projects created by, assigned to, or worked on by the user
     this.adminService.getProjects().subscribe(projects => {
-      // Filter projects: show only those assigned to user or created by user
+      // Filter projects: show only those assigned to user, created by user, or worked on by user
       const relevantProjects = projects.filter((project: any) => {
-        // Check if assigned to user
-        const isAssigned = project.manager_id === this.currentUserId;
+        // Check if assigned to user (manager_id)
+        const isAssignedAsManager = project.manager_id === this.currentUserId;
+        // Check if project is assigned to user (assigned_to field)
+        const isAssignedTo = project.assigned_to === this.currentUserId;
         // Check if created by user
         const isCreated = project.created_by === this.currentUserEmail ||
                         project.created_by === this.currentUserId ||
                         project.created_by_id === this.currentUserId;
+        // Check if employee has worked on this project (has time entries)
+        const isWorkedOn = this.workedOnProjectIds.has(project.id);
         
-        return isAssigned || isCreated;
+        return isAssignedAsManager || isAssignedTo || isCreated || isWorkedOn;
       });
 
       this.projects = relevantProjects;
@@ -226,14 +230,22 @@ export class EmployeeDashboardComponent implements OnInit {
     projectIdsArray.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Filter tasks: show only tasks assigned to user or created by user
+          // Filter tasks: show only tasks assigned to user, created by user, or worked on by user
           const relevantTasks = tasks.filter((task: any) => {
+            // Check if task is assigned to employee
             const isAssignedToEmployee = task.assigned_to === this.currentUserId;
+            // Check if task was assigned by the employee (created/assigned by them)
+            // assigned_by stores the name of the person who assigned/created the task
+            const isAssignedByEmployee = task.assigned_by === this.currentUserName ||
+                                        task.assigned_by === this.currentUserEmail;
+            // Check if task was created by employee (legacy check for created_by field if it exists)
             const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
                                          task.created_by === this.currentUserId ||
                                          task.created_by_id === this.currentUserId;
+            // Check if employee has worked on this task (has time entries with this task name)
+            const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
             
-            return isAssignedToEmployee || isCreatedByCurrentUser;
+            return isAssignedToEmployee || isAssignedByEmployee || isCreatedByCurrentUser || isWorkedOn;
           });
           
           allTasks.push(...relevantTasks);
@@ -300,6 +312,18 @@ export class EmployeeDashboardComponent implements OnInit {
           return entry.user_id === this.currentUserId;
         });
         
+        // Collect project IDs and task names that employee worked on
+        this.workedOnProjectIds.clear();
+        this.workedOnTaskNames.clear();
+        currentUserEntries.forEach((entry: any) => {
+          if (entry.project_id) {
+            this.workedOnProjectIds.add(entry.project_id);
+          }
+          if (entry.task_name) {
+            this.workedOnTaskNames.add(entry.task_name.toLowerCase());
+          }
+        });
+        
         // Store all time entries for modal (but only count current user's entries)
         this.allTimeEntries = entries.sort((a: any, b: any) => {
           const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
@@ -310,7 +334,7 @@ export class EmployeeDashboardComponent implements OnInit {
         // Only count current user's entries for dashboard
         this.totalTimeEntries = currentUserEntries.length;
         
-        // Load all projects (not filtered by worked projects)
+        // Load all projects (will include worked-on projects)
         this.loadProjects();
       },
       error: (err) => {

@@ -247,9 +247,9 @@ export class DashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
-    this.loadProjects();
-    this.loadTasks();
+    // Load time entries first to get worked-on projects/tasks
     this.loadTimeEntries();
+    // Projects and tasks will be loaded by loadTimeEntries after collecting worked-on data
   }
 
   loadProjects(): void {
