@@ -15,9 +15,14 @@ export class EmployeeDashboardComponent implements OnInit {
   employeeTasks: any[] = [];
   currentUserId: number | null = null;
   currentUserEmail: string | null = null;
+  currentUserName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
+  
+  // Track projects and tasks worked on by employee
+  workedOnProjectIds: Set<number> = new Set();
+  workedOnTaskNames: Set<string> = new Set();
   
   // Summary metrics
   totalProjects: number = 0;
@@ -1215,12 +1220,20 @@ export class EmployeeDashboardComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
+        // Set current user name
+        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
+        if (currentUser && currentUser.name) {
+          this.currentUserName = currentUser.name;
+        } else {
+          this.currentUserName = this.currentUserEmail?.split('@')[0] || null;
+        }
         // Check welcome message after users are loaded
         this.checkAndShowWelcome();
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.users = [];
+        this.currentUserName = this.currentUserEmail?.split('@')[0] || null;
         // Still check welcome message even if users load fails
         this.checkAndShowWelcome();
       }

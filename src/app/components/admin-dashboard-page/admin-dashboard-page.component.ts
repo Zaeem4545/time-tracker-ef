@@ -65,9 +65,14 @@ export class AdminDashboardPageComponent implements OnInit {
   // Current admin info
   currentAdminId: number | null = null;
   currentAdminEmail: string | null = null;
+  currentAdminName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
+  
+  // Track projects and tasks worked on by admin
+  workedOnProjectIds: Set<number> = new Set();
+  workedOnTaskNames: Set<string> = new Set();
 
   // Status dropdown tracking
   projectStatusDropdownOpen: number | null = null;
@@ -117,6 +122,7 @@ export class AdminDashboardPageComponent implements OnInit {
       const currentUser = this.users.find(u => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
       if (currentUser && currentUser.name) {
         this.welcomeUserName = currentUser.name;
+        this.currentAdminName = currentUser.name;
         this.showWelcomeMessage = true;
         setTimeout(() => {
           this.showWelcomeMessage = false;
@@ -127,11 +133,14 @@ export class AdminDashboardPageComponent implements OnInit {
 
     this.adminService.getUsers().subscribe({
       next: (users) => {
+        this.users = users;
         const currentUser = users.find((u: any) => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
         if (currentUser && currentUser.name) {
           this.welcomeUserName = currentUser.name;
+          this.currentAdminName = currentUser.name;
         } else {
           this.welcomeUserName = this.currentAdminEmail?.split('@')[0] || 'User';
+          this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
         }
         this.showWelcomeMessage = true;
         setTimeout(() => {
@@ -140,6 +149,7 @@ export class AdminDashboardPageComponent implements OnInit {
       },
       error: () => {
         this.welcomeUserName = this.currentAdminEmail?.split('@')[0] || 'User';
+        this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
         this.showWelcomeMessage = true;
         setTimeout(() => {
           this.showWelcomeMessage = false;
@@ -281,179 +291,46 @@ export class AdminDashboardPageComponent implements OnInit {
   }
 
   loadTimeEntries(): void {
-    // First get admin's projects to filter time entries
-    this.adminService.getProjects().subscribe({
-      next: (allProjects) => {
-        // Filter projects: Only show projects where this admin is the manager or head manager
-        const adminProjects = allProjects.filter((project: any) => {
-          const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
-                                    project.created_by === this.currentAdminId ||
-                                    project.created_by_id === this.currentAdminId;
-          const isAssignedToAdmin = project.manager_id === this.currentAdminId;
-          const isHeadManager = project.head_manager_id === this.currentAdminId;
-          // Only show projects where admin is explicitly assigned or created
-          return isCreatedByAdmin || isAssignedToAdmin || isHeadManager;
+    this.adminService.getTimeEntries().subscribe({
+      next: (entries) => {
+        // Filter to only count current admin's time entries for dashboard count
+        const currentUserEntries = entries.filter((entry: any) => {
+          return entry.user_id === this.currentAdminId;
         });
-
-        const adminProjectIds = adminProjects.map((p: any) => p.id);
-
-        // Get admin's tasks from those projects
-        const adminTaskNames = new Set<string>();
-        let loadedProjects = 0;
-
-        if (adminProjectIds.length === 0) {
-              // No admin projects, so only show entries where admin logged time
-          this.adminService.getTimeEntries().subscribe({
-            next: (entries) => {
-              const adminTimeEntries = entries.filter((entry: any) => {
-                return entry.user_id === this.currentAdminId;
-              });
-              // Store all time entries for modal
-              this.allTimeEntries = adminTimeEntries;
-              this.totalTimeEntries = adminTimeEntries.length || 0;
-            },
-            error: (err) => {
-              console.error('Error loading time entries:', err);
-              this.allTimeEntries = [];
-              this.totalTimeEntries = 0;
-            }
-          });
-          return;
-        }
-
-        adminProjects.forEach((project: any) => {
-          this.adminService.getTasks(project.id).subscribe({
-            next: (tasks) => {
-              // Filter tasks: created by admin, assigned to admin, assigned by admin, or worked on by admin
-              const adminTasks = tasks.filter((task: any) => {
-                // Check if task was created by admin
-                const isCreatedByAdmin = task.created_by === this.currentAdminEmail || 
-                                         task.created_by === this.currentAdminId ||
-                                         task.created_by_id === this.currentAdminId;
-                // Check if task is assigned to admin
-                const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
-                // Check if task was assigned by admin (assigned_by stores the name/email of the person who assigned/created the task)
-                const isAssignedByAdmin = task.assigned_by === this.currentAdminName ||
-                                         task.assigned_by === this.currentAdminEmail;
-                // Check if admin has worked on this task (has time entries with this task name)
-                const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
-                
-                return isCreatedByAdmin || isAssignedToAdmin || isAssignedByAdmin || isWorkedOn;
-              });
-
-              adminTasks.forEach((task: any) => {
-                if (task.title) {
-                  adminTaskNames.add(task.title);
-                }
-              });
-
-              loadedProjects++;
-              
-              if (loadedProjects === adminProjects.length) {
-                // Now filter time entries
-                this.adminService.getTimeEntries().subscribe({
-                  next: (entries) => {
-                    // Filter time entries:
-                    // 1. Worked by admin (user_id === adminId)
-                    // 2. For admin's projects
-                    // 3. For admin's tasks
-                    const adminTimeEntries = entries.filter((entry: any) => {
-                      // Worked by admin
-                      if (entry.user_id === this.currentAdminId) {
-                        return true;
-                      }
-                      
-                      // For admin's projects
-                      if (adminProjectIds.includes(entry.project_id)) {
-                        // If task name matches admin's tasks, include it
-                        if (entry.task_name && adminTaskNames.has(entry.task_name)) {
-                          return true;
-                        }
-                        // If no task name but it's admin's project, include it
-                        if (!entry.task_name) {
-                          return true;
-                        }
-                      }
-                      
-                      return false;
-                    });
-                    
-                    // Store all time entries for modal, sorted by date (newest first)
-                    this.allTimeEntries = adminTimeEntries.sort((a: any, b: any) => {
-                      const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
-                      const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
-                      return dateB - dateA; // Newest first
-                    });
-                    this.totalTimeEntries = adminTimeEntries.length || 0;
-                  },
-                  error: (err) => {
-                    console.error('Error loading time entries:', err);
-                    this.totalTimeEntries = 0;
-                  }
-                });
-              }
-            },
-            error: (err) => {
-              console.error(`Error loading tasks for project ${project.id}:`, err);
-              loadedProjects++;
-              if (loadedProjects === adminProjects.length) {
-                // Still filter time entries even if some tasks failed to load
-                this.adminService.getTimeEntries().subscribe({
-                  next: (entries) => {
-                    const adminTimeEntries = entries.filter((entry: any) => {
-                      if (entry.user_id === this.currentAdminId) {
-                        return true;
-                      }
-                      if (adminProjectIds.includes(entry.project_id)) {
-                        if (entry.task_name && adminTaskNames.has(entry.task_name)) {
-                          return true;
-                        }
-                        if (!entry.task_name) {
-                          return true;
-                        }
-                      }
-                      return false;
-                    });
-                    // Store all time entries for modal, sorted by date (newest first)
-                    this.allTimeEntries = adminTimeEntries.sort((a: any, b: any) => {
-                      const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
-                      const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
-                      return dateB - dateA; // Newest first
-                    });
-                    this.totalTimeEntries = adminTimeEntries.length || 0;
-                  },
-                  error: (err) => {
-                    console.error('Error loading time entries:', err);
-                    this.totalTimeEntries = 0;
-                  }
-                });
-              }
-            }
-          });
-        });
-      },
-      error: (err) => {
-        console.error('Error loading projects for time entries:', err);
-        // Fallback: only show entries where admin logged time
-        this.adminService.getTimeEntries().subscribe({
-          next: (entries) => {
-            const adminTimeEntries = entries.filter((entry: any) => {
-              return entry.user_id === this.currentAdminId;
-            });
-            // Store all time entries for modal, sorted by date (newest first)
-            this.allTimeEntries = adminTimeEntries.sort((a: any, b: any) => {
-              const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
-              const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
-              return dateB - dateA; // Newest first
-            });
-            this.totalTimeEntries = adminTimeEntries.length || 0;
-          },
-          error: (err2) => {
-            console.error('Error loading time entries:', err2);
-            this.allTimeEntries = [];
-            this.totalTimeEntries = 0;
+        
+        // Collect project IDs and task names that admin worked on
+        this.workedOnProjectIds.clear();
+        this.workedOnTaskNames.clear();
+        currentUserEntries.forEach((entry: any) => {
+          if (entry.project_id) {
+            this.workedOnProjectIds.add(entry.project_id);
+          }
+          if (entry.task_name) {
+            this.workedOnTaskNames.add(entry.task_name.toLowerCase());
           }
         });
+        
+        // Store all time entries for modal (but only count current admin's entries)
+        this.allTimeEntries = entries.sort((a: any, b: any) => {
+          const dateA = new Date(a.date || a.entry_date || a.start_time || 0).getTime();
+          const dateB = new Date(b.date || b.entry_date || b.start_time || 0).getTime();
+          return dateB - dateA; // Newest first
+        });
+        
+        // Only count current admin's entries for dashboard
+        this.totalTimeEntries = currentUserEntries.length;
+        
+        // Reload projects and tasks now that we have worked-on data
+        this.loadProjects();
+        this.loadTasks();
+      },
+      error: (err) => {
+        console.error('Error loading time entries:', err);
+        this.allTimeEntries = [];
+        this.totalTimeEntries = 0;
+        // Still try to load projects and tasks even if time entries fail
+        this.loadProjects();
+        this.loadTasks();
       }
     });
   }
@@ -1343,12 +1220,20 @@ export class AdminDashboardPageComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
+        // Set current admin name
+        const currentUser = users.find((u: any) => u.id === this.currentAdminId || u.email === this.currentAdminEmail);
+        if (currentUser && currentUser.name) {
+          this.currentAdminName = currentUser.name;
+        } else {
+          this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
+        }
         // Check welcome message after users are loaded
         this.checkAndShowWelcome();
       },
       error: (err) => {
         console.error('Error loading users:', err);
         this.users = [];
+        this.currentAdminName = this.currentAdminEmail?.split('@')[0] || null;
         // Still check welcome message even if users load fails
         this.checkAndShowWelcome();
       }
