@@ -159,10 +159,13 @@ export class AdminDashboardPageComponent implements OnInit {
     // Load projects and filter: only show projects created by or assigned to the admin
     this.adminService.getProjects().subscribe({
       next: (projects) => {
-        // Filter projects: Show projects where admin is manager, head manager, or created by admin
+        // Filter projects: Show projects where admin is manager, head manager, assigned to admin, or created by admin
         const adminProjects = projects.filter((project: any) => {
           // Check if project is assigned to this admin (manager_id)
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          
+          // Check if project is assigned to admin (assigned_to field)
+          const isAssignedTo = project.assigned_to === this.currentAdminId;
           
           // Check if project has head_manager_id and it matches this admin
           const isHeadManager = project.head_manager_id === this.currentAdminId;
@@ -173,7 +176,7 @@ export class AdminDashboardPageComponent implements OnInit {
                                     project.created_by_id === this.currentAdminId;
           
           // Show projects where admin is assigned or created
-          return isAssignedToAdmin || isHeadManager || isCreatedByAdmin;
+          return isAssignedToAdmin || isAssignedTo || isHeadManager || isCreatedByAdmin;
         });
 
         // Store all projects for modal
@@ -197,15 +200,16 @@ export class AdminDashboardPageComponent implements OnInit {
     // Load admin's projects first to filter tasks from
     this.adminService.getProjects().subscribe({
       next: (allProjects) => {
-        // Filter projects: Show projects where admin is manager, head manager, or created by admin
+        // Filter projects: Show projects where admin is manager, head manager, assigned to admin, or created by admin
         const adminProjects = allProjects.filter((project: any) => {
           const isCreatedByAdmin = project.created_by === this.currentAdminEmail || 
                                     project.created_by === this.currentAdminId ||
                                     project.created_by_id === this.currentAdminId;
           const isAssignedToAdmin = project.manager_id === this.currentAdminId;
+          const isAssignedTo = project.assigned_to === this.currentAdminId;
           const isHeadManager = project.head_manager_id === this.currentAdminId;
           // Show projects where admin is assigned or created
-          return isCreatedByAdmin || isAssignedToAdmin || isHeadManager;
+          return isCreatedByAdmin || isAssignedToAdmin || isAssignedTo || isHeadManager;
         });
 
         if (adminProjects.length === 0) {
