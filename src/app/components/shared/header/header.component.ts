@@ -7,6 +7,9 @@ import { ToastNotificationService } from '../../../services/toast-notification.s
 import { ConfirmationModalService } from '../../../services/confirmation-modal.service';
 import { filter, interval, Subscription } from 'rxjs';
 
+import { UserService } from '../../../services/user.service'; // Import UserService
+import { environment } from 'src/environments/environment'; // Import environment
+
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
@@ -49,13 +52,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   };
 
   constructor(
-    public auth: AuthService, 
+    public auth: AuthService,
     private router: Router,
     private notificationService: NotificationService,
     private adminService: AdminService,
+    private userService: UserService, // Inject UserService
     private toastService: ToastNotificationService,
     private confirmationService: ConfirmationModalService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.checkMobileView();
@@ -64,13 +68,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe((event: any) => {
         this.updatePageTitle(event.url);
       });
-    
+
     this.updatePageTitle(this.router.url);
     this.loadNotifications();
     this.loadUnreadCount();
     this.loadUserName();
     this.loadProfilePicture();
-    
+
     // Refresh notifications every 30 seconds
     this.refreshSubscription = interval(30000).subscribe(() => {
       this.loadNotifications();
@@ -165,17 +169,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
   updatePageTitle(url: string): void {
     const route = url.split('?')[0].split('#')[0];
     let title = this.routeTitles[route] || 'Dashboard';
-    
+
     // For head managers on create-project route, show "Projects"
     if (route === '/create-project' && this.auth.getRole()?.toLowerCase() === 'head manager') {
       title = 'Projects';
     }
-    
+
     // For head managers on dashboard route, show "Select Team Leads"
     if (route === '/head-manager' || (route === '/dashboard' && this.auth.getRole()?.toLowerCase() === 'head manager')) {
       title = 'Select Team Leads';
     }
-    
+
     this.pageTitle = title;
   }
 
@@ -199,19 +203,19 @@ export class HeaderComponent implements OnInit, OnDestroy {
   loadUserName(): void {
     const userId = this.auth.getUserId();
     const userEmail = this.auth.getEmail();
-    
+
     // First try to get name from token
     const tokenName = this.auth.getName();
     if (tokenName) {
       this.userName = tokenName;
       return;
     }
-    
+
     // If not in token, fetch from API
     if (userId || userEmail) {
       this.adminService.getUsers().subscribe({
         next: (users) => {
-          const currentUser = users.find((u: any) => 
+          const currentUser = users.find((u: any) =>
             (userId && u.id === userId) || (userEmail && u.email === userEmail)
           );
           if (currentUser && currentUser.name) {
@@ -233,17 +237,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.userName) {
       return this.userName;
     }
-    
+
     // Try to get name from token
     const tokenName = this.auth.getName();
     if (tokenName) {
       return tokenName;
     }
-    
+
     // Final fallback to role
     const role = this.auth.getRole();
     if (!role) return 'User';
-    
+
     // Map role to display name
     const roleLower = role.toLowerCase();
     if (roleLower === 'manager') {
@@ -279,7 +283,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   goToDashboard(): void {
     const role = this.auth.getRole();
     const roleLower = role?.toLowerCase();
-    
+
     // Navigate to role-specific dashboard
     if (roleLower === 'admin') {
       this.router.navigate(['/admin-dashboard']);
@@ -429,13 +433,28 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.adminService.uploadFile(file).subscribe({
       next: (response) => {
         if (response.success && response.file) {
-          // Store profile picture URL (you may want to save this to user profile in database)
-          this.profilePictureUrl = response.file.path;
-          // Save to localStorage for now (you can update this to save to database)
+          // Construct full URL if needed
+          let profilePath = response.file.path;
+          this.profilePictureUrl = this.getFullProfileUrl(profilePath);
+
+          // Save to localStorage immediately for UI responsiveness
           if (this.profilePictureUrl) {
             localStorage.setItem('profilePicture', this.profilePictureUrl);
           }
-          this.toastService.show('Profile picture updated successfully', 'success');
+
+          // Persist to database
+          this.userService.updateProfile({
+            name: this.userName, // Keep existing name
+            profile_picture: this.profilePictureUrl // Save full URL or relative path depending on strategy, here simpler to save what we show
+          }).subscribe({
+            next: () => {
+              this.toastService.show('Profile picture updated successfully', 'success');
+            },
+            error: (err) => {
+              console.error('Failed to save profile picture to database:', err);
+              // Don't show error to user since upload succeeded and UI is updated
+            }
+          });
         }
       },
       error: (err) => {
@@ -445,30 +464,52 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   loadProfilePicture(): void {
-    // Load from localStorage (you can update this to load from database)
-    const savedPicture = localStorage.getItem('profilePicture');
-    if (savedPicture) {
-      this.profilePictureUrl = savedPicture;
-    } else {
-      // Try to get from user data
-      const userId = this.auth.getUserId();
-      if (userId) {
-        this.adminService.getUsers().subscribe({
+    // Try to get from user data from API first for source of truth
+    const userId = this.auth.getUserId();
+    if (userId) {
+      this.adminService.getUsers().subscribe({
         next: (users) => {
           const currentUser = users.find((u: any) => u.id === userId);
           if (currentUser && currentUser.profile_picture) {
-            this.profilePictureUrl = currentUser.profile_picture;
+            this.profilePictureUrl = this.getFullProfileUrl(currentUser.profile_picture);
             if (this.profilePictureUrl) {
               localStorage.setItem('profilePicture', this.profilePictureUrl);
             }
+          } else {
+            // Fallback to localStorage if not in DB (legacy support)
+            const savedPicture = localStorage.getItem('profilePicture');
+            if (savedPicture) {
+              this.profilePictureUrl = savedPicture;
+            }
           }
         },
-          error: () => {
-            // Silently fail
+        error: () => {
+          // Fallback to localStorage on error
+          const savedPicture = localStorage.getItem('profilePicture');
+          if (savedPicture) {
+            this.profilePictureUrl = savedPicture;
           }
-        });
+        }
+      });
+    } else {
+      // Fallback to localStorage if no user ID
+      const savedPicture = localStorage.getItem('profilePicture');
+      if (savedPicture) {
+        this.profilePictureUrl = savedPicture;
       }
     }
+  }
+
+  // Helper to ensure profile URL is absolute if it's a relative path from our backend
+  getFullProfileUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http')) return path; // Already absolute
+
+    // Construct absolute URL using environment apiBase
+    // Assume apiBase doesn't end with slash and path starts with slash or not
+    const base = environment.apiBase.replace(/\/$/, ''); // Remove trailing slash if any
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
   }
 }
 

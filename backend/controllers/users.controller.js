@@ -3,34 +3,34 @@ const bcrypt = require('bcryptjs');
 
 // Get all users
 async function getAllUsers(req, res) {
-    try {
-        // Return all users for all roles to show in assigned_to dropdown across all portals
-        const [rows] = await db.query('SELECT * FROM users ORDER BY role, email');
-        res.json(rows);
-    } catch (error) {
-        console.error('Error fetching users:', error);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
+  try {
+    // Return all users for all roles to show in assigned_to dropdown across all portals
+    const [rows] = await db.query('SELECT * FROM users ORDER BY role, email');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 }
 
 // Create new user (admin only)
 async function createUser(req, res) {
   try {
     const { email, password, role = 'Engineer', contact_number, name } = req.body;
-    
+
     // Validate required fields
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
-    
+
     if (!name || name.trim() === '') {
       return res.status(400).json({ success: false, message: 'Name is required' });
     }
-    
+
     if (!contact_number || contact_number.trim() === '') {
       return res.status(400).json({ success: false, message: 'Contact number is required' });
     }
-    
+
     // Validate contact number contains only digits
     if (!/^\d+$/.test(contact_number.trim())) {
       return res.status(400).json({ success: false, message: 'Contact number must contain only numbers' });
@@ -80,11 +80,11 @@ async function updateUserInfo(req, res) {
     if (!email || !role || !contact_number || contact_number.trim() === '') {
       return res.status(400).json({ success: false, message: "Email, role, and contact number are required" });
     }
-    
+
     if (!name || name.trim() === '') {
       return res.status(400).json({ success: false, message: "Name is required" });
     }
-    
+
     // Validate contact number contains only digits
     if (!/^\d+$/.test(contact_number.trim())) {
       return res.status(400).json({ success: false, message: 'Contact number must contain only numbers' });
@@ -273,10 +273,10 @@ async function notifySelectedManagers(req, res) {
       // Don't fail the request if notification creation fails
     }
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: `Notifications sent to ${notifications.length} manager(s)`,
-      notifications 
+      notifications
     });
   } catch (error) {
     console.error('Error notifying selected managers:', error);
@@ -523,6 +523,47 @@ async function removeEmployeeFromManager(req, res) {
   }
 }
 
+// Update user profile (self-update)
+async function updateUserProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { name, contact_number, profile_picture } = req.body;
+
+    // Validate required fields
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+
+    // Validate contact number contains only digits if provided
+    if (contact_number && !/^\d+$/.test(contact_number.trim())) {
+      return res.status(400).json({ success: false, message: 'Contact number must contain only numbers' });
+    }
+
+    const updates = ['name = ?'];
+    const params = [name.trim()];
+
+    if (contact_number !== undefined) {
+      updates.push('contact_number = ?');
+      params.push(contact_number.trim() || null);
+    }
+
+    if (profile_picture !== undefined) {
+      updates.push('profile_picture = ?');
+      params.push(profile_picture);
+    }
+
+    params.push(userId);
+
+    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
+    await db.query(query, params);
+
+    res.json({ success: true, message: 'Profile updated successfully' });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
+  }
+}
+
 module.exports = {
   getAllUsers,
   createUser,
@@ -536,5 +577,6 @@ module.exports = {
   getTeamMembers,
   getHeadManagerTeam,
   assignEmployeeToManager,
-  removeEmployeeFromManager
+  removeEmployeeFromManager,
+  updateUserProfile
 };

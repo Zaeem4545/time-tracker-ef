@@ -16,7 +16,7 @@ const buildApi = (path: string) => {
 export class UserService {
   private apiUrl = buildApi('users');
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private http: HttpClient, private auth: AuthService) { }
 
   private getHeaders() {
     return {
@@ -32,5 +32,9 @@ export class UserService {
 
   updateRole(userId: number, role: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/${userId}/role`, { role }, this.getHeaders());
+  }
+
+  updateProfile(data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/profile`, data, this.getHeaders());
   }
 }
