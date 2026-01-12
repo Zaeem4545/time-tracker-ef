@@ -172,18 +172,74 @@ export class EmployeeDashboardComponent implements OnInit {
   }
 
   loadProjects() {
+    // First load time entries to find projects user has worked on
+    this.adminService.getTimeEntries().subscribe({
+      next: (timeEntries) => {
+        // Get project IDs where user has logged time
+        const workedOnProjectIds = new Set<number>();
+        timeEntries.forEach((entry: any) => {
+          if (entry.user_id === this.currentUserId && entry.project_id) {
+            workedOnProjectIds.add(entry.project_id);
+          }
+        });
+
+        // Now load projects and filter
+        this.adminService.getProjects().subscribe(projects => {
+          // Filter projects: show only those assigned to user, created by user, or worked on by user
+          const relevantProjects = projects.filter((project: any) => {
+            // Check if assigned to user
+            const isAssigned = project.manager_id === this.currentUserId;
+            // Check if created by user
+            const isCreated = project.created_by === this.currentUserEmail ||
+                            project.created_by === this.currentUserId ||
+                            project.created_by_id === this.currentUserId;
+            // Check if worked on by user
+            const isWorkedOn = workedOnProjectIds.has(project.id);
+            
+            return isAssigned || isCreated || isWorkedOn;
+          });
+
+          this.projects = relevantProjects;
+          this.allProjects = relevantProjects;
+          this.totalProjects = relevantProjects.length;
+          this.myProjects = relevantProjects.filter((p: any) => p.manager_id === this.currentUserId).length;
+          
+          // Get 5 most recent projects
+          this.recentProjects = relevantProjects
+            .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
+            .slice(0, 5);
+          
+          // After projects load, load tasks from relevant projects
+          this.loadEmployeeTasks();
+        });
+      },
+      error: (err) => {
+        console.error('Error loading time entries for projects:', err);
+        // Fallback: load projects without time entry check
+        this.loadProjectsFallback();
+      }
+    });
+  }
+
+  loadProjectsFallback() {
     this.adminService.getProjects().subscribe(projects => {
-      // Show all projects (not filtered)
-      this.projects = projects;
-      this.totalProjects = projects.length;
-      this.myProjects = projects.filter((p: any) => p.manager_id === this.currentUserId).length;
+      // Filter projects: show only those assigned to user or created by user
+      const relevantProjects = projects.filter((project: any) => {
+        return project.manager_id === this.currentUserId ||
+               project.created_by === this.currentUserEmail ||
+               project.created_by === this.currentUserId ||
+               project.created_by_id === this.currentUserId;
+      });
+
+      this.projects = relevantProjects;
+      this.allProjects = relevantProjects;
+      this.totalProjects = relevantProjects.length;
+      this.myProjects = relevantProjects.filter((p: any) => p.manager_id === this.currentUserId).length;
       
-      // Get 5 most recent projects
-      this.recentProjects = projects
+      this.recentProjects = relevantProjects
         .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
         .slice(0, 5);
       
-      // After projects load, load all tasks from all projects
       this.loadEmployeeTasks();
     });
   }
@@ -193,10 +249,112 @@ export class EmployeeDashboardComponent implements OnInit {
       this.employeeTasks = [];
       this.totalTasks = 0;
       this.recentTasks = [];
+      this.allTasks = [];
       return;
     }
     
-    // Load all tasks from all projects (both assigned and not assigned)
+    // First get time entries to find tasks user has worked on
+    this.adminService.getTimeEntries().subscribe({
+      next: (timeEntries) => {
+        // Get task names where user has logged time
+        const workedOnTaskNames = new Set<string>();
+        timeEntries.forEach((entry: any) => {
+          if (entry.user_id === this.currentUserId && entry.task_name) {
+            workedOnTaskNames.add(entry.task_name.toLowerCase());
+          }
+        });
+
+        // Load tasks from relevant projects only
+        const allTasks: any[] = [];
+        let loadedProjects = 0;
+        const projectIdsArray = this.projects.map((p: any) => p.id);
+        
+        if (projectIdsArray.length === 0) {
+          this.employeeTasks = [];
+          this.totalTasks = 0;
+          this.recentTasks = [];
+          this.allTasks = [];
+          return;
+        }
+        
+        projectIdsArray.forEach((projectId) => {
+          this.adminService.getTasks(projectId).subscribe({
+            next: (tasks) => {
+              // Filter tasks: show only tasks assigned to user, created by user, or worked on by user
+              const relevantTasks = tasks.filter((task: any) => {
+                const isAssignedToEmployee = task.assigned_to === this.currentUserId;
+                const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
+                                             task.created_by === this.currentUserId ||
+                                             task.created_by_id === this.currentUserId;
+                const hasWorkedOn = task.title && workedOnTaskNames.has(task.title.toLowerCase());
+                
+                return isAssignedToEmployee || isCreatedByCurrentUser || hasWorkedOn;
+              });
+              
+              allTasks.push(...relevantTasks);
+              loadedProjects++;
+              
+              if (loadedProjects === projectIdsArray.length) {
+                // Normalize status values and determine task type
+                this.employeeTasks = allTasks.map((task: any) => {
+                  const isAssignedToEmployee = task.assigned_to === this.currentUserId;
+                  const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
+                                               task.created_by === this.currentUserId ||
+                                               task.created_by_id === this.currentUserId;
+                  
+                  let taskType = 'assigned';
+                  if (isCreatedByCurrentUser) {
+                    taskType = 'created_by_me';
+                  } else if (isAssignedToEmployee && task.assigned_by) {
+                    taskType = 'assigned_by_user';
+                  } else if (isAssignedToEmployee) {
+                    taskType = 'assigned';
+                  }
+                  
+                  return {
+                    ...task,
+                    status: task.status === 'in_progress' ? 'in-progress' : task.status,
+                    taskType: taskType
+                  };
+                });
+                
+                this.allTasks = this.employeeTasks;
+                this.totalTasks = this.employeeTasks.length;
+                
+                // Get 5 most recent tasks
+                this.recentTasks = this.employeeTasks
+                  .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
+                  .slice(0, 5);
+              }
+            },
+            error: (err) => {
+              console.error(`Error loading tasks for project ${projectId}:`, err);
+              loadedProjects++;
+              if (loadedProjects === projectIdsArray.length) {
+                this.employeeTasks = allTasks.map((task: any) => ({
+                  ...task,
+                  status: task.status === 'in_progress' ? 'in-progress' : task.status,
+                  taskType: task.assigned_to === this.currentUserId ? 'assigned' : 'created_by_me'
+                }));
+                this.allTasks = this.employeeTasks;
+                this.totalTasks = this.employeeTasks.length;
+                this.recentTasks = this.employeeTasks
+                  .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
+                  .slice(0, 5);
+              }
+            }
+          });
+        });
+      },
+      error: (err) => {
+        console.error('Error loading time entries for tasks:', err);
+        // Fallback: load tasks without time entry check
+        this.loadEmployeeTasksFallback();
+      }
+    });
+  }
+
+  loadEmployeeTasksFallback() {
     const allTasks: any[] = [];
     let loadedProjects = 0;
     const projectIdsArray = this.projects.map((p: any) => p.id);
@@ -205,44 +363,32 @@ export class EmployeeDashboardComponent implements OnInit {
       this.employeeTasks = [];
       this.totalTasks = 0;
       this.recentTasks = [];
+      this.allTasks = [];
       return;
     }
     
     projectIdsArray.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Add all tasks from this project (assigned and not assigned)
-          allTasks.push(...tasks);
+          // Filter tasks: show only tasks assigned to user or created by user
+          const relevantTasks = tasks.filter((task: any) => {
+            return task.assigned_to === this.currentUserId ||
+                   task.created_by === this.currentUserEmail ||
+                   task.created_by === this.currentUserId ||
+                   task.created_by_id === this.currentUserId;
+          });
+          
+          allTasks.push(...relevantTasks);
           loadedProjects++;
           
           if (loadedProjects === projectIdsArray.length) {
-            // Normalize status values and determine task type
-            this.employeeTasks = allTasks.map((task: any) => {
-              const isAssignedToEmployee = task.assigned_to === this.currentUserId;
-              // Check if created by current user (could be email or ID)
-              const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
-                                           task.created_by === this.currentUserId ||
-                                           task.created_by_id === this.currentUserId;
-              
-              let taskType = 'not_assigned';
-              if (isCreatedByCurrentUser) {
-                taskType = 'created_by_me';
-              } else if (isAssignedToEmployee && task.assigned_by) {
-                taskType = 'assigned_by_user';
-              } else if (isAssignedToEmployee) {
-                taskType = 'assigned';
-              }
-              
-              return {
-                ...task,
-                status: task.status === 'in_progress' ? 'in-progress' : task.status,
-                taskType: taskType
-              };
-            });
-            
+            this.employeeTasks = allTasks.map((task: any) => ({
+              ...task,
+              status: task.status === 'in_progress' ? 'in-progress' : task.status,
+              taskType: task.assigned_to === this.currentUserId ? 'assigned' : 'created_by_me'
+            }));
+            this.allTasks = this.employeeTasks;
             this.totalTasks = this.employeeTasks.length;
-            
-            // Get 5 most recent tasks
             this.recentTasks = this.employeeTasks
               .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
               .slice(0, 5);
@@ -255,8 +401,9 @@ export class EmployeeDashboardComponent implements OnInit {
             this.employeeTasks = allTasks.map((task: any) => ({
               ...task,
               status: task.status === 'in_progress' ? 'in-progress' : task.status,
-              taskType: task.assigned_to === this.currentUserId ? 'assigned' : 'not_assigned'
+              taskType: task.assigned_to === this.currentUserId ? 'assigned' : 'created_by_me'
             }));
+            this.allTasks = this.employeeTasks;
             this.totalTasks = this.employeeTasks.length;
             this.recentTasks = this.employeeTasks
               .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())

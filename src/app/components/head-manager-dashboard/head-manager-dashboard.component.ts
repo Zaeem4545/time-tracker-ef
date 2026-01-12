@@ -318,13 +318,16 @@ export class HeadManagerDashboardComponent implements OnInit {
               allProjects.forEach((project: any) => {
                 this.adminService.getTasks(project.id).subscribe({
                   next: (tasks) => {
-                    // Filter tasks: created by head manager, worked on by head manager, or assigned by admin
+                    // Filter tasks: created by head manager, assigned to head manager, or worked on by head manager
                     tasks.forEach((task: any) => {
-                      const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase();
+                      const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase() ||
+                                                     task.created_by === headManagerEmail ||
+                                                     task.created_by === this.currentUserId ||
+                                                     task.created_by_id === this.currentUserId;
+                      const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
                       const isWorkedOn = this.workedOnTaskNames.has(task.title?.toLowerCase());
-                      const isAssignedByAdmin = task.assigned_by && this.adminEmails.has(task.assigned_by.toLowerCase());
                       
-                      if (isCreatedByHeadManager || isWorkedOn || isAssignedByAdmin) {
+                      if (isCreatedByHeadManager || isAssignedToHeadManager || isWorkedOn) {
                         taskMap.set(task.id, task);
                       }
                     });
@@ -355,9 +358,18 @@ export class HeadManagerDashboardComponent implements OnInit {
             relevantProjects.forEach((project: any) => {
               this.adminService.getTasks(project.id).subscribe({
                 next: (tasks) => {
-                  // Include all tasks from relevant projects (since the project itself is relevant)
+                  // Filter tasks: show only tasks assigned to head manager, created by head manager, or worked on by head manager
                   tasks.forEach((task: any) => {
-                    taskMap.set(task.id, task);
+                    const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase() ||
+                                                   task.created_by === headManagerEmail ||
+                                                   task.created_by === this.currentUserId ||
+                                                   task.created_by_id === this.currentUserId;
+                    const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
+                    const isWorkedOn = this.workedOnTaskNames.has(task.title?.toLowerCase());
+                    
+                    if (isCreatedByHeadManager || isAssignedToHeadManager || isWorkedOn) {
+                      taskMap.set(task.id, task);
+                    }
                   });
                   loadedProjects++;
                   
