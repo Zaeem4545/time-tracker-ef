@@ -24,11 +24,11 @@
             </td>
           </tr>
           <tr *ngFor="let member of teamMembers" class="user-row">
-            <td>{{ member.id }}</td>
-            <td>{{ member.name || '-' }}</td>
-            <td>{{ member.email }}</td>
-            <td>{{ member.contact_number || '-' }}</td>
-            <td class="role-cell">
+            <td data-label="ID">{{ member.id }}</td>
+            <td data-label="Name">{{ member.name || '-' }}</td>
+            <td data-label="Email">{{ member.email }}</td>
+            <td data-label="Contact Number">{{ member.contact_number || '-' }}</td>
+            <td class="role-cell" data-label="Role">
               <span class="role-text">{{ member.role | roleDisplay }}</span>
             </td>
           </tr>
@@ -41,12 +41,13 @@
       <div *ngIf="teamGroups.length === 0" style="text-align: center; padding: 2rem; color: #666;">
         No team members found. Please select managers from the dashboard.
       </div>
-      
+
       <div *ngFor="let teamGroup of teamGroups" class="team-group" style="margin-bottom: 2rem;">
-        <h3 class="team-title" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: #f5f5f5; border-left: 4px solid #007bff; color: #333; font-size: 1.1rem; font-weight: 600;">
+        <h3 class="team-title"
+          style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: #f5f5f5; border-left: 4px solid #007bff; color: #333; font-size: 1.1rem; font-weight: 600;">
           Team {{ teamGroup.selectionOrder }} - Manager: {{ teamGroup.manager.email }} (ID: {{ teamGroup.manager.id }})
         </h3>
-        
+
         <table class="expertflow-table">
           <thead>
             <tr>
@@ -60,15 +61,15 @@
           <tbody>
             <!-- Team Lead row -->
             <tr class="user-row manager-row" style="background-color: #e3f2fd;">
-              <td>{{ teamGroup.manager.id }}</td>
-              <td><strong>{{ teamGroup.manager.name || '-' }}</strong></td>
-              <td><strong>{{ teamGroup.manager.email }}</strong></td>
-              <td>{{ teamGroup.manager.contact_number || '-' }}</td>
-              <td class="role-cell">
+              <td data-label="ID">{{ teamGroup.manager.id }}</td>
+              <td data-label="Name"><strong>{{ teamGroup.manager.name || '-' }}</strong></td>
+              <td data-label="Email"><strong>{{ teamGroup.manager.email }}</strong></td>
+              <td data-label="Contact Number">{{ teamGroup.manager.contact_number || '-' }}</td>
+              <td class="role-cell" data-label="Role">
                 <span class="role-text" style="font-weight: 600;">{{ teamGroup.manager.role | titlecase }}</span>
               </td>
             </tr>
-            
+
             <!-- Employees rows -->
             <tr *ngIf="teamGroup.employees.length === 0" class="no-results">
               <td colspan="5" style="text-align: center; padding: 1rem; color: #999; font-style: italic;">
@@ -76,11 +77,11 @@
               </td>
             </tr>
             <tr *ngFor="let employee of teamGroup.employees" class="user-row employee-row">
-              <td>{{ employee.id }}</td>
-              <td>{{ employee.name || '-' }}</td>
-              <td>{{ employee.email }}</td>
-              <td>{{ employee.contact_number || '-' }}</td>
-              <td class="role-cell">
+              <td data-label="ID">{{ employee.id }}</td>
+              <td data-label="Name">{{ employee.name || '-' }}</td>
+              <td data-label="Email">{{ employee.email }}</td>
+              <td data-label="Contact Number">{{ employee.contact_number || '-' }}</td>
+              <td class="role-cell" data-label="Role">
                 <span class="role-text">{{ employee.role | titlecase }}</span>
               </td>
             </tr>

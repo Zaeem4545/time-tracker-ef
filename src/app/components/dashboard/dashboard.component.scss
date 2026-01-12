@@ -23,13 +23,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(255, 255, 255, 0.05) 10px,
-    rgba(255, 255, 255, 0.05) 20px
-  );
+  background: repeating-linear-gradient(45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.05) 10px,
+      rgba(255, 255, 255, 0.05) 20px);
   pointer-events: none;
 }
 
@@ -60,6 +58,7 @@
     transform: translateY(-20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -70,11 +69,11 @@
   .welcome-banner {
     padding: 1.5rem;
   }
-  
+
   .welcome-name {
     font-size: 2rem;
   }
-  
+
   .welcome-back {
     font-size: 0.9rem;
   }
@@ -83,7 +82,7 @@
 // Summary Metrics
 .summary-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -179,14 +178,14 @@
 // Projects Grid
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
 }
 
 // Tasks Grid
 .tasks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
 }
 
@@ -210,7 +209,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 0.75rem;
-  padding-right: 70px; // Reserve space for action buttons (2 buttons + gap)
+  padding-right: 130px; // Reserve space for action buttons (approx 4 buttons)
 }
 
 .card-title {
@@ -235,6 +234,7 @@
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -471,33 +471,33 @@
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .metric-card {
     padding: 1rem;
   }
-  
+
   .metric-value {
     font-size: 1.75rem;
   }
-  
+
   .section-container {
     padding: 1rem;
   }
-  
+
   .project-card,
   .task-card {
     padding: 1rem;
   }
-  
+
   // Card header - adjust padding for mobile buttons
   .card-header {
     padding-right: 65px; // Slightly less padding on mobile
   }
-  
+
   .action-buttons {
     flex-wrap: wrap;
     gap: 0.5rem;
-    
+
     .btn-expertflow.btn-icon {
       width: 32px;
       height: 32px;
@@ -505,29 +505,29 @@
       margin-bottom: 0.25rem;
     }
   }
-  
+
   .task-modal-content {
     width: 95% !important;
     max-width: 95% !important;
   }
-  
+
   .task-modal-header {
     padding: 1rem;
-    
+
     h3 {
       font-size: 1.1rem;
     }
   }
-  
+
   .task-modal-body {
     padding: 1rem;
   }
-  
+
   .task-modal-footer {
     padding: 1rem;
     flex-direction: column;
     gap: 0.5rem;
-    
+
     button {
       width: 100%;
     }
@@ -538,18 +538,18 @@
   .dashboard-container {
     padding: 0.75rem;
   }
-  
+
   .metric-card {
     flex-direction: column;
     text-align: center;
     padding: 1rem;
   }
-  
+
   .metric-icon {
     width: 48px;
     height: 48px;
   }
-  
+
   .metric-value {
     font-size: 1.5rem;
   }

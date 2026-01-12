@@ -13,7 +13,8 @@
     <div class="metric-card" (click)="openProjectsModal()" style="cursor: pointer;">
       <div class="metric-icon projects-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 4H4C2.9 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V8C22 6.9 21.1 6 20 6H12L10 4Z" stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M10 4H4C2.9 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H20C21.1 22 22 21.1 22 20V8C22 6.9 21.1 6 20 6H12L10 4Z"
+            stroke="#1976d2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </div>
       <div class="metric-content">
@@ -26,8 +27,9 @@
     <div class="metric-card" (click)="openTasksModal()" style="cursor: pointer;">
       <div class="metric-icon tasks-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 11L12 14L22 4" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M21 12V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 11L12 14L22 4" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M21 12V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3H16" stroke="#4caf50"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </div>
       <div class="metric-content">
@@ -39,8 +41,8 @@
     <div class="metric-card" (click)="openTimeEntriesModal()" style="cursor: pointer;">
       <div class="metric-icon time-icon">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="12" cy="12" r="10" stroke="#9c27b0" stroke-width="2"/>
-          <path d="M12 6V12L16 14" stroke="#9c27b0" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="10" stroke="#9c27b0" stroke-width="2" />
+          <path d="M12 6V12L16 14" stroke="#9c27b0" stroke-width="2" stroke-linecap="round" />
         </svg>
       </div>
       <div class="metric-content">
@@ -55,40 +57,30 @@
     <h3 class="section-title">Projects</h3>
     <div class="projects-grid">
       <div class="project-card" *ngFor="let project of recentProjects" style="position: relative;">
-        <div *ngIf="isProjectArchived(project)" style="position: absolute; top: 0.5rem; left: 0.5rem; z-index: 10; background: #9c27b0; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+        <div *ngIf="isProjectArchived(project)"
+          style="position: absolute; top: 0.5rem; left: 0.5rem; z-index: 10; background: #9c27b0; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
           Archived
         </div>
-        <div *ngIf="isProjectInMaintenance(project) && !isProjectArchived(project)" style="position: absolute; top: 0.5rem; left: 0.5rem; z-index: 10; background: #607d8b; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
+        <div *ngIf="isProjectInMaintenance(project) && !isProjectArchived(project)"
+          style="position: absolute; top: 0.5rem; left: 0.5rem; z-index: 10; background: #607d8b; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
           Maintenance
         </div>
         <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10;">
-          <button 
-            *ngIf="shouldShowArchiveButton(project)"
-            (click)="archiveProject(project)" 
-            class="btn-circle-icon" 
+          <button *ngIf="shouldShowArchiveButton(project)" (click)="archiveProject(project)" class="btn-circle-icon"
             title="Archive Project"
             style="width: 28px; height: 28px; border-radius: 50%; background: #9c27b0; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             📦
           </button>
-          <button 
-            *ngIf="isProjectInMaintenance(project) && !isProjectArchived(project)"
-            (click)="removeFromMaintenance(project)" 
-            class="btn-circle-icon" 
-            title="Remove from Maintenance"
+          <button *ngIf="isProjectInMaintenance(project) && !isProjectArchived(project)"
+            (click)="removeFromMaintenance(project)" class="btn-circle-icon" title="Remove from Maintenance"
             style="width: 28px; height: 28px; border-radius: 50%; background: #607d8b; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             🔧
           </button>
-          <button 
-            (click)="viewProjectDetails(project)" 
-            class="btn-circle-icon" 
-            title="View Details"
+          <button (click)="viewProjectDetails(project)" class="btn-circle-icon" title="View Details"
             style="width: 28px; height: 28px; border-radius: 50%; background: #1976d2; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             👁️
           </button>
-          <button 
-            (click)="editProject(project)" 
-            class="btn-circle-icon" 
-            title="Edit"
+          <button (click)="editProject(project)" class="btn-circle-icon" title="Edit"
             style="width: 28px; height: 28px; border-radius: 50%; background: #ff9800; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             ✏️
           </button>
@@ -102,9 +94,7 @@
         </div>
         <div class="card-footer">
           <div class="status-dropdown-container">
-            <button 
-              class="status-change-btn" 
-              (click)="toggleProjectStatusDropdown(project.id, $event)"
+            <button class="status-change-btn" (click)="toggleProjectStatusDropdown(project.id, $event)"
               [class.active]="projectStatusDropdownOpen === project.id">
               <span class="status-badge" [ngClass]="getStatusClass(project.status)">
                 {{ getStatusDisplayName(project.status || 'on-track') }}
@@ -112,9 +102,7 @@
               <span class="dropdown-arrow">▼</span>
             </button>
             <div class="status-dropdown-menu" *ngIf="projectStatusDropdownOpen === project.id">
-              <div 
-                class="status-option" 
-                *ngFor="let option of projectStatusOptions"
+              <div class="status-option" *ngFor="let option of projectStatusOptions"
                 (click)="updateProjectStatus(project, option.value)"
                 [class.active]="(project.status || 'on-track') === option.value">
                 <span class="status-dot" [ngClass]="'status-' + option.value"></span>
@@ -136,17 +124,11 @@
     <div class="tasks-grid">
       <div class="task-card" *ngFor="let task of recentTasks" style="position: relative;">
         <div style="position: absolute; top: 0.5rem; right: 0.5rem; display: flex; gap: 0.25rem; z-index: 10;">
-          <button 
-            (click)="viewTaskDetails(task)" 
-            class="btn-circle-icon" 
-            title="View Details"
+          <button (click)="viewTaskDetails(task)" class="btn-circle-icon" title="View Details"
             style="width: 28px; height: 28px; border-radius: 50%; background: #1976d2; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             👁️
           </button>
-          <button 
-            (click)="editTask(task)" 
-            class="btn-circle-icon" 
-            title="Edit"
+          <button (click)="editTask(task)" class="btn-circle-icon" title="Edit"
             style="width: 28px; height: 28px; border-radius: 50%; background: #ff9800; color: white; border: none; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; justify-content: center; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
             ✏️
           </button>
@@ -161,9 +143,7 @@
         </div>
         <div class="card-footer">
           <div class="status-dropdown-container">
-            <button 
-              class="status-change-btn" 
-              (click)="toggleTaskStatusDropdown(task.id, $event)"
+            <button class="status-change-btn" (click)="toggleTaskStatusDropdown(task.id, $event)"
               [class.active]="taskStatusDropdownOpen === task.id">
               <span class="status-badge" [ngClass]="getStatusClass(task.status)">
                 {{ getStatusDisplayName(task.status || 'pending') }}
@@ -171,9 +151,7 @@
               <span class="dropdown-arrow">▼</span>
             </button>
             <div class="status-dropdown-menu" *ngIf="taskStatusDropdownOpen === task.id">
-              <div 
-                class="status-option" 
-                *ngFor="let option of taskStatusOptions"
+              <div class="status-option" *ngFor="let option of taskStatusOptions"
                 (click)="updateTaskStatus(task, option.value)"
                 [class.active]="(task.status || 'pending') === option.value || (task.status === 'in_progress' && option.value === 'in-progress')">
                 <span class="status-dot" [ngClass]="'status-' + option.value"></span>
@@ -200,45 +178,69 @@
     <div class="task-modal-body">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Project ID:</label>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Project
+            ID:</label>
           <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.id }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Name:</label>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Name:</label>
           <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.name }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.description || 'Not provided' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedProjectForDetails.description || 'Not provided'
+            }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedProjectForDetails.status || 'on-track') }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedProjectForDetails.status ||
+            'on-track') }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start Date:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.start_date) || 'Not set' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Start
+            Date:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.start_date)
+            || 'Not set' }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End Date:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.end_date) || 'Not set' }}</span>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">End
+            Date:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedProjectForDetails.end_date) ||
+            'Not set' }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedProjectForDetails.allocated_time) || 'Not provided' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated
+            Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{
+            formatAllocatedTime(selectedProjectForDetails.allocated_time) || 'Not provided' }}</span>
         </div>
         <div *ngIf="selectedProjectForDetails.allocated_time">
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Remaining Allocated Time:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ getRemainingAllocatedTime(selectedProjectForDetails) || formatAllocatedTime(selectedProjectForDetails.allocated_time) }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Remaining
+            Allocated Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getRemainingAllocatedTime(selectedProjectForDetails) ||
+            formatAllocatedTime(selectedProjectForDetails.allocated_time) }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned by:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ getAssignedByNameForProject(selectedProjectForDetails) || 'Not assigned' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned
+            by:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getAssignedByNameForProject(selectedProjectForDetails) ||
+            'Not assigned' }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
-          <div *ngIf="selectedProjectForDetails.attachment && selectedProjectForDetails.attachment.trim() !== ''; else noAttachment">
-            <a [href]="selectedProjectForDetails.attachment" target="_blank" style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0;">
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Attachment:</label>
+          <div
+            *ngIf="selectedProjectForDetails.attachment && selectedProjectForDetails.attachment.trim() !== ''; else noAttachment">
+            <a [href]="selectedProjectForDetails.attachment" target="_blank"
+              style="color: #1976d2; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f5f5f5; border-radius: 4px; border: 1px solid #e0e0e0;">
               <span style="font-size: 1.2rem;">📎</span>
               <span>{{ getAttachmentFileName(selectedProjectForDetails.attachment) }}</span>
               <span style="font-size: 0.75rem; color: #666; margin-left: 0.5rem;">(Click to open)</span>
@@ -250,7 +252,9 @@
         </div>
         <ng-container *ngIf="getProjectCustomFields(selectedProjectForDetails)">
           <div *ngFor="let customField of getProjectCustomFields(selectedProjectForDetails) | keyvalue">
-            <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+            <label
+              style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{
+              formatCustomFieldKey(customField.key) }}:</label>
             <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
           </div>
         </ng-container>
@@ -259,22 +263,15 @@
       <!-- Comments Section -->
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
         <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Comments</h4>
-        
+
         <!-- Add Comment Form -->
         <div style="margin-bottom: 1.5rem;">
-          <textarea 
-            [(ngModel)]="newProjectComment" 
-            placeholder="Write a comment..."
+          <textarea [(ngModel)]="newProjectComment" placeholder="Write a comment..."
             style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
-            (keydown.enter)="$event.preventDefault(); addProjectComment()"
-          ></textarea>
+            (keydown.enter)="$event.preventDefault(); addProjectComment()"></textarea>
           <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
-            <button 
-              (click)="addProjectComment()" 
-              [disabled]="!newProjectComment.trim() || loadingProjectComments"
-              class="btn-expertflow btn-primary"
-              style="padding: 0.5rem 1.5rem; font-size: 0.875rem;"
-            >
+            <button (click)="addProjectComment()" [disabled]="!newProjectComment.trim() || loadingProjectComments"
+              class="btn-expertflow btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.875rem;">
               Post Comment
             </button>
           </div>
@@ -285,10 +282,12 @@
           <div *ngIf="loadingProjectComments" style="text-align: center; padding: 2rem; color: #666;">
             Loading comments...
           </div>
-          <div *ngIf="!loadingProjectComments && projectComments.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+          <div *ngIf="!loadingProjectComments && projectComments.length === 0"
+            style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
             No comments yet. Be the first to comment!
           </div>
-          <div *ngFor="let comment of projectComments" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
+          <div *ngFor="let comment of projectComments"
+            style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
               <div>
                 <div style="font-weight: 600; color: #333; font-size: 0.875rem;">
@@ -299,48 +298,34 @@
                 </div>
               </div>
               <div *ngIf="isOwnProjectComment(comment)" style="display: flex; gap: 0.5rem;">
-                <button 
-                  *ngIf="editingProjectCommentId !== comment.id"
-                  (click)="startEditingProjectComment(comment)"
+                <button *ngIf="editingProjectCommentId !== comment.id" (click)="startEditingProjectComment(comment)"
                   style="background: #2196F3; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
-                  title="Edit comment"
-                >
+                  title="Edit comment">
                   ✏️
                 </button>
-                <button 
-                  *ngIf="editingProjectCommentId !== comment.id"
-                  (click)="deleteProjectComment(comment)"
+                <button *ngIf="editingProjectCommentId !== comment.id" (click)="deleteProjectComment(comment)"
                   style="background: #f44336; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
-                  title="Delete comment"
-                >
+                  title="Delete comment">
                   🗑️
                 </button>
               </div>
             </div>
             <div *ngIf="editingProjectCommentId === comment.id" style="margin-bottom: 0.5rem;">
-              <textarea 
-                [(ngModel)]="editingProjectCommentText"
-                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
-              ></textarea>
+              <textarea [(ngModel)]="editingProjectCommentText"
+                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"></textarea>
               <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
-                <button 
-                  (click)="cancelEditingProjectComment()"
-                  class="btn-expertflow"
-                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                >
+                <button (click)="cancelEditingProjectComment()" class="btn-expertflow"
+                  style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                   Cancel
                 </button>
-                <button 
-                  (click)="saveProjectComment(comment)"
-                  [disabled]="!editingProjectCommentText.trim()"
-                  class="btn-expertflow btn-primary"
-                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                >
+                <button (click)="saveProjectComment(comment)" [disabled]="!editingProjectCommentText.trim()"
+                  class="btn-expertflow btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                   Save
                 </button>
               </div>
             </div>
-            <div *ngIf="editingProjectCommentId !== comment.id" style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
+            <div *ngIf="editingProjectCommentId !== comment.id"
+              style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
               {{ comment.comment }}
             </div>
           </div>
@@ -348,7 +333,8 @@
       </div>
     </div>
     <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-      <button (click)="openProjectHistoryModal()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+      <button (click)="openProjectHistoryModal()" class="btn-expertflow btn-primary"
+        style="background: #1976d2; color: white;">
         📋 Task History
       </button>
       <button (click)="closeProjectDetailsModal()" class="btn-expertflow">Close</button>
@@ -366,40 +352,60 @@
     <div class="task-modal-body">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Task ID:</label>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Task
+            ID:</label>
           <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.id }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Title:</label>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Title:</label>
           <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.title }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.description || 'Not provided' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Description:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ selectedTaskForDetails.description || 'Not provided'
+            }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedTaskForDetails.status || 'pending') }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Status:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getStatusDisplayName(selectedTaskForDetails.status ||
+            'pending') }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned To:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ getAssignedUserName(selectedTaskForDetails.assigned_to, selectedTaskForDetails) || 'Not assigned' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned
+            To:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getAssignedUserName(selectedTaskForDetails.assigned_to,
+            selectedTaskForDetails) || 'Not assigned' }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned By:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ getUserNameFromEmail(selectedTaskForDetails.assigned_by) || 'Not assigned' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Assigned
+            By:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ getUserNameFromEmail(selectedTaskForDetails.assigned_by) ||
+            'Not assigned' }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Due Date:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedTaskForDetails.due_date) || 'Not set' }}</span>
+          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Due
+            Date:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatDateForDisplay(selectedTaskForDetails.due_date) ||
+            'Not set' }}</span>
         </div>
         <div>
-          <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated Time:</label>
-          <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedTaskForDetails.allocated_time) || 'Not provided' }}</span>
+          <label
+            style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">Allocated
+            Time:</label>
+          <span style="color: #333; font-size: 0.875rem;">{{ formatAllocatedTime(selectedTaskForDetails.allocated_time)
+            || 'Not provided' }}</span>
         </div>
         <ng-container *ngIf="getTaskCustomFields(selectedTaskForDetails)">
           <div *ngFor="let customField of getTaskCustomFields(selectedTaskForDetails) | keyvalue">
-            <label style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{ formatCustomFieldKey(customField.key) }}:</label>
+            <label
+              style="font-weight: 600; color: #666; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">{{
+              formatCustomFieldKey(customField.key) }}:</label>
             <span style="color: #333; font-size: 0.875rem;">{{ customField.value }}</span>
           </div>
         </ng-container>
@@ -408,22 +414,15 @@
       <!-- Comments Section -->
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
         <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Comments</h4>
-        
+
         <!-- Add Comment Form -->
         <div style="margin-bottom: 1.5rem;">
-          <textarea 
-            [(ngModel)]="newTaskComment" 
-            placeholder="Write a comment..."
+          <textarea [(ngModel)]="newTaskComment" placeholder="Write a comment..."
             style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
-            (keydown.enter)="$event.preventDefault(); addTaskComment()"
-          ></textarea>
+            (keydown.enter)="$event.preventDefault(); addTaskComment()"></textarea>
           <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
-            <button 
-              (click)="addTaskComment()" 
-              [disabled]="!newTaskComment.trim() || loadingTaskComments"
-              class="btn-expertflow btn-primary"
-              style="padding: 0.5rem 1.5rem; font-size: 0.875rem;"
-            >
+            <button (click)="addTaskComment()" [disabled]="!newTaskComment.trim() || loadingTaskComments"
+              class="btn-expertflow btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.875rem;">
               Post Comment
             </button>
           </div>
@@ -434,10 +433,12 @@
           <div *ngIf="loadingTaskComments" style="text-align: center; padding: 2rem; color: #666;">
             Loading comments...
           </div>
-          <div *ngIf="!loadingTaskComments && taskComments.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+          <div *ngIf="!loadingTaskComments && taskComments.length === 0"
+            style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
             No comments yet. Be the first to comment!
           </div>
-          <div *ngFor="let comment of taskComments" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
+          <div *ngFor="let comment of taskComments"
+            style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
               <div>
                 <div style="font-weight: 600; color: #333; font-size: 0.875rem;">
@@ -448,48 +449,34 @@
                 </div>
               </div>
               <div *ngIf="isOwnTaskComment(comment)" style="display: flex; gap: 0.5rem;">
-                <button 
-                  *ngIf="editingTaskCommentId !== comment.id"
-                  (click)="startEditingTaskComment(comment)"
+                <button *ngIf="editingTaskCommentId !== comment.id" (click)="startEditingTaskComment(comment)"
                   style="background: #2196F3; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
-                  title="Edit comment"
-                >
+                  title="Edit comment">
                   ✏️
                 </button>
-                <button 
-                  *ngIf="editingTaskCommentId !== comment.id"
-                  (click)="deleteTaskComment(comment)"
+                <button *ngIf="editingTaskCommentId !== comment.id" (click)="deleteTaskComment(comment)"
                   style="background: #f44336; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
-                  title="Delete comment"
-                >
+                  title="Delete comment">
                   🗑️
                 </button>
               </div>
             </div>
             <div *ngIf="editingTaskCommentId === comment.id" style="margin-bottom: 0.5rem;">
-              <textarea 
-                [(ngModel)]="editingTaskCommentText"
-                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
-              ></textarea>
+              <textarea [(ngModel)]="editingTaskCommentText"
+                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"></textarea>
               <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
-                <button 
-                  (click)="cancelEditingTaskComment()"
-                  class="btn-expertflow"
-                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                >
+                <button (click)="cancelEditingTaskComment()" class="btn-expertflow"
+                  style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                   Cancel
                 </button>
-                <button 
-                  (click)="saveTaskComment(comment)"
-                  [disabled]="!editingTaskCommentText.trim()"
-                  class="btn-expertflow btn-primary"
-                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                >
+                <button (click)="saveTaskComment(comment)" [disabled]="!editingTaskCommentText.trim()"
+                  class="btn-expertflow btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                   Save
                 </button>
               </div>
             </div>
-            <div *ngIf="editingTaskCommentId !== comment.id" style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
+            <div *ngIf="editingTaskCommentId !== comment.id"
+              style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
               {{ comment.comment }}
             </div>
           </div>
@@ -497,7 +484,8 @@
       </div>
     </div>
     <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
-      <button (click)="openTaskHistoryModalForTask()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+      <button (click)="openTaskHistoryModalForTask()" class="btn-expertflow btn-primary"
+        style="background: #1976d2; color: white;">
         📋 Task History
       </button>
       <button (click)="closeTaskDetailsModal()" class="btn-expertflow">Close</button>
@@ -513,22 +501,29 @@
       <button (click)="closeEditProjectModal()" class="task-modal-close">×</button>
     </div>
     <div class="task-modal-body" style="flex: 1; overflow-y: auto;">
-      <div *ngIf="editProjectError" style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
+      <div *ngIf="editProjectError"
+        style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
         {{ editProjectError }}
       </div>
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Project Name *</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Project
+            Name *</label>
           <input type="text" [(ngModel)]="editProjectData.name" placeholder="Project Name" required
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description *</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description
+            *</label>
           <textarea [(ngModel)]="editProjectData.description" placeholder="Description" required
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Customer *</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Customer
+            *</label>
           <select [(ngModel)]="editProjectData.customer_id" required
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
             <option [value]="null">-- Select Customer --</option>
@@ -539,18 +534,23 @@
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div>
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Start Date</label>
+            <label
+              style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Start
+              Date</label>
             <input type="date" [(ngModel)]="editProjectData.start_date"
               style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
           </div>
           <div>
-            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">End Date</label>
+            <label
+              style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">End
+              Date</label>
             <input type="date" [(ngModel)]="editProjectData.end_date"
               style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
           </div>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
           <select [(ngModel)]="editProjectData.status"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
             <option value="on-track">On Track</option>
@@ -562,12 +562,16 @@
           </select>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated
+            Time (HH:MM:SS)</label>
           <input type="text" [(ngModel)]="editProjectData.allocated_time" placeholder="HH:MM:SS"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned to</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned
+            to</label>
           <select [(ngModel)]="editProjectData.assigned_to"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
             <option [value]="null">Select User</option>
@@ -577,10 +581,12 @@
           </select>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Attachment</label>
-          <input type="file" (change)="onAttachmentChange($event)" 
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Attachment</label>
+          <input type="file" (change)="onAttachmentChange($event)"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
-          <div *ngIf="selectedProjectForEdit && selectedProjectForEdit.attachment" style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">
+          <div *ngIf="selectedProjectForEdit && selectedProjectForEdit.attachment"
+            style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">
             Current: {{ getAttachmentFileName(selectedProjectForEdit.attachment) }}
           </div>
         </div>
@@ -589,21 +595,14 @@
       <!-- Comments Section -->
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
         <h4 style="margin-bottom: 1rem; color: #333; font-size: 1rem; font-weight: 600;">Comments</h4>
-        
+
         <!-- Add Comment Form -->
         <div style="margin-bottom: 1.5rem;">
-          <textarea 
-            [(ngModel)]="newProjectComment" 
-            placeholder="Write a comment..."
-            style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
-          ></textarea>
+          <textarea [(ngModel)]="newProjectComment" placeholder="Write a comment..."
+            style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"></textarea>
           <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
-            <button 
-              (click)="addProjectComment()" 
-              [disabled]="!newProjectComment.trim() || loadingProjectComments"
-              class="btn-expertflow btn-primary"
-              style="padding: 0.5rem 1.5rem; font-size: 0.875rem;"
-            >
+            <button (click)="addProjectComment()" [disabled]="!newProjectComment.trim() || loadingProjectComments"
+              class="btn-expertflow btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.875rem;">
               Post Comment
             </button>
           </div>
@@ -614,10 +613,12 @@
           <div *ngIf="loadingProjectComments" style="text-align: center; padding: 2rem; color: #666;">
             Loading comments...
           </div>
-          <div *ngIf="!loadingProjectComments && projectComments.length === 0" style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
+          <div *ngIf="!loadingProjectComments && projectComments.length === 0"
+            style="text-align: center; padding: 2rem; color: #999; font-size: 0.875rem;">
             No comments yet. Be the first to comment!
           </div>
-          <div *ngFor="let comment of projectComments" style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
+          <div *ngFor="let comment of projectComments"
+            style="margin-bottom: 1.5rem; padding: 1rem; background: #f9f9f9; border-radius: 4px; border-left: 3px solid #1976d2;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
               <div>
                 <div style="font-weight: 600; color: #333; font-size: 0.875rem;">
@@ -628,56 +629,44 @@
                 </div>
               </div>
               <div *ngIf="isOwnProjectComment(comment)" style="display: flex; gap: 0.5rem;">
-                <button 
-                  *ngIf="editingProjectCommentId !== comment.id"
-                  (click)="startEditingProjectComment(comment)"
+                <button *ngIf="editingProjectCommentId !== comment.id" (click)="startEditingProjectComment(comment)"
                   style="background: #2196F3; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
-                  title="Edit comment"
-                >
+                  title="Edit comment">
                   ✏️
                 </button>
-                <button 
-                  *ngIf="editingProjectCommentId !== comment.id"
-                  (click)="deleteProjectComment(comment)"
+                <button *ngIf="editingProjectCommentId !== comment.id" (click)="deleteProjectComment(comment)"
                   style="background: #f44336; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; padding: 0;"
-                  title="Delete comment"
-                >
+                  title="Delete comment">
                   🗑️
                 </button>
               </div>
             </div>
             <div *ngIf="editingProjectCommentId === comment.id" style="margin-bottom: 0.5rem;">
-              <textarea 
-                [(ngModel)]="editingProjectCommentText"
-                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"
-              ></textarea>
+              <textarea [(ngModel)]="editingProjectCommentText"
+                style="width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; font-family: inherit; resize: vertical;"></textarea>
               <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem;">
-                <button 
-                  (click)="cancelEditingProjectComment()"
-                  class="btn-expertflow"
-                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                >
+                <button (click)="cancelEditingProjectComment()" class="btn-expertflow"
+                  style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                   Cancel
                 </button>
-                <button 
-                  (click)="saveProjectComment(comment)"
-                  [disabled]="!editingProjectCommentText.trim()"
-                  class="btn-expertflow btn-primary"
-                  style="padding: 0.5rem 1rem; font-size: 0.875rem;"
-                >
+                <button (click)="saveProjectComment(comment)" [disabled]="!editingProjectCommentText.trim()"
+                  class="btn-expertflow btn-primary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                   Save
                 </button>
               </div>
             </div>
-            <div *ngIf="editingProjectCommentId !== comment.id" style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
+            <div *ngIf="editingProjectCommentId !== comment.id"
+              style="color: #333; font-size: 0.875rem; white-space: pre-wrap; word-wrap: break-word;">
               {{ comment.comment }}
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0; background: #fff; flex-shrink: 0;">
-      <button (click)="openProjectHistoryModal()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+    <div class="task-modal-footer"
+      style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0; background: #fff; flex-shrink: 0;">
+      <button (click)="openProjectHistoryModal()" class="btn-expertflow btn-primary"
+        style="background: #1976d2; color: white;">
         📋 Project History
       </button>
       <div style="display: flex; gap: 0.5rem;">
@@ -696,22 +685,26 @@
       <button (click)="closeEditTaskModal()" class="task-modal-close">×</button>
     </div>
     <div class="task-modal-body" style="flex: 1; overflow-y: auto;">
-      <div *ngIf="editTaskError" style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
+      <div *ngIf="editTaskError"
+        style="background: #ffebee; color: #c62828; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #c62828; font-size: 0.875rem;">
         {{ editTaskError }}
       </div>
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Task Title *</label>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Task
+            Title *</label>
           <input type="text" [(ngModel)]="editTaskData.title" placeholder="Task Title" required
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Description</label>
           <textarea [(ngModel)]="editTaskData.description" placeholder="Description"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem; min-height: 80px; resize: vertical;"></textarea>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Status</label>
           <select [(ngModel)]="editTaskData.status"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
             <option value="pending">Pending</option>
@@ -720,7 +713,9 @@
           </select>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned To</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Assigned
+            To</label>
           <select [(ngModel)]="editTaskData.assigned_to"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;">
             <option [value]="null">-- Not Assigned --</option>
@@ -730,19 +725,24 @@
           </select>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Due Date</label>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Due
+            Date</label>
           <input type="date" [(ngModel)]="editTaskData.due_date"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
         <div>
-          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated Time (HH:MM:SS)</label>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #666; font-size: 0.875rem;">Allocated
+            Time (HH:MM:SS)</label>
           <input type="text" [(ngModel)]="editTaskData.allocated_time" placeholder="HH:MM:SS"
             style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.875rem;" />
         </div>
       </div>
     </div>
-    <div class="task-modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0; background: #fff; flex-shrink: 0;">
-      <button (click)="openTaskHistoryModalForTask()" class="btn-expertflow btn-primary" style="background: #1976d2; color: white;">
+    <div class="task-modal-footer"
+      style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0; background: #fff; flex-shrink: 0;">
+      <button (click)="openTaskHistoryModalForTask()" class="btn-expertflow btn-primary"
+        style="background: #1976d2; color: white;">
         📋 Task History
       </button>
       <div style="display: flex; gap: 0.5rem;">
@@ -807,11 +807,11 @@
             <h4 class="card-title">{{ task.title }}</h4>
             <span class="card-date" *ngIf="task.due_date">{{ formatDate(task.due_date) }}</span>
           </div>
-        <p class="card-description">{{ task.description || 'No description' }}</p>
-        <div class="task-type-badge" [ngClass]="getTaskTypeClass(task)" style="margin-bottom: 0.75rem;">
-          {{ getTaskTypeLabel(task) }}
-        </div>
-        <div class="card-footer">
+          <p class="card-description">{{ task.description || 'No description' }}</p>
+          <div class="task-type-badge" [ngClass]="getTaskTypeClass(task)" style="margin-bottom: 0.75rem;">
+            {{ getTaskTypeLabel(task) }}
+          </div>
+          <div class="card-footer">
             <span class="status-badge" [ngClass]="getStatusClass(task.status)">
               {{ getStatusDisplayName(task.status || 'pending') }}
             </span>
@@ -830,7 +830,8 @@
       <button (click)="closeTimeEntriesModal()" class="task-modal-close">×</button>
     </div>
     <div class="task-modal-body">
-      <div *ngIf="allTimeEntries.length === 0" class="empty-state" style="padding: 2rem; text-align: center; color: #999;">
+      <div *ngIf="allTimeEntries.length === 0" class="empty-state"
+        style="padding: 2rem; text-align: center; color: #999;">
         <p>No time entries found</p>
       </div>
       <div *ngIf="allTimeEntries.length > 0" class="time-entries-list">
@@ -847,12 +848,12 @@
           </thead>
           <tbody>
             <tr *ngFor="let entry of allTimeEntries">
-              <td>{{ formatDate(entry.date || entry.entry_date || entry.start_time) }}</td>
-              <td>{{ entry.project_name || 'N/A' }}</td>
-              <td>{{ entry.task_name || 'N/A' }}</td>
-              <td>{{ calculateTimeSpent(entry) }}</td>
-              <td>{{ getWorkedBy(entry) }}</td>
-              <td>{{ entry.description || '-' }}</td>
+              <td data-label="Date">{{ formatDate(entry.date || entry.entry_date || entry.start_time) }}</td>
+              <td data-label="Project">{{ entry.project_name || 'N/A' }}</td>
+              <td data-label="Task">{{ entry.task_name || 'N/A' }}</td>
+              <td data-label="Time Spent">{{ calculateTimeSpent(entry) }}</td>
+              <td data-label="Worked By">{{ getWorkedBy(entry) }}</td>
+              <td data-label="Description">{{ entry.description || '-' }}</td>
             </tr>
           </tbody>
         </table>

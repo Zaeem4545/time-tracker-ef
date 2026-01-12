@@ -4,11 +4,12 @@
       <span class="arrow">►</span>
       <span class="title-text">Create User</span>
     </h2>
-    
+
     <div class="search-bar">
       <div class="search-input">
         <span class="search-icon">🔍</span>
-        <input type="text" placeholder="Search users by ID, Name or Email" [(ngModel)]="searchTerm" (input)="onSearchChange()" />
+        <input type="text" placeholder="Search users by ID, Name or Email" [(ngModel)]="searchTerm"
+          (input)="onSearchChange()" />
       </div>
       <button (click)="toggleCreateUserForm()" class="create-btn">
         {{ showCreateUserForm ? '− Hide Form' : '+ Create User' }}
@@ -16,13 +17,20 @@
     </div>
 
     <!-- Create User Form (Expandable) -->
-    <div *ngIf="showCreateUserForm" style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; margin-top: 1rem;">
+    <div *ngIf="showCreateUserForm"
+      style="background: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; margin-top: 1rem;">
       <h4 style="margin-bottom: 1rem; color: #666; font-size: 1rem;">Add New User</h4>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-        <input type="text" placeholder="Name *" [(ngModel)]="newUser.name" required style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
-        <input type="email" placeholder="Email *" [(ngModel)]="newUser.email" required style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
-        <input type="password" placeholder="Password *" [(ngModel)]="newUser.password" required style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
-        <input type="text" placeholder="Contact Number *" [(ngModel)]="newUser.contact_number" (input)="onContactNumberInput($event)" pattern="[0-9]*" required style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+        <input type="text" placeholder="Name *" [(ngModel)]="newUser.name" required
+          style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
+        <input type="email" placeholder="Email *" [(ngModel)]="newUser.email" required
+          style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
+        <input type="password" placeholder="Password *" [(ngModel)]="newUser.password" required
+          style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
+        <input type="text" placeholder="Contact Number *" [(ngModel)]="newUser.contact_number"
+          (input)="onContactNumberInput($event)" pattern="[0-9]*" required
+          style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
         <select [(ngModel)]="newUser.role" style="padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 4px;">
           <option value="Engineer">Engineer</option>
           <option value="manager">Team Lead</option>
@@ -48,57 +56,69 @@
           <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
             No users found matching your search.
           </td>
-      </tr>
+        </tr>
         <tr *ngFor="let user of filteredUsers" class="user-row">
-        <td>{{ user.id }}</td>
-        <td>
-          <span *ngIf="editingUser !== user.id">{{ user.name || '-' }}</span>
-          <input *ngIf="editingUser === user.id" type="text" [(ngModel)]="editUserData[user.id].name" placeholder="Name *" required />
-        </td>
-        <td>
-          <span *ngIf="editingUser !== user.id">{{ user.email }}</span>
-          <input *ngIf="editingUser === user.id" type="email" [(ngModel)]="editUserData[user.id].email" placeholder="Email" />
-        </td>
-        <td>
-          <span *ngIf="editingUser !== user.id">{{ user.contact_number || '-' }}</span>
-          <input *ngIf="editingUser === user.id" type="text" [(ngModel)]="editUserData[user.id].contact_number" (input)="onEditContactNumberInput(user.id, $event)" pattern="[0-9]*" placeholder="Contact Number *" required />
-        </td>
-        <td class="role-cell">
-          <div class="role-content">
-            <span *ngIf="editingUser !== user.id" class="role-text">{{ getRoleDisplayName(user.role) }}</span>
-            <select *ngIf="editingUser === user.id" [(ngModel)]="editUserData[user.id].role">
-            <option value="admin">Admin</option>
-            <option value="head manager">Project Manager</option>
-            <option value="manager">Team Lead</option>
-            <option value="engineer">Engineer</option>
-            </select>
-            <div *ngIf="editingUser !== user.id && editingPassword !== user.id" class="action-buttons">
-              <button (click)="editUser(user)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
-              <button (click)="openPasswordEdit(user.id)" class="btn-expertflow btn-icon" title="Change Password">🔑</button>
-              <button (click)="deleteUser(user.id)" class="btn-expertflow btn-icon btn-delete" title="Delete">🗑️</button>
-            </div>
-            <div *ngIf="editingUser === user.id" class="action-buttons edit-mode">
-              <div *ngIf="errorMessage[user.id]" class="error-message" style="color: #f44336; font-size: 0.75rem; margin-bottom: 0.5rem; width: 100%; padding: 0.5rem; background: #ffebee; border-radius: 4px; border-left: 4px solid #c62828;">
-                {{ errorMessage[user.id] }}
+          <td data-label="ID">{{ user.id }}</td>
+          <td data-label="Name">
+            <span *ngIf="editingUser !== user.id">{{ user.name || '-' }}</span>
+            <input *ngIf="editingUser === user.id" type="text" [(ngModel)]="editUserData[user.id].name"
+              placeholder="Name *" required />
+          </td>
+          <td data-label="Email">
+            <span *ngIf="editingUser !== user.id">{{ user.email }}</span>
+            <input *ngIf="editingUser === user.id" type="email" [(ngModel)]="editUserData[user.id].email"
+              placeholder="Email" />
+          </td>
+          <td data-label="Contact Number">
+            <span *ngIf="editingUser !== user.id">{{ user.contact_number || '-' }}</span>
+            <input *ngIf="editingUser === user.id" type="text" [(ngModel)]="editUserData[user.id].contact_number"
+              (input)="onEditContactNumberInput(user.id, $event)" pattern="[0-9]*" placeholder="Contact Number *"
+              required />
+          </td>
+          <td class="role-cell" data-label="Role">
+            <div class="role-content">
+              <span *ngIf="editingUser !== user.id" class="role-text">{{ getRoleDisplayName(user.role) }}</span>
+              <select *ngIf="editingUser === user.id" [(ngModel)]="editUserData[user.id].role">
+                <option value="admin">Admin</option>
+                <option value="head manager">Project Manager</option>
+                <option value="manager">Team Lead</option>
+                <option value="engineer">Engineer</option>
+              </select>
+              <div *ngIf="editingUser !== user.id && editingPassword !== user.id" class="action-buttons">
+                <button (click)="editUser(user)" class="btn-expertflow btn-icon btn-edit" title="Edit">✏️</button>
+                <button (click)="openPasswordEdit(user.id)" class="btn-expertflow btn-icon"
+                  title="Change Password">🔑</button>
+                <button (click)="deleteUser(user.id)" class="btn-expertflow btn-icon btn-delete"
+                  title="Delete">🗑️</button>
               </div>
-              <button (click)="saveUser(user.id)" class="btn-expertflow btn-primary">💾 Save</button>
-              <button (click)="cancelEdit(user.id)" class="btn-expertflow btn-icon btn-delete">❌</button>
-            </div>
-            <div *ngIf="editingPassword === user.id" class="action-buttons edit-mode">
-              <div class="password-inputs">
-                <input type="password" [(ngModel)]="editPasswordData[user.id].currentPassword" (input)="checkPasswordMatch(user.id)" placeholder="Current Password *" required style="margin-right: 0.5rem; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
-                <input type="password" [(ngModel)]="editPasswordData[user.id].password" (input)="checkPasswordMatch(user.id)" placeholder="New Password *" required style="margin-right: 0.5rem; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
-                <div *ngIf="errorMessage[user.id]" class="error-message" style="color: #f44336; font-size: 0.75rem; margin-top: 0.25rem; width: 100%;">
+              <div *ngIf="editingUser === user.id" class="action-buttons edit-mode">
+                <div *ngIf="errorMessage[user.id]" class="error-message"
+                  style="color: #f44336; font-size: 0.75rem; margin-bottom: 0.5rem; width: 100%; padding: 0.5rem; background: #ffebee; border-radius: 4px; border-left: 4px solid #c62828;">
                   {{ errorMessage[user.id] }}
                 </div>
+                <button (click)="saveUser(user.id)" class="btn-expertflow btn-primary">💾 Save</button>
+                <button (click)="cancelEdit(user.id)" class="btn-expertflow btn-icon btn-delete">❌</button>
               </div>
-              <button (click)="savePassword(user.id)" class="btn-expertflow btn-primary">💾 Save Password</button>
-              <button (click)="cancelPasswordEdit(user.id)" class="btn-expertflow btn-icon btn-delete">❌</button>
+              <div *ngIf="editingPassword === user.id" class="action-buttons edit-mode">
+                <div class="password-inputs">
+                  <input type="password" [(ngModel)]="editPasswordData[user.id].currentPassword"
+                    (input)="checkPasswordMatch(user.id)" placeholder="Current Password *" required
+                    style="margin-right: 0.5rem; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
+                  <input type="password" [(ngModel)]="editPasswordData[user.id].password"
+                    (input)="checkPasswordMatch(user.id)" placeholder="New Password *" required
+                    style="margin-right: 0.5rem; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 4px;" />
+                  <div *ngIf="errorMessage[user.id]" class="error-message"
+                    style="color: #f44336; font-size: 0.75rem; margin-top: 0.25rem; width: 100%;">
+                    {{ errorMessage[user.id] }}
+                  </div>
+                </div>
+                <button (click)="savePassword(user.id)" class="btn-expertflow btn-primary">💾 Save Password</button>
+                <button (click)="cancelPasswordEdit(user.id)" class="btn-expertflow btn-icon btn-delete">❌</button>
+              </div>
             </div>
-          </div>
-        </td>
-      </tr>
+          </td>
+        </tr>
       </tbody>
     </table>
-    </div>
+  </div>
 </div>

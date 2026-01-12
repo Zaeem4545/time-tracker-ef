@@ -379,26 +379,26 @@
             <!-- Projects in this group -->
             <ng-container *ngFor="let project of groupedProjects[groupKey]">
               <tr class="user-row">
-                <td>
+                <td data-label="Name">
                   <span *ngIf="editingProject !== project.id">{{ project.name }}</span>
                   <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].name" placeholder="Project Name" />
                 </td>
-                <td>
+                <td data-label="Description">
                   <span *ngIf="editingProject !== project.id">{{ project.description || '-' }}</span>
                   <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].description" placeholder="Description" />
                 </td>
-                <td>
+                <td data-label="Customer">
                   <span *ngIf="editingProject !== project.id">{{ getCustomerName(project.customer_id, project) || '-' }}</span>
                   <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].customer_id" (change)="onCustomerChange(project.id, editProjectData[project.id].customer_id)">
                     <option value="">Select Customer</option>
                     <option *ngFor="let customer of customers" [value]="customer.id.toString()">{{ customer.name }}</option>
                   </select>
                 </td>
-                <td>
+                <td data-label="Region">
                   <span *ngIf="editingProject !== project.id">{{ project.region || '-' }}</span>
                   <span *ngIf="editingProject === project.id">{{ editProjectData[project.id].region || project.region || '-' }}</span>
                 </td>
-                <td *ngIf="showStatusColumn">
+                <td *ngIf="showStatusColumn" data-label="Status">
                   <div class="status-selector" style="position: relative;">
                     <div class="status-dropdown-trigger" (click)="projectStatusDropdownOpen = (projectStatusDropdownOpen === project.id ? null : project.id)" [class.active]="projectStatusDropdownOpen === project.id">
                       <span class="status-dot status-{{ project.status || 'on-track' }}"></span>
@@ -433,19 +433,19 @@
                     </div>
                   </div>
                 </td>
-                <td>
+                <td data-label="Start Date">
                   <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.start_date) }}</span>
                   <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].start_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
                 </td>
-                <td>
+                <td data-label="End Date">
                   <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.end_date) }}</span>
                   <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].end_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
                 </td>
-                <td>
+                <td data-label="Allocated Time">
                   <span *ngIf="editingProject !== project.id">{{ formatAllocatedTime(project.allocated_time) || '-' }}</span>
                   <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
                 </td>
-                <td>
+                <td data-label="Assigned to">
                   <span *ngIf="editingProject !== project.id">{{ getAssignedUserNameForProject(project.assigned_to, project) || '-' }}</span>
                   <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].assigned_to">
                     <option [ngValue]="null">Select User</option>
@@ -454,15 +454,15 @@
                     </option>
                   </select>
                 </td>
-                <td>
+                <td data-label="Assigned by">
                   <span>{{ getAssignedByNameForProject(project) || '-' }}</span>
                 </td>
                 <!-- Dynamic Custom Fields Columns -->
-                <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
+                <td *ngFor="let fieldName of getAllProjectCustomFieldNames()" [attr.data-label]="formatCustomFieldKey(fieldName)">
                   <span *ngIf="editingProject !== project.id">{{ getProjectCustomFieldValue(project, fieldName) || '-' }}</span>
                   <input *ngIf="editingProject === project.id" type="text" [ngModel]="(editProjectData[project.id].custom_fields?.[fieldName] !== undefined && editProjectData[project.id].custom_fields?.[fieldName] !== null) ? editProjectData[project.id].custom_fields[fieldName] : getProjectCustomFieldValue(project, fieldName)" (ngModelChange)="editProjectData[project.id].custom_fields = editProjectData[project.id].custom_fields || {}; editProjectData[project.id].custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
                 </td>
-                <td class="role-cell" style="width: 200px; min-width: 200px; text-align: center;">
+                <td class="role-cell" data-label="Actions" style="width: 200px; min-width: 200px; text-align: center;">
                   <div class="role-content" style="display: flex; justify-content: center; align-items: center;">
                     <div *ngIf="editingProject !== project.id" class="project-menu-container" style="position: relative; display: inline-block;">
                       <button class="task-menu-btn" (click)="toggleProjectMenu(project.id, $event)" title="Menu">
@@ -541,7 +541,7 @@
                             <span *ngIf="editingTask !== task.id">{{ task.description || '-' }}</span>
                             <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.description" />
                           </td>
-                          <td *ngIf="showTaskStatusColumn">
+                          <td *ngIf="showTaskStatusColumn" data-label="Status">
                             <span *ngIf="editingTask !== task.id">{{ (task.status === 'in-progress' || task.status === 'in_progress') ? 'In Progress' : (task.status | titlecase) }}</span>
                             <select *ngIf="editingTask === task.id" [(ngModel)]="task.status">
                               <option value="pending">Pending</option>
@@ -569,11 +569,11 @@
                             <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
                           </td>
                           <!-- Dynamic Custom Fields Columns -->
-                          <td *ngFor="let fieldName of getAllTaskCustomFieldNames()">
+                          <td *ngFor="let fieldName of getAllTaskCustomFieldNames()" [attr.data-label]="formatCustomFieldKey(fieldName)">
                             <span *ngIf="editingTask !== task.id">{{ getTaskCustomFieldValue(task, fieldName) || '-' }}</span>
                             <input *ngIf="editingTask === task.id" type="text" [ngModel]="getTaskCustomFieldValue(task, fieldName)" (ngModelChange)="task.custom_fields = task.custom_fields || {}; task.custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
                           </td>
-                          <td style="text-align: center;">
+                          <td data-label="Actions" style="text-align: center;">
                             <div *ngIf="editingTask !== task.id" class="task-menu-container" style="position: relative; display: inline-block;">
                               <button class="task-menu-btn" (click)="toggleTaskMenu(task.id, $event)" title="Menu">
                                 <span>⋮</span>
@@ -626,22 +626,22 @@
           </tr>
           <ng-container *ngFor="let project of filteredProjects">
           <tr class="user-row">
-            <td>
+            <td data-label="Name">
               <span *ngIf="editingProject !== project.id">{{ project.name }}</span>
               <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].name" placeholder="Project Name" />
             </td>
-            <td>
+            <td data-label="Description">
               <span *ngIf="editingProject !== project.id">{{ project.description || '-' }}</span>
               <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].description" placeholder="Description" />
             </td>
-            <td>
-              <span *ngIf="editingProject !== project.id">{{ getCustomerName(project.customer_id) || '-' }}</span>
-              <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].customer_id" (change)="onCustomerChange(project.id, editProjectData[project.id].customer_id)">
-                <option value="">Select Customer</option>
-                <option *ngFor="let customer of customers" [value]="customer.id.toString()">{{ customer.name }}</option>
-              </select>
-            </td>
-            <td>
+                <td data-label="Customer">
+                  <span *ngIf="editingProject !== project.id">{{ getCustomerName(project.customer_id) || '-' }}</span>
+                  <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].customer_id" (change)="onCustomerChange(project.id, editProjectData[project.id].customer_id)">
+                    <option value="">Select Customer</option>
+                    <option *ngFor="let customer of customers" [value]="customer.id.toString()">{{ customer.name }}</option>
+                  </select>
+                </td>
+            <td data-label="Region">
               <span *ngIf="editingProject !== project.id">{{ project.region || '-' }}</span>
               <span *ngIf="editingProject === project.id">{{ editProjectData[project.id].region || project.region || '-' }}</span>
             </td>
@@ -680,19 +680,19 @@
                 </div>
               </div>
             </td>
-            <td>
+            <td data-label="Start Date">
               <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.start_date) }}</span>
               <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].start_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
             </td>
-            <td>
+            <td data-label="End Date">
               <span *ngIf="editingProject !== project.id">{{ formatDateForDisplay(project.end_date) }}</span>
               <input *ngIf="editingProject === project.id" type="date" [(ngModel)]="editProjectData[project.id].end_date" (change)="editProjectError[project.id] = validateDates(editProjectData[project.id].start_date, editProjectData[project.id].end_date)" />
             </td>
-            <td>
+            <td data-label="Allocated Time">
               <span *ngIf="editingProject !== project.id">{{ formatAllocatedTime(project.allocated_time) || '-' }}</span>
               <input *ngIf="editingProject === project.id" type="text" [(ngModel)]="editProjectData[project.id].allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
             </td>
-            <td>
+            <td data-label="Assigned to">
               <span *ngIf="editingProject !== project.id">{{ getAssignedUserNameForProject(project.assigned_to, project) || '-' }}</span>
               <select *ngIf="editingProject === project.id" [(ngModel)]="editProjectData[project.id].assigned_to">
                 <option [value]="null">Select User</option>
@@ -701,15 +701,15 @@
                 </option>
               </select>
             </td>
-            <td>
+            <td data-label="Assigned by">
               <span>{{ getAssignedByNameForProject(project) || '-' }}</span>
             </td>
             <!-- Dynamic Custom Fields Columns -->
-            <td *ngFor="let fieldName of getAllProjectCustomFieldNames()">
+            <td *ngFor="let fieldName of getAllProjectCustomFieldNames()" [attr.data-label]="formatCustomFieldKey(fieldName)">
               <span *ngIf="editingProject !== project.id">{{ getProjectCustomFieldValue(project, fieldName) || '-' }}</span>
               <input *ngIf="editingProject === project.id" type="text" [ngModel]="(editProjectData[project.id].custom_fields?.[fieldName] !== undefined && editProjectData[project.id].custom_fields?.[fieldName] !== null) ? editProjectData[project.id].custom_fields[fieldName] : getProjectCustomFieldValue(project, fieldName)" (ngModelChange)="editProjectData[project.id].custom_fields = editProjectData[project.id].custom_fields || {}; editProjectData[project.id].custom_fields[fieldName] = $event" placeholder="{{ formatCustomFieldKey(fieldName) }}" />
             </td>
-            <td class="role-cell" style="width: 200px; min-width: 200px; text-align: center;">
+            <td class="role-cell" data-label="Actions" style="width: 200px; min-width: 200px; text-align: center;">
               <div class="role-content" style="display: flex; justify-content: center; align-items: center;">
                 <div *ngIf="editingProject !== project.id" class="project-menu-container" style="position: relative; display: inline-block;">
                   <button class="task-menu-btn" (click)="toggleProjectMenu(project.id, $event)" title="Menu">
@@ -783,15 +783,15 @@
                   </thead>
                   <tbody>
                     <tr *ngFor="let task of projectTasks[project.id]" class="user-row">
-                      <td>
+                      <td data-label="Title">
                         <span *ngIf="editingTask !== task.id">{{ task.title }}</span>
                         <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.title" />
                       </td>
-                      <td>
+                      <td data-label="Description">
                         <span *ngIf="editingTask !== task.id">{{ task.description || '-' }}</span>
                         <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.description" />
                       </td>
-                      <td *ngIf="showTaskStatusColumn">
+                      <td *ngIf="showTaskStatusColumn" data-label="Status">
                         <span *ngIf="editingTask !== task.id">{{ task.status | titlecase }}</span>
                         <select *ngIf="editingTask === task.id" [(ngModel)]="task.status">
                           <option value="pending">Pending</option>
@@ -799,22 +799,22 @@
                           <option value="completed">Completed</option>
                         </select>
                       </td>
-                      <td>
+                      <td data-label="Assigned To">
                         <span *ngIf="editingTask !== task.id">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
                         <select *ngIf="editingTask === task.id && !isEmployee" [(ngModel)]="task.assigned_to">
-                          <option value="">Select Employee (Optional)</option>
-                          <option *ngFor="let employee of getEmployees(task)" [value]="employee.id">{{ employee.email }} ({{ employee.role | titlecase }})</option>
+                          <option value="">Select Engineer (Optional)</option>
+                          <option *ngFor="let employee of getEmployees(task)" [value]="employee.id">{{ employee.email }} ({{ employee.role | roleDisplay }})</option>
                         </select>
                         <span *ngIf="editingTask === task.id && isEmployee">{{ getAssignedUserName(task.assigned_to, task) || '-' }}</span>
                       </td>
-                      <td>
+                      <td data-label="Assigned By">
                         <span>{{ getUserNameFromEmail(task.assigned_by) || '-' }}</span>
                       </td>
-                      <td>
+                      <td data-label="Due Date">
                         <span *ngIf="editingTask !== task.id">{{ formatDateForDisplay(task.due_date) }}</span>
                         <input *ngIf="editingTask === task.id" type="date" [(ngModel)]="task.due_date" />
                       </td>
-                      <td>
+                      <td data-label="Allocated Time">
                         <span *ngIf="editingTask !== task.id">{{ formatAllocatedTime(task.allocated_time) || '-' }}</span>
                         <input *ngIf="editingTask === task.id" type="text" [(ngModel)]="task.allocated_time" placeholder="HH:MM:SS" style="width: 100px;" />
                       </td>
