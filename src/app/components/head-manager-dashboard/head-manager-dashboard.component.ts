@@ -13,7 +13,6 @@ import { AuthService } from '../../services/auth.service';
 export class HeadManagerDashboardComponent implements OnInit {
   private currentUserId: number | null = null;
   private currentUserEmail: string | null = null;
-  private currentUserName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
@@ -161,11 +160,6 @@ export class HeadManagerDashboardComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users || [];
-        // Get current user name for task filtering
-        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
-        if (currentUser) {
-          this.currentUserName = currentUser.name || currentUser.email;
-        }
         // Check welcome message after users are loaded
         this.checkAndShowWelcome();
       },
@@ -314,21 +308,15 @@ export class HeadManagerDashboardComponent implements OnInit {
             relevantProjects.forEach((project: any) => {
               this.adminService.getTasks(project.id).subscribe({
                 next: (tasks) => {
-                  // Filter tasks: show only tasks assigned to head manager or created/assigned by head manager
-                  // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
+                  // Filter tasks: show only tasks assigned to head manager or created by head manager
                   tasks.forEach((task: any) => {
-                    // Check if task was assigned by the head manager (created/assigned by them)
-                    // assigned_by stores the name of the person who assigned/created the task
-                    const isAssignedByHeadManager = task.assigned_by === this.currentUserName ||
-                                                   task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase();
-                    // Check if task was created by head manager (legacy check for created_by field if it exists)
-                    const isCreatedByHeadManager = task.created_by === headManagerEmail ||
+                    const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase() ||
+                                                   task.created_by === headManagerEmail ||
                                                    task.created_by === this.currentUserId ||
                                                    task.created_by_id === this.currentUserId;
-                    // Check if task is assigned to head manager
                     const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
                     
-                    if (isAssignedByHeadManager || isCreatedByHeadManager || isAssignedToHeadManager) {
+                    if (isCreatedByHeadManager || isAssignedToHeadManager) {
                       taskMap.set(task.id, task);
                     }
                   });

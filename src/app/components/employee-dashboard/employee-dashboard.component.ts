@@ -15,7 +15,6 @@ export class EmployeeDashboardComponent implements OnInit {
   employeeTasks: any[] = [];
   currentUserId: number | null = null;
   currentUserEmail: string | null = null;
-  currentUserName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
@@ -227,21 +226,14 @@ export class EmployeeDashboardComponent implements OnInit {
     projectIdsArray.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Filter tasks: show only tasks assigned to user or created/assigned by user
-          // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
+          // Filter tasks: show only tasks assigned to user or created by user
           const relevantTasks = tasks.filter((task: any) => {
-            // Check if task is assigned to employee
             const isAssignedToEmployee = task.assigned_to === this.currentUserId;
-            // Check if task was assigned by the employee (created/assigned by them)
-            // assigned_by stores the name of the person who assigned/created the task
-            const isAssignedByEmployee = task.assigned_by === this.currentUserName ||
-                                        task.assigned_by === this.currentUserEmail;
-            // Check if task was created by employee (legacy check for created_by field if it exists)
             const isCreatedByCurrentUser = task.created_by === this.currentUserEmail || 
                                          task.created_by === this.currentUserId ||
                                          task.created_by_id === this.currentUserId;
             
-            return isAssignedToEmployee || isAssignedByEmployee || isCreatedByCurrentUser;
+            return isAssignedToEmployee || isCreatedByCurrentUser;
           });
           
           allTasks.push(...relevantTasks);

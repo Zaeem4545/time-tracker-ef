@@ -65,7 +65,6 @@ export class AdminDashboardPageComponent implements OnInit {
   // Current admin info
   currentAdminId: number | null = null;
   currentAdminEmail: string | null = null;
-  currentAdminName: string | null = null;
   users: any[] = [];
   showWelcomeMessage = false;
   welcomeUserName = '';
@@ -221,21 +220,14 @@ export class AdminDashboardPageComponent implements OnInit {
         adminProjects.forEach((project: any) => {
           this.adminService.getTasks(project.id).subscribe({
             next: (tasks) => {
-              // Filter tasks: created/assigned by admin OR assigned to admin
-              // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
+              // Filter tasks: created by admin OR assigned to admin
               const adminTasks = tasks.filter((task: any) => {
-                // Check if task was assigned by the admin (created/assigned by them)
-                // assigned_by stores the name of the person who assigned/created the task
-                const isAssignedByAdmin = task.assigned_by === this.currentAdminName ||
-                                         task.assigned_by === this.currentAdminEmail;
-                // Check if task was created by admin (legacy check for created_by field if it exists)
                 const isCreatedByAdmin = task.created_by === this.currentAdminEmail || 
                                          task.created_by === this.currentAdminId ||
                                          task.created_by_id === this.currentAdminId;
-                // Check if task is assigned to admin
                 const isAssignedToAdmin = task.assigned_to === this.currentAdminId;
                 
-                return isAssignedByAdmin || isCreatedByAdmin || isAssignedToAdmin;
+                return isCreatedByAdmin || isAssignedToAdmin;
               });
 
               allTasks.push(...adminTasks);

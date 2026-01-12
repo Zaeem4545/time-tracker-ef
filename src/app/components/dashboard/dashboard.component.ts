@@ -51,7 +51,6 @@ export class DashboardComponent implements OnInit {
   customers: any[] = [];
   managers: any[] = [];
   users: any[] = [];
-  currentUserName: string | null = null;
   
   // Comments
   projectComments: any[] = [];
@@ -209,11 +208,6 @@ export class DashboardComponent implements OnInit {
         this.managers = users.filter((user: any) => 
           user.role && user.role.toLowerCase() === 'manager'
         );
-        // Get current user name for task filtering
-        const currentUser = users.find((u: any) => u.id === this.currentUserId || u.email === this.currentUserEmail);
-        if (currentUser) {
-          this.currentUserName = currentUser.name || currentUser.email;
-        }
       },
       error: (err) => {
         console.error('Error loading users:', err);
@@ -318,31 +312,18 @@ export class DashboardComponent implements OnInit {
     projectIds.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Filter tasks: show only tasks created/assigned by manager or assigned to manager
-          // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
+          // Filter tasks: show only tasks created by manager or assigned to manager
           const managerTasks = tasks.filter((task: any) => {
-            // Check if task was assigned by the manager (created/assigned by them)
-            // assigned_by stores the name of the person who assigned/created the task
-            const isAssignedByManager = task.assigned_by === this.currentUserName ||
-                                        task.assigned_by === managerEmail ||
-                                        task.assigned_by === this.currentUserEmail;
-            // Check if task was created by manager (legacy check for created_by field if it exists)
             const isCreatedByManager = task.created_by === managerEmail || 
                                       task.created_by === this.currentUserId ||
-                                      task.created_by_id === this.currentUserId ||
-                                      task.created_by === this.currentUserEmail;
-            // Check if task is assigned to manager
+                                      task.created_by_id === this.currentUserId;
             const isAssignedToManager = task.assigned_to === this.currentUserId;
             
-            return isAssignedByManager || isCreatedByManager || isAssignedToManager;
+            return isCreatedByManager || isAssignedToManager;
           }).map((task: any) => {
             // Determine task type: created by manager or assigned to manager by others
-            const isAssignedByManager = task.assigned_by === this.currentUserName ||
-                                       task.assigned_by === managerEmail ||
-                                       task.assigned_by === this.currentUserEmail;
-            const isCreatedByManager = task.created_by === managerEmail || 
-                                      task.created_by === this.currentUserId ||
-                                      task.created_by === this.currentUserEmail;
+            const isCreatedByManager = task.created_by === managerEmail || task.created_by === this.currentUserId;
+            const isAssignedByManager = task.assigned_by === managerEmail;
             
             // If created_by is null/empty and assigned_by matches manager, it's created by manager
             // If assigned_by exists and matches manager, it's assigned by manager
