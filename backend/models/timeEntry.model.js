@@ -26,7 +26,9 @@ async function stopTime(id) {
     const startTime = new Date(rows[0].start_time);
     const endTime = new Date();
 
-    const totalTime = Math.floor((endTime - startTime) / 60000); // minutes
+    // Calculate total time in minutes, ensuring it's never negative
+    const totalTimeMs = endTime.getTime() - startTime.getTime();
+    const totalTime = Math.max(0, Math.floor(totalTimeMs / 60000)); // minutes, clamped to 0 minimum
 
     await db.query(
         'UPDATE time_entries SET end_time = ?, total_time = ? WHERE id = ?',

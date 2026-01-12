@@ -464,7 +464,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       const startTime = new Date(this.activeEntry.start_time);
       const updateTimer = () => {
         const now = new Date();
-        this.elapsedTime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+        // Ensure elapsed time is never negative (clamp to 0)
+        this.elapsedTime = Math.max(0, elapsed);
       };
       updateTimer();
       this.timerInterval = setInterval(updateTimer, 1000);
@@ -474,6 +476,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   }
 
   formatTimer(seconds: number): string {
+    // Ensure seconds is never negative (clamp to 0)
+    seconds = Math.max(0, seconds);
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
@@ -994,6 +998,10 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Capture entry ID and elapsed time before showing confirmation dialog
+    const entryId = this.activeEntry.id;
+    const currentElapsedSeconds = Math.max(0, this.elapsedTime);
+
     this.confirmationService.show({
       title: 'Stop Time Tracking',
       message: 'Stop time tracking?',
@@ -1001,17 +1009,21 @@ export class TimesheetComponent implements OnInit, OnDestroy {
       cancelText: 'Cancel'
     }).then((confirmed: boolean) => {
       if (confirmed) {
-        this.adminService.stopTime(this.activeEntry.id).subscribe({
+        // Stop the timer immediately to prevent further updates
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        
+        // Clear active entry immediately for UI responsiveness
+        this.activeEntry = null;
+        this.elapsedTime = 0;
+        
+        // Call backend to stop time
+        this.adminService.stopTime(entryId).subscribe({
           next: (response) => {
             if (response.success) {
               this.toastService.show('Time tracking stopped successfully', 'success');
-              // Clear active entry first
-              this.activeEntry = null;
-              if (this.timerInterval) {
-                clearInterval(this.timerInterval);
-                this.timerInterval = null;
-              }
-              this.elapsedTime = 0;
               
               // Reload entries immediately and again after a short delay to ensure backend has updated
               this.loadTimeEntries();
@@ -1022,6 +1034,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             this.toastService.show('Error stopping time tracking: ' + (err.error?.message || 'Unknown error'), 'error');
+            // Reload active entry if stop failed
+            this.loadActiveTimeEntry();
           }
         });
       }
@@ -1743,7 +1757,9 @@ export class TimesheetComponent implements OnInit, OnDestroy {
           this.activeActivityTimers[key].interval = setInterval(() => {
             if (this.activeActivityTimers[key]) {
               const now = new Date();
-              this.activeActivityTimers[key].elapsedTime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+              const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+              // Ensure elapsed time is never negative (clamp to 0)
+              this.activeActivityTimers[key].elapsedTime = Math.max(0, elapsed);
             }
           }, 1000);
           
@@ -1807,7 +1823,8 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   getActivityElapsedTime(activity: ActivityRow): number {
     const key = this.getActivityKey(activity);
     if (this.activeActivityTimers[key]) {
-      return this.activeActivityTimers[key].elapsedTime;
+      // Ensure elapsed time is never negative (clamp to 0)
+      return Math.max(0, this.activeActivityTimers[key].elapsedTime);
     }
     return 0;
   }
