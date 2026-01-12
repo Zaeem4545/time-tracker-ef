@@ -223,133 +223,24 @@ export class DashboardComponent implements OnInit {
   }
 
   loadProjects(): void {
-    // First load time entries to find projects user has worked on
-    this.adminService.getTimeEntries().subscribe({
-      next: (timeEntries) => {
-        // Get project IDs where user has logged time
-        const workedOnProjectIds = new Set<number>();
-        timeEntries.forEach((entry: any) => {
-          if (entry.user_id === this.currentUserId && entry.project_id) {
-            workedOnProjectIds.add(entry.project_id);
-          }
-        });
-
-        // Now load projects and filter
-        this.adminService.getProjects().subscribe({
-          next: (projects) => {
-            // Filter projects: show only those where manager is assigned, created, or worked on
-            const managerEmail = this.authService.getEmail();
-            const managerProjects: any[] = [];
-            let checkedProjects = 0;
-
-            if (projects.length === 0) {
-              this.totalProjects = 0;
-              this.myProjects = 0;
-              this.allProjects = [];
-              this.recentProjects = [];
-              return;
-            }
-
-            projects.forEach((project: any) => {
-              // Check if manager is assigned to project
-              if (project.manager_id === this.currentUserId) {
-                managerProjects.push(project);
-                checkedProjects++;
-                if (checkedProjects === projects.length) {
-                  this.updateProjectMetrics(managerProjects);
-                }
-                return;
-              }
-
-              // Check if project was created by manager
-              const isCreatedByManager = project.created_by === managerEmail || 
-                                        project.created_by === this.currentUserId ||
-                                        project.created_by_id === this.currentUserId;
-              if (isCreatedByManager) {
-                if (!managerProjects.find(p => p.id === project.id)) {
-                  managerProjects.push(project);
-                }
-                checkedProjects++;
-                if (checkedProjects === projects.length) {
-                  this.updateProjectMetrics(managerProjects);
-                }
-                return;
-              }
-
-              // Check if manager has worked on this project
-              if (workedOnProjectIds.has(project.id)) {
-                if (!managerProjects.find(p => p.id === project.id)) {
-                  managerProjects.push(project);
-                }
-                checkedProjects++;
-                if (checkedProjects === projects.length) {
-                  this.updateProjectMetrics(managerProjects);
-                }
-                return;
-              }
-
-              // Check if manager has tasks in this project
-              this.adminService.getTasks(project.id).subscribe({
-                next: (tasks) => {
-                  // Check if any task is assigned by this manager, created by manager, or assigned to manager
-                  const hasManagerTasks = tasks.some((task: any) => {
-                    // Task assigned by manager (assigned_by matches manager email)
-                    if (task.assigned_by === managerEmail) {
-                      return true;
-                    }
-                    // Task created by manager (if created_by field exists)
-                    if (task.created_by === managerEmail || task.created_by === this.currentUserId) {
-                      return true;
-                    }
-                    // Task assigned to manager
-                    if (task.assigned_to === this.currentUserId) {
-                      return true;
-                    }
-                    return false;
-                  });
-
-                  if (hasManagerTasks && !managerProjects.find(p => p.id === project.id)) {
-                    managerProjects.push(project);
-                  }
-
-                  checkedProjects++;
-                  if (checkedProjects === projects.length) {
-                    this.updateProjectMetrics(managerProjects);
-                  }
-                },
-                error: (err) => {
-                  console.error(`Error loading tasks for project ${project.id}:`, err);
-                  checkedProjects++;
-                  if (checkedProjects === projects.length) {
-                    this.updateProjectMetrics(managerProjects);
-                  }
-                }
-              });
-            });
-          },
-          error: (err) => {
-            console.error('Error loading projects:', err);
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Error loading time entries for projects:', err);
-        // Fallback: load projects without time entry check
-        this.loadProjectsFallback();
-      }
-    });
-  }
-
-  loadProjectsFallback(): void {
+    // Load projects and filter: only show projects created by or assigned to the user
     this.adminService.getProjects().subscribe({
       next: (projects) => {
         const managerEmail = this.authService.getEmail();
+        
+        // Filter projects: show only those created by or assigned to the manager
         const managerProjects = projects.filter((project: any) => {
-          return project.manager_id === this.currentUserId ||
-                 project.created_by === managerEmail ||
-                 project.created_by === this.currentUserId ||
-                 project.created_by_id === this.currentUserId;
+          // Check if manager is assigned to project
+          const isAssigned = project.manager_id === this.currentUserId;
+          
+          // Check if project was created by manager
+          const isCreated = project.created_by === managerEmail || 
+                          project.created_by === this.currentUserId ||
+                          project.created_by_id === this.currentUserId;
+          
+          return isAssigned || isCreated;
         });
+
         this.updateProjectMetrics(managerProjects);
       },
       error: (err) => {
@@ -357,6 +248,7 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
+
 
   updateProjectMetrics(managerProjects: any[]): void {
     // Store all projects for modal
@@ -381,131 +273,23 @@ export class DashboardComponent implements OnInit {
     if (!managerEmail) {
       this.totalTasks = 0;
       this.recentTasks = [];
-      return;
-    }
-
-    // First get time entries to find tasks user has worked on
-    this.adminService.getTimeEntries().subscribe({
-      next: (timeEntries) => {
-        // Get task names where user has logged time
-        const workedOnTaskNames = new Set<string>();
-        const workedOnProjectIds = new Set<number>();
-        timeEntries.forEach((entry: any) => {
-          if (entry.user_id === this.currentUserId) {
-            if (entry.task_name) {
-              workedOnTaskNames.add(entry.task_name.toLowerCase());
-            }
-            if (entry.project_id) {
-              workedOnProjectIds.add(entry.project_id);
-            }
-          }
-        });
-
-        // Now load projects and filter
-        this.adminService.getProjects().subscribe({
-          next: (projects) => {
-            const managerProjectIds = new Set<number>();
-            let checkedProjects = 0;
-
-            if (projects.length === 0) {
-              this.totalTasks = 0;
-              this.allTasks = [];
-              this.recentTasks = [];
-              return;
-            }
-
-            // First, identify which projects manager can work on
-            projects.forEach((project: any) => {
-              // Check if manager is assigned to project
-              if (project.manager_id === this.currentUserId) {
-                managerProjectIds.add(project.id);
-                checkedProjects++;
-                if (checkedProjects === projects.length) {
-                  this.loadTasksFromProjects(Array.from(managerProjectIds), managerEmail, workedOnTaskNames);
-                }
-                return;
-              }
-
-              // Check if project was created by manager
-              const isCreatedByManager = project.created_by === managerEmail || 
-                                        project.created_by === this.currentUserId ||
-                                        project.created_by_id === this.currentUserId;
-              if (isCreatedByManager) {
-                managerProjectIds.add(project.id);
-                checkedProjects++;
-                if (checkedProjects === projects.length) {
-                  this.loadTasksFromProjects(Array.from(managerProjectIds), managerEmail, workedOnTaskNames);
-                }
-                return;
-              }
-
-              // Check if manager has worked on this project
-              if (workedOnProjectIds.has(project.id)) {
-                managerProjectIds.add(project.id);
-                checkedProjects++;
-                if (checkedProjects === projects.length) {
-                  this.loadTasksFromProjects(Array.from(managerProjectIds), managerEmail, workedOnTaskNames);
-                }
-                return;
-              }
-
-              // Check if manager has tasks in this project
-              this.adminService.getTasks(project.id).subscribe({
-                next: (tasks) => {
-                  const hasManagerTasks = tasks.some((task: any) => {
-                    return task.assigned_by === managerEmail || 
-                           task.created_by === managerEmail || 
-                           task.created_by === this.currentUserId ||
-                           task.assigned_to === this.currentUserId;
-                  });
-
-                  if (hasManagerTasks) {
-                    managerProjectIds.add(project.id);
-                  }
-
-                  checkedProjects++;
-                  if (checkedProjects === projects.length) {
-                    this.loadTasksFromProjects(Array.from(managerProjectIds), managerEmail, workedOnTaskNames);
-                  }
-                },
-                error: (err) => {
-                  console.error(`Error loading tasks for project ${project.id}:`, err);
-                  checkedProjects++;
-                  if (checkedProjects === projects.length) {
-                    this.loadTasksFromProjects(Array.from(managerProjectIds), managerEmail, workedOnTaskNames);
-                  }
-                }
-              });
-            });
-          },
-          error: (err) => {
-            console.error('Error loading projects for tasks:', err);
-          }
-        });
-      },
-      error: (err) => {
-        console.error('Error loading time entries for tasks:', err);
-        // Fallback: load tasks without time entry check
-        this.loadTasksFallback();
-      }
-    });
-  }
-
-  loadTasksFallback(): void {
-    const managerEmail = this.authService.getEmail();
-    if (!managerEmail) {
-      this.totalTasks = 0;
-      this.recentTasks = [];
       this.allTasks = [];
       return;
     }
+
+    // Load projects first to get relevant project IDs
     this.adminService.getProjects().subscribe({
       next: (projects) => {
-        const managerProjectIds = projects
-          .filter((p: any) => p.manager_id === this.currentUserId ||
-                            p.created_by === managerEmail ||
-                            p.created_by === this.currentUserId)
-          .map((p: any) => p.id);
+        // Filter projects: only those created by or assigned to manager
+        const managerProjects = projects.filter((project: any) => {
+          const isAssigned = project.manager_id === this.currentUserId;
+          const isCreated = project.created_by === managerEmail || 
+                          project.created_by === this.currentUserId ||
+                          project.created_by_id === this.currentUserId;
+          return isAssigned || isCreated;
+        });
+
+        const managerProjectIds = managerProjects.map((p: any) => p.id);
         this.loadTasksFromProjects(managerProjectIds, managerEmail, new Set<string>());
       },
       error: (err) => {
@@ -528,16 +312,14 @@ export class DashboardComponent implements OnInit {
     projectIds.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Filter tasks: show tasks assigned by manager, created by manager, assigned to manager, or worked on by manager
+          // Filter tasks: show only tasks created by manager or assigned to manager
           const managerTasks = tasks.filter((task: any) => {
-            const isAssignedByManager = task.assigned_by === managerEmail;
             const isCreatedByManager = task.created_by === managerEmail || 
                                       task.created_by === this.currentUserId ||
                                       task.created_by_id === this.currentUserId;
             const isAssignedToManager = task.assigned_to === this.currentUserId;
-            const hasWorkedOn = task.title && workedOnTaskNames.has(task.title.toLowerCase());
             
-            return isAssignedByManager || isCreatedByManager || isAssignedToManager || hasWorkedOn;
+            return isCreatedByManager || isAssignedToManager;
           }).map((task: any) => {
             // Determine task type: created by manager or assigned to manager by others
             const isCreatedByManager = task.created_by === managerEmail || task.created_by === this.currentUserId;

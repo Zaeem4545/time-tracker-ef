@@ -223,11 +223,9 @@ export class HeadManagerDashboardComponent implements OnInit {
         this.adminService.getProjects().subscribe({
           next: (allProjects) => {
             // Filter projects: 
-            // 1. Selected by head manager
+            // 1. Selected by head manager (which means created by head manager)
             // 2. Assigned to head manager (manager_id matches)
             // 3. Created by head manager (selected_by_head_manager_id matches)
-            // 4. Worked on by head manager (from time entries)
-            // 5. Recently created projects (within last 7 days) that aren't selected by any head manager
             const relevantProjects = allProjects.filter((project: any) => {
               // Check if project is selected by this head manager
               const isSelected = selectedProjects.some((sp: any) => sp.id === project.id);
@@ -235,19 +233,8 @@ export class HeadManagerDashboardComponent implements OnInit {
               const isAssigned = project.manager_id === this.currentUserId;
               // Check if project was created by this head manager
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
-              // Check if project was worked on by head manager (from time entries)
-              const isWorkedOn = this.workedOnProjectIds.has(project.id);
-              // Check if project was recently created (within last 7 days) and not selected by any head manager
-              // This helps catch projects created by this head manager before auto-selection was implemented
-              let isRecentlyCreatedUnselected = false;
-              if (project.created_at && !project.selected_by_head_manager_id) {
-                const createdDate = new Date(project.created_at);
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                isRecentlyCreatedUnselected = createdDate >= sevenDaysAgo;
-              }
               
-              return isSelected || isAssigned || isCreatedByHeadManager || isWorkedOn || isRecentlyCreatedUnselected;
+              return isSelected || isAssigned || isCreatedByHeadManager;
             });
             
             this.totalProjects = relevantProjects.length;
@@ -268,13 +255,11 @@ export class HeadManagerDashboardComponent implements OnInit {
         // Fallback: load all projects if getSelectedProjects fails
         this.adminService.getProjects().subscribe({
           next: (projects) => {
-            // Filter to include projects created by head manager, assigned to them, or worked on by them
+            // Filter to include projects created by head manager or assigned to them
             const relevantProjects = projects.filter((project: any) => {
               const isAssigned = project.manager_id === this.currentUserId;
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
-              const isWorkedOn = this.workedOnProjectIds.has(project.id);
-              const hasManagerAssigned = project.manager_id !== null && project.manager_id !== undefined;
-              return isAssigned || isCreatedByHeadManager || isWorkedOn || hasManagerAssigned;
+              return isAssigned || isCreatedByHeadManager;
             });
             
             this.totalProjects = relevantProjects.length;
@@ -312,120 +297,44 @@ export class HeadManagerDashboardComponent implements OnInit {
             const taskMap = new Map<number, any>(); // Use Map to avoid duplicates
             let loadedProjects = 0;
 
-            // Load tasks from relevant projects
+            // Load tasks from relevant projects only
             if (relevantProjects.length === 0) {
-              // If no relevant projects, still check all projects for tasks created by head manager, worked on by head manager, or assigned by admin
-              allProjects.forEach((project: any) => {
-                this.adminService.getTasks(project.id).subscribe({
-                  next: (tasks) => {
-                    // Filter tasks: created by head manager, assigned to head manager, or worked on by head manager
-                    tasks.forEach((task: any) => {
-                      const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase() ||
-                                                     task.created_by === headManagerEmail ||
-                                                     task.created_by === this.currentUserId ||
-                                                     task.created_by_id === this.currentUserId;
-                      const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
-                      const isWorkedOn = this.workedOnTaskNames.has(task.title?.toLowerCase());
-                      
-                      if (isCreatedByHeadManager || isAssignedToHeadManager || isWorkedOn) {
-                        taskMap.set(task.id, task);
-                      }
-                    });
-                    loadedProjects++;
-                    
-                    if (loadedProjects === allProjects.length) {
-                      this.totalTasks = taskMap.size;
-                      this.recentTasks = Array.from(taskMap.values())
-                        .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
-                        .slice(0, 5);
-                    }
-                  },
-                  error: (err) => {
-                    console.error(`Error loading tasks for project ${project.id}:`, err);
-                    loadedProjects++;
-                    if (loadedProjects === allProjects.length) {
-                      this.totalTasks = taskMap.size;
-                      this.recentTasks = Array.from(taskMap.values())
-                        .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
-                        .slice(0, 5);
-                    }
-                  }
-                });
-              });
+              this.totalTasks = 0;
+              this.recentTasks = [];
+              this.allTasks = [];
               return;
             }
 
             relevantProjects.forEach((project: any) => {
               this.adminService.getTasks(project.id).subscribe({
                 next: (tasks) => {
-                  // Filter tasks: show only tasks assigned to head manager, created by head manager, or worked on by head manager
+                  // Filter tasks: show only tasks assigned to head manager or created by head manager
                   tasks.forEach((task: any) => {
                     const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase() ||
                                                    task.created_by === headManagerEmail ||
                                                    task.created_by === this.currentUserId ||
                                                    task.created_by_id === this.currentUserId;
                     const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
-                    const isWorkedOn = this.workedOnTaskNames.has(task.title?.toLowerCase());
                     
-                    if (isCreatedByHeadManager || isAssignedToHeadManager || isWorkedOn) {
+                    if (isCreatedByHeadManager || isAssignedToHeadManager) {
                       taskMap.set(task.id, task);
                     }
                   });
                   loadedProjects++;
                   
                   if (loadedProjects === relevantProjects.length) {
-                    // Also check all other projects for tasks created by head manager, worked on by head manager, or assigned by admin
-                    const otherProjects = allProjects.filter((p: any) => !relevantProjects.some((rp: any) => rp.id === p.id));
-                    let otherProjectsLoaded = 0;
-                    
-                    if (otherProjects.length === 0) {
-                      this.totalTasks = taskMap.size;
-                      this.recentTasks = Array.from(taskMap.values())
-                        .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
-                        .slice(0, 5);
-                      return;
-                    }
-                    
-                    otherProjects.forEach((project: any) => {
-                      this.adminService.getTasks(project.id).subscribe({
-                        next: (tasks) => {
-                          // Add tasks created by head manager, worked on by head manager, or assigned by admin
-                          tasks.forEach((task: any) => {
-                            const isCreatedByHeadManager = task.assigned_by?.toLowerCase() === headManagerEmail?.toLowerCase();
-                            const isWorkedOn = this.workedOnTaskNames.has(task.title?.toLowerCase());
-                            const isAssignedByAdmin = task.assigned_by && this.adminEmails.has(task.assigned_by.toLowerCase());
-                            
-                            if (isCreatedByHeadManager || isWorkedOn || isAssignedByAdmin) {
-                              taskMap.set(task.id, task);
-                            }
-                          });
-                          otherProjectsLoaded++;
-                          
-                          if (otherProjectsLoaded === otherProjects.length) {
-                            this.totalTasks = taskMap.size;
-                            this.recentTasks = Array.from(taskMap.values())
-                              .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
-                              .slice(0, 5);
-                          }
-                        },
-                        error: (err) => {
-                          console.error(`Error loading tasks for project ${project.id}:`, err);
-                          otherProjectsLoaded++;
-                          if (otherProjectsLoaded === otherProjects.length) {
-                            this.totalTasks = taskMap.size;
-                            this.recentTasks = Array.from(taskMap.values())
-                              .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
-                              .slice(0, 5);
-                          }
-                        }
-                      });
-                    });
+                    this.allTasks = Array.from(taskMap.values());
+                    this.totalTasks = taskMap.size;
+                    this.recentTasks = Array.from(taskMap.values())
+                      .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
+                      .slice(0, 5);
                   }
                 },
                 error: (err) => {
                   console.error(`Error loading tasks for project ${project.id}:`, err);
                   loadedProjects++;
                   if (loadedProjects === relevantProjects.length) {
+                    this.allTasks = Array.from(taskMap.values());
                     this.totalTasks = taskMap.size;
                     this.recentTasks = Array.from(taskMap.values())
                       .sort((a: any, b: any) => new Date(b.created_at || b.id).getTime() - new Date(a.created_at || a.id).getTime())
