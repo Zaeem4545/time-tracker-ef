@@ -223,9 +223,11 @@ export class DashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
+    // Load time entries first to get projects/tasks user has worked on
+    this.loadTimeEntries();
+    // Then load projects and tasks (they will use worked-on data)
     this.loadProjects();
     this.loadTasks();
-    this.loadTimeEntries();
   }
 
   loadProjects(): void {
@@ -234,7 +236,7 @@ export class DashboardComponent implements OnInit {
       next: (projects) => {
         const managerEmail = this.authService.getEmail();
         
-        // Filter projects: show only those created by or assigned to the manager
+        // Filter projects: show only those created by, assigned to, or worked on by the manager
         const managerProjects = projects.filter((project: any) => {
           // Check if manager is assigned to project (manager_id)
           const isAssignedAsManager = project.manager_id === this.currentUserId;
@@ -247,7 +249,10 @@ export class DashboardComponent implements OnInit {
                           project.created_by === this.currentUserId ||
                           project.created_by_id === this.currentUserId;
           
-          return isAssignedAsManager || isAssignedTo || isCreated;
+          // Check if manager has worked on this project (has time entries)
+          const isWorkedOn = this.workedOnProjectIds.has(project.id);
+          
+          return isAssignedAsManager || isAssignedTo || isCreated || isWorkedOn;
         });
 
         this.updateProjectMetrics(managerProjects);
@@ -289,14 +294,16 @@ export class DashboardComponent implements OnInit {
     // Load projects first to get relevant project IDs
     this.adminService.getProjects().subscribe({
       next: (projects) => {
-        // Filter projects: only those created by or assigned to manager
+        // Filter projects: only those created by, assigned to, or worked on by manager
         const managerProjects = projects.filter((project: any) => {
           const isAssignedAsManager = project.manager_id === this.currentUserId;
           const isAssignedTo = project.assigned_to === this.currentUserId;
           const isCreated = project.created_by === managerEmail || 
                           project.created_by === this.currentUserId ||
                           project.created_by_id === this.currentUserId;
-          return isAssignedAsManager || isAssignedTo || isCreated;
+          // Check if manager has worked on this project (has time entries)
+          const isWorkedOn = this.workedOnProjectIds.has(project.id);
+          return isAssignedAsManager || isAssignedTo || isCreated || isWorkedOn;
         });
 
         const managerProjectIds = managerProjects.map((p: any) => p.id);
@@ -322,7 +329,7 @@ export class DashboardComponent implements OnInit {
     projectIds.forEach((projectId) => {
       this.adminService.getTasks(projectId).subscribe({
         next: (tasks) => {
-          // Filter tasks: show only tasks created/assigned by manager or assigned to manager
+          // Filter tasks: show only tasks created/assigned by manager, assigned to manager, or worked on by manager
           // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
           const managerTasks = tasks.filter((task: any) => {
             // Check if task was assigned by the manager (created/assigned by them)
@@ -338,7 +345,10 @@ export class DashboardComponent implements OnInit {
             // Check if task is assigned to manager
             const isAssignedToManager = task.assigned_to === this.currentUserId;
             
-            return isAssignedByManager || isCreatedByManager || isAssignedToManager;
+            // Check if manager has worked on this task (has time entries with this task name)
+            const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
+            
+            return isAssignedByManager || isCreatedByManager || isAssignedToManager || isWorkedOn;
           }).map((task: any) => {
             // Determine task type: created by manager or assigned to manager by others
             const isAssignedByManager = task.assigned_by === this.currentUserName ||
@@ -398,12 +408,27 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  workedOnProjectIds: Set<number> = new Set();
+  workedOnTaskNames: Set<string> = new Set();
+
   loadTimeEntries(): void {
     this.adminService.getTimeEntries().subscribe({
       next: (entries) => {
         // Filter to only count current user's time entries for dashboard count
         const currentUserEntries = entries.filter((entry: any) => {
           return entry.user_id === this.currentUserId;
+        });
+        
+        // Collect project IDs and task names that user worked on
+        this.workedOnProjectIds.clear();
+        this.workedOnTaskNames.clear();
+        currentUserEntries.forEach((entry: any) => {
+          if (entry.project_id) {
+            this.workedOnProjectIds.add(entry.project_id);
+          }
+          if (entry.task_name) {
+            this.workedOnTaskNames.add(entry.task_name.toLowerCase());
+          }
         });
         
         // Store all time entries for modal (but only count current user's entries)
@@ -415,11 +440,18 @@ export class DashboardComponent implements OnInit {
         
         // Only count current user's entries for dashboard
         this.totalTimeEntries = currentUserEntries.length;
+        
+        // Reload projects and tasks now that we have worked-on data
+        this.loadProjects();
+        this.loadTasks();
       },
       error: (err) => {
         console.error('Error loading time entries:', err);
         this.allTimeEntries = [];
         this.totalTimeEntries = 0;
+        // Still try to load projects and tasks
+        this.loadProjects();
+        this.loadTasks();
       }
     });
   }

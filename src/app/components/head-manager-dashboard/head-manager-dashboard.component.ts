@@ -75,8 +75,8 @@ export class HeadManagerDashboardComponent implements OnInit {
     this.currentUserId = this.authService.getUserId();
     this.currentUserEmail = this.authService.getEmail();
     
-    // Load dashboard data
-    this.loadDashboardData();
+    // Load dashboard data - time entries first to get worked-on projects/tasks
+    this.loadTimeEntries();
     // Check for notifications when dashboard loads
     this.checkForNewNotifications();
     
@@ -233,6 +233,7 @@ export class HeadManagerDashboardComponent implements OnInit {
             // 2. Assigned to head manager (manager_id matches)
             // 3. Assigned to head manager (assigned_to field)
             // 4. Created by head manager (selected_by_head_manager_id matches)
+            // 5. Worked on by head manager (has time entries)
             const relevantProjects = allProjects.filter((project: any) => {
               // Check if project is selected by this head manager
               const isSelected = selectedProjects.some((sp: any) => sp.id === project.id);
@@ -242,8 +243,10 @@ export class HeadManagerDashboardComponent implements OnInit {
               const isAssignedTo = project.assigned_to === this.currentUserId;
               // Check if project was created by this head manager
               const isCreatedByHeadManager = project.selected_by_head_manager_id === this.currentUserId;
+              // Check if head manager has worked on this project (has time entries)
+              const isWorkedOn = this.workedOnProjectIds.has(project.id);
               
-              return isSelected || isAssignedAsManager || isAssignedTo || isCreatedByHeadManager;
+              return isSelected || isAssignedAsManager || isAssignedTo || isCreatedByHeadManager || isWorkedOn;
             });
             
             this.totalProjects = relevantProjects.length;
@@ -317,7 +320,7 @@ export class HeadManagerDashboardComponent implements OnInit {
             relevantProjects.forEach((project: any) => {
               this.adminService.getTasks(project.id).subscribe({
                 next: (tasks) => {
-                  // Filter tasks: show only tasks assigned to head manager or created/assigned by head manager
+                  // Filter tasks: show only tasks assigned to head manager, created/assigned by head manager, or worked on by head manager
                   // Note: Tasks use 'assigned_by' (name) not 'created_by', so we check assigned_by against user name
                   tasks.forEach((task: any) => {
                     // Check if task was assigned by the head manager (created/assigned by them)
@@ -330,8 +333,10 @@ export class HeadManagerDashboardComponent implements OnInit {
                                                    task.created_by_id === this.currentUserId;
                     // Check if task is assigned to head manager
                     const isAssignedToHeadManager = task.assigned_to === this.currentUserId;
+                    // Check if head manager has worked on this task (has time entries with this task name)
+                    const isWorkedOn = task.title && this.workedOnTaskNames.has(task.title.toLowerCase());
                     
-                    if (isAssignedByHeadManager || isCreatedByHeadManager || isAssignedToHeadManager) {
+                    if (isAssignedByHeadManager || isCreatedByHeadManager || isAssignedToHeadManager || isWorkedOn) {
                       taskMap.set(task.id, task);
                     }
                   });
@@ -432,6 +437,8 @@ export class HeadManagerDashboardComponent implements OnInit {
         });
         
         // Collect project IDs and task names that head manager worked on
+        this.workedOnProjectIds.clear();
+        this.workedOnTaskNames.clear();
         headManagerEntries.forEach((entry: any) => {
           if (entry.project_id) {
             this.workedOnProjectIds.add(entry.project_id);
@@ -448,9 +455,16 @@ export class HeadManagerDashboardComponent implements OnInit {
           return dateB - dateA; // Newest first
         });
         this.totalTimeEntries = headManagerEntries.length;
+        
+        // Reload projects and tasks now that we have worked-on data
+        this.loadProjects();
+        this.loadTasks();
       },
       error: (err) => {
         console.error('Error loading time entries:', err);
+        // Still try to load projects and tasks
+        this.loadProjects();
+        this.loadTasks();
       }
     });
   }
