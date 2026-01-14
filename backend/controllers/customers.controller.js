@@ -1,4 +1,5 @@
 const Customer = require('../models/customer.model');
+const googleSheetsService = require('../services/googleSheets.service');
 
 // Get all customers
 async function getAllCustomers(req, res) {
@@ -48,6 +49,11 @@ async function createCustomer(req, res) {
       custom_fields
     });
     
+    // Sync to Google Sheets (non-blocking)
+    googleSheetsService.syncCustomer('create', customer).catch(err => {
+      console.error('Error syncing customer to Google Sheets:', err);
+    });
+
     res.status(201).json({ success: true, message: 'Customer created successfully', customer });
   } catch (err) {
     console.error('Error creating customer:', err);
@@ -98,6 +104,16 @@ async function updateCustomer(req, res) {
       }
     }
     
+    // Get updated customer data for sync
+    const updatedCustomer = await Customer.getCustomerById(id);
+    
+    // Sync to Google Sheets (non-blocking)
+    if (updatedCustomer) {
+      googleSheetsService.syncCustomer('update', updatedCustomer).catch(err => {
+        console.error('Error syncing customer to Google Sheets:', err);
+      });
+    }
+
     res.json({ success: true, message: 'Customer updated successfully' });
   } catch (err) {
     console.error('Error updating customer:', err);
@@ -120,6 +136,21 @@ async function deleteCustomer(req, res) {
     if (!existingCustomer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
+    
+    // Sync deletion to Google Sheets (non-blocking) - before actual deletion
+    console.log(`🔄 Attempting to sync customer ${existingCustomer.id} DELETE to Google Sheets...`);
+    googleSheetsService.syncCustomer('delete', existingCustomer)
+      .then(result => {
+        if (result) {
+          console.log(`✅ Customer ${existingCustomer.id} deleted from Google Sheets successfully`);
+        } else {
+          console.error(`❌ Failed to sync customer ${existingCustomer.id} deletion to Google Sheets`);
+        }
+      })
+      .catch(err => {
+        console.error('❌ Error syncing customer deletion to Google Sheets:', err.message);
+        console.error('Full error:', err);
+      });
     
     await Customer.deleteCustomer(id);
     

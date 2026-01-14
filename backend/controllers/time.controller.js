@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const TimeEntry = require('../models/timeEntry.model');
+const googleSheetsService = require('../services/googleSheets.service');
 
 // Helper function to convert ISO datetime string to MySQL DATETIME format
 function formatDateTimeForMySQL(isoString) {
@@ -111,6 +112,17 @@ async function stopTime(req, res) {
     }
 
     const totalTime = await TimeEntry.stopTime(id);
+
+    // Get updated time entry data for sync
+    const [updatedEntries] = await db.query('SELECT * FROM time_entries WHERE id = ?', [id]);
+    const updatedEntry = updatedEntries[0];
+
+    // Sync to Google Sheets (non-blocking)
+    if (updatedEntry) {
+      googleSheetsService.syncTimeEntry('update', updatedEntry).catch(err => {
+        console.error('Error syncing time entry to Google Sheets:', err);
+      });
+    }
 
     res.json({ success: true, message: 'Time tracking stopped', totalTime });
   } catch (err) {
@@ -232,6 +244,17 @@ async function updateTimeEntry(req, res) {
 
     await db.query(updateQuery, params);
 
+    // Get updated time entry data for sync
+    const [updatedEntries] = await db.query('SELECT * FROM time_entries WHERE id = ?', [id]);
+    const updatedEntry = updatedEntries[0];
+
+    // Sync to Google Sheets (non-blocking)
+    if (updatedEntry) {
+      googleSheetsService.syncTimeEntry('update', updatedEntry).catch(err => {
+        console.error('Error syncing time entry to Google Sheets:', err);
+      });
+    }
+
     res.json({ success: true, message: 'Time entry updated successfully' });
   } catch (err) {
     console.error('Error updating time entry:', err);
@@ -255,13 +278,30 @@ async function deleteTimeEntry(req, res) {
 
     const { id } = req.params;
 
-    // Verify time entry exists
-    const [entryRows] = await db.query('SELECT id FROM time_entries WHERE id = ?', [id]);
+    // Verify time entry exists and get data for sync
+    const [entryRows] = await db.query('SELECT * FROM time_entries WHERE id = ?', [id]);
     if (entryRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Time entry not found' });
     }
 
+    const entryToDelete = entryRows[0];
+
     await db.query('DELETE FROM time_entries WHERE id = ?', [id]);
+
+    // Sync deletion to Google Sheets (non-blocking)
+    console.log(`🔄 Attempting to sync time entry ${entryToDelete.id} DELETE to Google Sheets...`);
+    googleSheetsService.syncTimeEntry('delete', entryToDelete)
+      .then(result => {
+        if (result) {
+          console.log(`✅ Time entry ${entryToDelete.id} deleted from Google Sheets successfully`);
+        } else {
+          console.error(`❌ Failed to sync time entry ${entryToDelete.id} deletion to Google Sheets`);
+        }
+      })
+      .catch(err => {
+        console.error('❌ Error syncing time entry deletion to Google Sheets:', err.message);
+        console.error('Full error:', err);
+      });
 
     res.json({ success: true, message: 'Time entry deleted successfully' });
   } catch (err) {
@@ -343,6 +383,17 @@ async function createTimeEntry(req, res) {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [targetUserId, project_id, task_name.trim(), description?.trim() || null, formatDateTimeForMySQL(start_time), formatDateTimeForMySQL(end_time), totalTimeMinutes]
     );
+
+    // Get created time entry data for sync
+    const [createdEntries] = await db.query('SELECT * FROM time_entries WHERE id = ?', [result.insertId]);
+    const createdEntry = createdEntries[0];
+
+    // Sync to Google Sheets (non-blocking)
+    if (createdEntry) {
+      googleSheetsService.syncTimeEntry('create', createdEntry).catch(err => {
+        console.error('Error syncing time entry to Google Sheets:', err);
+      });
+    }
 
     res.json({ success: true, message: 'Time entry created successfully', entryId: result.insertId });
   } catch (err) {

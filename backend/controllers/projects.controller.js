@@ -1,5 +1,6 @@
 const db = require("../config/db");
 const Notification = require("../models/notification.model");
+const googleSheetsService = require("../services/googleSheets.service");
 
 const formatDateForMySQL = (date) => {
       if (!date) return null;
@@ -327,6 +328,29 @@ async function createProject(req, res) {
         );
         // Don't fail the request if notification creation fails
       }
+    }
+
+    // Get created project data for sync
+    const [createdProjects] = await db.query('SELECT * FROM projects WHERE id = ?', [projectId]);
+    const createdProject = createdProjects[0];
+
+    // Sync to Google Sheets (non-blocking)
+    if (createdProject) {
+      console.log(`🔄 Attempting to sync project ${createdProject.id} to Google Sheets...`);
+      googleSheetsService.syncProject('create', createdProject)
+        .then(result => {
+          if (result) {
+            console.log(`✅ Project ${createdProject.id} synced to Google Sheets successfully`);
+          } else {
+            console.error(`❌ Failed to sync project ${createdProject.id} to Google Sheets (check logs above)`);
+          }
+        })
+        .catch(err => {
+          console.error('❌ Error syncing project to Google Sheets:', err.message);
+          console.error('Full error:', err);
+        });
+    } else {
+      console.warn('⚠️  Created project data not found for sync');
     }
 
     res.json({
@@ -892,6 +916,29 @@ async function updateProject(req, res) {
       }
     }
 
+    // Get updated project data for sync
+    const [updatedProjects] = await db.query('SELECT * FROM projects WHERE id = ?', [id]);
+    const updatedProject = updatedProjects[0];
+
+    // Sync to Google Sheets (non-blocking)
+    if (updatedProject) {
+      console.log(`🔄 Attempting to sync project ${updatedProject.id} UPDATE to Google Sheets...`);
+      googleSheetsService.syncProject('update', updatedProject)
+        .then(result => {
+          if (result) {
+            console.log(`✅ Project ${updatedProject.id} updated in Google Sheets successfully`);
+          } else {
+            console.error(`❌ Failed to sync project ${updatedProject.id} update to Google Sheets (check logs above)`);
+          }
+        })
+        .catch(err => {
+          console.error('❌ Error syncing project update to Google Sheets:', err.message);
+          console.error('Full error:', err);
+        });
+    } else {
+      console.warn('⚠️  Updated project data not found for sync');
+    }
+
     res.json({ success: true, message: "Project updated successfully" });
   } catch (error) {
     console.error("Error updating project:", error);
@@ -925,6 +972,21 @@ async function deleteProject(req, res) {
     const project = projectRows[0];
     const projectName = project.name || "Unknown Project";
     const customerId = project.customer_id;
+
+    // Sync deletion to Google Sheets (non-blocking) - before actual deletion
+    console.log(`🔄 Attempting to sync project ${project.id} DELETE to Google Sheets...`);
+    googleSheetsService.syncProject('delete', project)
+      .then(result => {
+        if (result) {
+          console.log(`✅ Project ${project.id} deleted from Google Sheets successfully`);
+        } else {
+          console.error(`❌ Failed to sync project ${project.id} deletion to Google Sheets (check logs above)`);
+        }
+      })
+      .catch(err => {
+        console.error('❌ Error syncing project deletion to Google Sheets:', err.message);
+        console.error('Full error:', err);
+      });
 
     // Get deleter name
     const [deleterRows] = await db.query(

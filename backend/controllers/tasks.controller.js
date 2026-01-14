@@ -1,6 +1,7 @@
 const Task = require('../models/task.model');
 const Notification = require('../models/notification.model');
 const db = require('../config/db');
+const googleSheetsService = require('../services/googleSheets.service');
 
 // Helper function to log task history
 async function logTaskHistory(taskId, projectId, action, fieldName, oldValue, newValue, taskTitle, userId, userName, userEmail) {
@@ -251,6 +252,11 @@ async function createTask(req, res) {
       }
     }
     
+    // Sync to Google Sheets (non-blocking)
+    googleSheetsService.syncTask('create', task).catch(err => {
+      console.error('Error syncing task to Google Sheets:', err);
+    });
+
     res.json({ success: true, task });
   } catch (err) {
     console.error('Error creating task:', err);
@@ -521,7 +527,17 @@ async function updateTask(req, res) {
         // Don't fail the request if notification creation fails
       }
     }
+
+    // Get updated task data for sync
+    const updatedTask = await Task.getTaskById(id);
     
+    // Sync to Google Sheets (non-blocking)
+    if (updatedTask) {
+      googleSheetsService.syncTask('update', updatedTask).catch(err => {
+        console.error('Error syncing task to Google Sheets:', err);
+      });
+    }
+
     res.json({ success: true, message: 'Task updated successfully' });
   } catch (err) {
     console.error('Error updating task:', err);
@@ -547,8 +563,25 @@ async function deleteTask(req, res) {
       return res.status(403).json({ success: false, message: 'Access denied. Only admins can delete tasks.' });
     }
     
-    // Get task details before deletion for notification
+    // Get task details before deletion for notification and sync
     const currentTask = await Task.getTaskById(id);
+    
+    // Sync deletion to Google Sheets (non-blocking) - before actual deletion
+    if (currentTask) {
+      console.log(`🔄 Attempting to sync task ${currentTask.id} DELETE to Google Sheets...`);
+      googleSheetsService.syncTask('delete', currentTask)
+        .then(result => {
+          if (result) {
+            console.log(`✅ Task ${currentTask.id} deleted from Google Sheets successfully`);
+          } else {
+            console.error(`❌ Failed to sync task ${currentTask.id} deletion to Google Sheets`);
+          }
+        })
+        .catch(err => {
+          console.error('❌ Error syncing task deletion to Google Sheets:', err.message);
+          console.error('Full error:', err);
+        });
+    }
     
     if (currentTask) {
       // Log task deletion in history before deleting

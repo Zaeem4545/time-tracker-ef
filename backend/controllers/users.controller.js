@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
+const googleSheetsService = require('../services/googleSheets.service');
 
 // Get all users
 async function getAllUsers(req, res) {
@@ -58,7 +59,14 @@ async function createUser(req, res) {
       [email, passwordHash, normalizedRole, contact_number || null, name.trim()]
     );
 
-    res.json({ success: true, message: 'User created successfully', user: { id: result.insertId, email, name, role: normalizedRole, contact_number } });
+    const newUser = { id: result.insertId, email, name, role: normalizedRole, contact_number };
+
+    // Sync to Google Sheets (non-blocking)
+    googleSheetsService.syncUser('create', newUser).catch(err => {
+      console.error('Error syncing user to Google Sheets:', err);
+    });
+
+    res.json({ success: true, message: 'User created successfully', user: newUser });
   } catch (err) {
     console.error('Error creating user:', err);
     res.status(500).json({ success: false, message: 'Failed to create user' });
@@ -106,6 +114,17 @@ async function updateUserInfo(req, res) {
     // Update user (email, role, contact_number, name only, password unchanged)
     const query = `UPDATE users SET email = ?, role = ?, contact_number = ?, name = ? WHERE id = ?`;
     await db.query(query, [email.trim(), normalizedRole, contact_number.trim(), name.trim(), id]);
+
+    // Get updated user data for sync
+    const [updatedUsers] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+    const updatedUser = updatedUsers[0];
+
+    // Sync to Google Sheets (non-blocking)
+    if (updatedUser) {
+      googleSheetsService.syncUser('update', updatedUser).catch(err => {
+        console.error('Error syncing user to Google Sheets:', err);
+      });
+    }
 
     res.json({ success: true, message: 'User updated successfully' });
   } catch (err) {
@@ -208,7 +227,30 @@ async function deleteUser(req, res) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
     const { id } = req.params;
+    
+    // Get user data before deletion for sync
+    const [users] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
+    const userToDelete = users[0];
+
     await db.query('DELETE FROM users WHERE id = ?', [id]);
+
+    // Sync to Google Sheets (non-blocking)
+    if (userToDelete) {
+      console.log(`🔄 Attempting to sync user ${userToDelete.id} DELETE to Google Sheets...`);
+      googleSheetsService.syncUser('delete', userToDelete)
+        .then(result => {
+          if (result) {
+            console.log(`✅ User ${userToDelete.id} deleted from Google Sheets successfully`);
+          } else {
+            console.error(`❌ Failed to sync user ${userToDelete.id} deletion to Google Sheets`);
+          }
+        })
+        .catch(err => {
+          console.error('❌ Error syncing user deletion to Google Sheets:', err.message);
+          console.error('Full error:', err);
+        });
+    }
+
     res.json({ success: true, message: 'User deleted successfully' });
   } catch (err) {
     console.error('Error deleting user:', err);
