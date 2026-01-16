@@ -95,21 +95,18 @@ async function startTime(req, res) {
   }
 }
 
-// Stop time tracking (All roles can stop their own time tracking)
+// Stop time tracking (All users can stop any time tracking)
 async function stopTime(req, res) {
   try {
-    const userId = req.user.id;
     const { id } = req.params;
 
-    // Verify the time entry belongs to this user
+    // Verify the time entry exists
     const [entryRows] = await db.query('SELECT id, user_id FROM time_entries WHERE id = ?', [id]);
     if (entryRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Time entry not found' });
     }
 
-    if (entryRows[0].user_id !== userId) {
-      return res.status(403).json({ success: false, message: 'Access denied. You can only stop your own time entries.' });
-    }
+    // All users can stop any time entry
 
     const totalTime = await TimeEntry.stopTime(id);
 
@@ -263,11 +260,9 @@ async function updateTimeEntry(req, res) {
   }
 }
 
-// Delete a time entry (Admin only)
+// Delete a time entry (All users can delete any time entry)
 async function deleteTimeEntry(req, res) {
   try {
-    const userRole = req.user.role?.toLowerCase();
-
     const { id } = req.params;
 
     // Verify time entry exists and get data for sync
@@ -278,10 +273,7 @@ async function deleteTimeEntry(req, res) {
 
     const entryToDelete = entryRows[0];
 
-    // Access control: Admin can delete any, user can only delete their own
-    if (userRole !== 'admin' && entryToDelete.user_id !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Access denied. You can only delete your own time entries.' });
-    }
+    // All users can delete any time entry
 
     await db.query('DELETE FROM time_entries WHERE id = ?', [id]);
 
@@ -326,21 +318,15 @@ async function clearAllTimeEntries(req, res) {
   }
 }
 
-// Create a time entry manually (All roles can create time entries)
+// Create a time entry manually (All users can create time entries for anyone)
 async function createTimeEntry(req, res) {
   try {
-    const userRole = req.user.role?.toLowerCase();
     const currentUserId = req.user.id;
 
     const { user_id, project_id, task_name, description, start_time, end_time } = req.body;
 
-    // All roles can create time entries, but they can only create entries for themselves
-    // Admin can create entries for any user
+    // All users can create time entries for any user
     const targetUserId = user_id || currentUserId;
-
-    if (userRole !== 'admin' && targetUserId !== currentUserId) {
-      return res.status(403).json({ success: false, message: 'Access denied. You can only create time entries for yourself.' });
-    }
 
     // Validate required fields (user_id is optional, defaults to current user)
     if (!project_id || !task_name || !start_time || !end_time) {
