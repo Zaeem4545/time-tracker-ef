@@ -502,11 +502,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.imageZoom = 1;
     this.imagePosition = { x: 0, y: 0 };
 
-    // Store the original file for later use
+    // Store the original file for later use (user-specific)
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      localStorage.setItem('profilePictureOriginal', base64String);
+      localStorage.setItem(this.getUserSpecificKey('profilePictureOriginal'), base64String);
     };
     reader.readAsDataURL(file);
 
@@ -523,8 +523,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // First, try to load the original uncropped image from localStorage
-    const originalImageData = localStorage.getItem('profilePictureOriginal');
+    // First, try to load the original uncropped image from localStorage (user-specific)
+    const originalImageData = localStorage.getItem(this.getUserSpecificKey('profilePictureOriginal'));
 
     if (originalImageData) {
       // Load the original uncropped image
@@ -537,9 +537,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         canvas.width = size;
         canvas.height = size;
 
-        // Restore zoom and position if available, otherwise fit to box
-        const savedZoom = localStorage.getItem('profilePictureZoom');
-        const savedPosition = localStorage.getItem('profilePicturePosition');
+        // Restore zoom and position if available, otherwise fit to box (user-specific)
+        const savedZoom = localStorage.getItem(this.getUserSpecificKey('profilePictureZoom'));
+        const savedPosition = localStorage.getItem(this.getUserSpecificKey('profilePicturePosition'));
         if (savedZoom) {
           this.imageZoom = parseFloat(savedZoom);
         } else {
@@ -763,9 +763,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Store the current zoom and position for restoration when reopening
-    localStorage.setItem('profilePictureZoom', this.imageZoom.toString());
-    localStorage.setItem('profilePicturePosition', JSON.stringify(this.imagePosition));
+    // Store the current zoom and position for restoration when reopening (user-specific)
+    localStorage.setItem(this.getUserSpecificKey('profilePictureZoom'), this.imageZoom.toString());
+    localStorage.setItem(this.getUserSpecificKey('profilePicturePosition'), JSON.stringify(this.imagePosition));
 
     // If we have a selected file, the original is already stored in onImageSelected
     // If we're adjusting an existing image, we need to store the original imageElement
@@ -777,13 +777,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       const originalCtx = originalCanvas.getContext('2d');
       if (originalCtx) {
         originalCtx.drawImage(this.imageElement, 0, 0);
-        // Store as base64 for later use
+        // Store as base64 for later use (user-specific)
         originalCanvas.toBlob((blob) => {
           if (blob) {
             const reader = new FileReader();
             reader.onloadend = () => {
               const base64String = reader.result as string;
-              localStorage.setItem('profilePictureOriginal', base64String);
+              localStorage.setItem(this.getUserSpecificKey('profilePictureOriginal'), base64String);
             };
             reader.readAsDataURL(blob);
           }
@@ -830,20 +830,23 @@ export class HeaderComponent implements OnInit, OnDestroy {
             let profilePath = response.file.path;
             this.profilePictureUrl = this.getFullProfileUrl(profilePath);
 
-            // Save to localStorage immediately for UI responsiveness
-            if (this.profilePictureUrl) {
-              localStorage.setItem('profilePicture', this.profilePictureUrl);
-            }
-
-            // Persist to database
+            // Persist to database first - database is the source of truth
             // Get current user name using getUserDisplayName which has proper fallbacks
             const currentName = this.getUserDisplayName();
+            const userId = this.auth.getUserId();
+            const userSpecificKey = this.getUserSpecificKey('profilePicture');
 
             this.userService.updateProfile({
               name: currentName,
               profile_picture: this.profilePictureUrl
             }).subscribe({
               next: () => {
+                // Only cache in localStorage after successful database save
+                if (this.profilePictureUrl && userId) {
+                  localStorage.setItem(userSpecificKey, this.profilePictureUrl);
+                  // Clear old non-user-specific cache
+                  localStorage.removeItem('profilePicture');
+                }
                 this.toastService.show('Profile picture updated successfully', 'success');
                 this.closeProfilePictureModal();
                 // Refresh profile view if open
@@ -853,14 +856,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
               },
               error: (err) => {
                 console.error('Failed to save profile picture to database:', err);
-                // Even if database save fails, the picture is uploaded and visible
-                // So we still close the modal and show success (picture is visible)
-                this.toastService.show('Profile picture updated successfully', 'success');
-                this.closeProfilePictureModal();
-                // Refresh profile view if open
-                if (this.showProfileViewModal) {
-                  this.loadProfilePicture();
-                }
+                this.toastService.show('Failed to save profile picture: ' + (err?.error?.message || 'Unknown error'), 'error');
+                // Don't update UI if database save fails - reload from DB
+                this.loadProfilePicture();
               }
             });
           }
@@ -896,22 +894,28 @@ export class HeaderComponent implements OnInit, OnDestroy {
           let profilePath = response.file.path;
           this.profilePictureUrl = this.getFullProfileUrl(profilePath);
 
-          // Save to localStorage immediately for UI responsiveness
-          if (this.profilePictureUrl) {
-            localStorage.setItem('profilePicture', this.profilePictureUrl);
-          }
+          // Persist to database first - database is the source of truth
+          const userId = this.auth.getUserId();
+          const userSpecificKey = this.getUserSpecificKey('profilePicture');
 
-          // Persist to database
           this.userService.updateProfile({
-            name: this.userName, // Keep existing name
-            profile_picture: this.profilePictureUrl // Save full URL or relative path depending on strategy, here simpler to save what we show
+            name: this.userName || this.getUserDisplayName(), // Keep existing name
+            profile_picture: this.profilePictureUrl // Save full URL or relative path
           }).subscribe({
             next: () => {
+              // Only cache in localStorage after successful database save
+              if (this.profilePictureUrl && userId) {
+                localStorage.setItem(userSpecificKey, this.profilePictureUrl);
+                // Clear old non-user-specific cache
+                localStorage.removeItem('profilePicture');
+              }
               this.toastService.show('Profile picture updated successfully', 'success');
             },
             error: (err) => {
               console.error('Failed to save profile picture to database:', err);
-              // Don't show error to user since upload succeeded and UI is updated
+              this.toastService.show('Failed to save profile picture: ' + (err?.error?.message || 'Unknown error'), 'error');
+              // Reload from database to ensure consistency
+              this.loadProfilePicture();
             }
           });
         }
@@ -922,40 +926,54 @@ export class HeaderComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Helper to get user-specific localStorage keys
+  private getUserSpecificKey(key: string): string {
+    const userId = this.auth.getUserId();
+    return userId ? `${key}_${userId}` : key;
+  }
+
   loadProfilePicture(): void {
-    // Try to get from user data from API first for source of truth
+    // Always load from database first - database is the source of truth
     const userId = this.auth.getUserId();
     if (userId) {
+      // Use user-specific localStorage key
+      const userSpecificKey = this.getUserSpecificKey('profilePicture');
+      
       this.adminService.getUsers().subscribe({
         next: (users) => {
           const currentUser = users.find((u: any) => u.id === userId);
           if (currentUser && currentUser.profile_picture) {
+            // Load from database - this is the source of truth
             this.profilePictureUrl = this.getFullProfileUrl(currentUser.profile_picture);
+            // Cache in user-specific localStorage for performance
             if (this.profilePictureUrl) {
-              localStorage.setItem('profilePicture', this.profilePictureUrl);
+              localStorage.setItem(userSpecificKey, this.profilePictureUrl);
+            } else {
+              // Clear cache if no picture in DB
+              localStorage.removeItem(userSpecificKey);
             }
+            // Clear old non-user-specific cache if exists
+            localStorage.removeItem('profilePicture');
           } else {
-            // Fallback to localStorage if not in DB (legacy support)
-            const savedPicture = localStorage.getItem('profilePicture');
-            if (savedPicture) {
-              this.profilePictureUrl = savedPicture;
-            }
+            // No picture in database - clear cache and reset
+            this.profilePictureUrl = null;
+            localStorage.removeItem(userSpecificKey);
+            localStorage.removeItem('profilePicture');
           }
         },
         error: () => {
-          // Fallback to localStorage on error
-          const savedPicture = localStorage.getItem('profilePicture');
-          if (savedPicture) {
-            this.profilePictureUrl = savedPicture;
+          // On error, try user-specific cache as fallback
+          const cachedPicture = localStorage.getItem(userSpecificKey);
+          if (cachedPicture) {
+            this.profilePictureUrl = cachedPicture;
+          } else {
+            this.profilePictureUrl = null;
           }
         }
       });
     } else {
-      // Fallback to localStorage if no user ID
-      const savedPicture = localStorage.getItem('profilePicture');
-      if (savedPicture) {
-        this.profilePictureUrl = savedPicture;
-      }
+      // No user ID - clear everything
+      this.profilePictureUrl = null;
     }
   }
 
