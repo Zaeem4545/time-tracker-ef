@@ -560,6 +560,7 @@ export class TimesheetComponent implements OnInit, OnDestroy {
   }
 
   startEditingCell(activity: ActivityRow, day: WeekDay) {
+    // Allow all users to edit time entries
     const activityKey = `${activity.projectName} - ${activity.taskName}`;
     const dateKey = this.formatDateKey(day.date);
     const currentTime = this.getTimeForDay(activity, day);

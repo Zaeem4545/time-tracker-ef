@@ -157,24 +157,21 @@ async function getActiveTimeEntry(req, res) {
   }
 }
 
-// Update/edit a time entry (Admin only)
+// Update/edit a time entry (All users can edit)
 async function updateTimeEntry(req, res) {
   try {
-    const userRole = req.user.role?.toLowerCase();
-
-    // Only admin can update time entries
-    if (userRole !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Access denied. Only admins can edit time entries.' });
-    }
-
     const { id } = req.params;
     const { start_time, end_time, task_name, description, project_id } = req.body;
 
     // Verify time entry exists
-    const [entryRows] = await db.query('SELECT id FROM time_entries WHERE id = ?', [id]);
+    const [entryRows] = await db.query('SELECT * FROM time_entries WHERE id = ?', [id]);
     if (entryRows.length === 0) {
       return res.status(404).json({ success: false, message: 'Time entry not found' });
     }
+
+    const entry = entryRows[0];
+
+    // All users can edit any time entry
 
     // Build update query dynamically based on provided fields
     const updates = [];
@@ -271,11 +268,6 @@ async function deleteTimeEntry(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
 
-    // Only admin can delete time entries
-    if (userRole !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Access denied. Only admins can delete time entries.' });
-    }
-
     const { id } = req.params;
 
     // Verify time entry exists and get data for sync
@@ -285,6 +277,11 @@ async function deleteTimeEntry(req, res) {
     }
 
     const entryToDelete = entryRows[0];
+
+    // Access control: Admin can delete any, user can only delete their own
+    if (userRole !== 'admin' && entryToDelete.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Access denied. You can only delete your own time entries.' });
+    }
 
     await db.query('DELETE FROM time_entries WHERE id = ?', [id]);
 
