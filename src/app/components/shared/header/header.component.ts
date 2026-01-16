@@ -831,13 +831,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
             this.profilePictureUrl = this.getFullProfileUrl(profilePath);
 
             // Persist to database first - database is the source of truth
-            // Get current user name using getUserDisplayName which has proper fallbacks
-            const currentName = this.getUserDisplayName();
+            // Only send profile_picture, name will be preserved from existing data
             const userId = this.auth.getUserId();
             const userSpecificKey = this.getUserSpecificKey('profilePicture');
 
+            // Only update profile_picture - name will remain unchanged
             this.userService.updateProfile({
-              name: currentName,
               profile_picture: this.profilePictureUrl
             }).subscribe({
               next: () => {
@@ -898,8 +897,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
           const userId = this.auth.getUserId();
           const userSpecificKey = this.getUserSpecificKey('profilePicture');
 
+          // Only update profile_picture - name will remain unchanged
           this.userService.updateProfile({
-            name: this.userName || this.getUserDisplayName(), // Keep existing name
             profile_picture: this.profilePictureUrl // Save full URL or relative path
           }).subscribe({
             next: () => {

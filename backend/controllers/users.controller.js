@@ -565,37 +565,49 @@ async function removeEmployeeFromManager(req, res) {
   }
 }
 
-// Update user profile (self-update)
+// Update user profile (self-update) - All users can update their own profile
 async function updateUserProfile(req, res) {
   try {
     const userId = req.user.id;
     const { name, contact_number, profile_picture } = req.body;
 
-    // Validate required fields
-    if (!name || name.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Name is required' });
+    // Build updates array dynamically - only update fields that are provided
+    const updates = [];
+    const params = [];
+
+    // Name is optional - only update if provided
+    if (name !== undefined) {
+      if (name.trim() === '') {
+        return res.status(400).json({ success: false, message: 'Name cannot be empty' });
+      }
+      updates.push('name = ?');
+      params.push(name.trim());
     }
 
-    // Validate contact number contains only digits if provided
-    if (contact_number && !/^\d+$/.test(contact_number.trim())) {
-      return res.status(400).json({ success: false, message: 'Contact number must contain only numbers' });
-    }
-
-    const updates = ['name = ?'];
-    const params = [name.trim()];
-
+    // Contact number is optional - only update if provided
     if (contact_number !== undefined) {
+      if (contact_number && contact_number.trim() !== '' && !/^\d+$/.test(contact_number.trim())) {
+        return res.status(400).json({ success: false, message: 'Contact number must contain only numbers' });
+      }
       updates.push('contact_number = ?');
-      params.push(contact_number.trim() || null);
+      params.push(contact_number && contact_number.trim() !== '' ? contact_number.trim() : null);
     }
 
+    // Profile picture is optional - only update if provided
     if (profile_picture !== undefined) {
       updates.push('profile_picture = ?');
       params.push(profile_picture);
     }
 
+    // If no updates provided, return error
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, message: 'No fields to update' });
+    }
+
+    // Add userId for WHERE clause
     params.push(userId);
 
+    // Update user profile - any authenticated user can update their own profile
     const query = `UPDATE users SET ${updates.join(', ')} WHERE id = ?`;
     await db.query(query, params);
 

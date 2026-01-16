@@ -12,11 +12,12 @@ router.post('/head-manager-team', authMiddleware, getHeadManagerTeam); // POST -
 router.post('/', authMiddleware, createUser);       // CREATE - Create new user
 router.post('/assign-employee', authMiddleware, assignEmployeeToManager); // POST - Assign employee to manager
 router.post('/remove-employee', authMiddleware, removeEmployeeFromManager); // POST - Remove employee from manager
-router.put('/:id', authMiddleware, updateUser);           // UPDATE - Update user (email, password, role) - legacy
+// IMPORTANT: Specific routes must come before parameterized routes
+router.put('/profile', authMiddleware, updateUserProfile); // UPDATE - Update own profile (name, contact, picture) - MUST come before /:id
 router.put('/:id/info', authMiddleware, updateUserInfo);  // UPDATE - Update user info (email, role) without password
-router.put('/profile', authMiddleware, updateUserProfile); // UPDATE - Update own profile (name, contact, picture)
 router.put('/:id/password', authMiddleware, updateUserPassword); // UPDATE - Update user password only
 router.put('/:id/role', authMiddleware, updateRole);      // UPDATE - Update user role (legacy)
+router.put('/:id', authMiddleware, updateUser);           // UPDATE - Update user (email, password, role) - legacy - MUST come last
 router.delete('/:id', authMiddleware, deleteUser);  // DELETE - Delete user
 router.post('/notify-selected', authMiddleware, notifySelectedManagers); // POST - Notify selected managers
 
