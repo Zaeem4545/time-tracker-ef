@@ -38,7 +38,7 @@ async function notifyAllManagers(message, type = 'info') {
   try {
     const managerIds = await getManagerUserIds();
     const notificationIds = [];
-    
+
     for (const managerId of managerIds) {
       try {
         const notificationId = await createNotification(managerId, message, type);
@@ -48,7 +48,7 @@ async function notifyAllManagers(message, type = 'info') {
         // Continue with other managers even if one fails
       }
     }
-    
+
     return notificationIds;
   } catch (error) {
     console.error('Error notifying managers:', error);
@@ -61,7 +61,7 @@ async function notifyAllHeadManagers(message, type = 'info') {
   try {
     const headManagerIds = await getHeadManagerUserIds();
     const notificationIds = [];
-    
+
     for (const headManagerId of headManagerIds) {
       try {
         const notificationId = await createNotification(headManagerId, message, type);
@@ -71,7 +71,7 @@ async function notifyAllHeadManagers(message, type = 'info') {
         // Continue with other head managers even if one fails
       }
     }
-    
+
     return notificationIds;
   } catch (error) {
     console.error('Error notifying head managers:', error);
@@ -107,7 +107,7 @@ async function notifyHeadManagersForManager(managerId, message, type = 'info') {
   try {
     const headManagerIds = await getHeadManagersForManager(managerId);
     const notificationIds = [];
-    
+
     for (const headManagerId of headManagerIds) {
       try {
         const notificationId = await createNotification(headManagerId, message, type);
@@ -117,7 +117,7 @@ async function notifyHeadManagersForManager(managerId, message, type = 'info') {
         // Continue with other head managers even if one fails
       }
     }
-    
+
     return notificationIds;
   } catch (error) {
     console.error('Error notifying head managers:', error);
@@ -144,7 +144,7 @@ async function notifyAllAdmins(message, type = 'info') {
   try {
     const adminIds = await getAdminUserIds();
     const notificationIds = [];
-    
+
     for (const adminId of adminIds) {
       try {
         const notificationId = await createNotification(adminId, message, type);
@@ -154,7 +154,7 @@ async function notifyAllAdmins(message, type = 'info') {
         // Continue with other admins even if one fails
       }
     }
-    
+
     return notificationIds;
   } catch (error) {
     console.error('Error notifying admins:', error);
@@ -231,6 +231,37 @@ module.exports = {
   getManagerUserIds,
   getHeadManagerUserIds,
   notifyAllManagers,
-  notifyAllHeadManagers
+  notifyAllHeadManagers,
+  notifyProjectFollowers
 };
+
+// Notify all followers of a project
+async function notifyProjectFollowers(projectId, message, type = 'info', excludeUserId = null) {
+  try {
+    // Get all followers
+    const [followers] = await db.query(
+      'SELECT user_id FROM project_followers WHERE project_id = ?',
+      [projectId]
+    );
+
+    const notificationIds = [];
+    for (const follower of followers) {
+      // Skip if it's the user performing the action
+      if (excludeUserId && follower.user_id === excludeUserId) {
+        continue;
+      }
+
+      try {
+        const notificationId = await createNotification(follower.user_id, message, type);
+        notificationIds.push(notificationId);
+      } catch (error) {
+        console.error(`Error notifying follower ${follower.user_id}:`, error);
+      }
+    }
+    return notificationIds;
+  } catch (error) {
+    console.error('Error notifying project followers:', error);
+    return [];
+  }
+}
 
