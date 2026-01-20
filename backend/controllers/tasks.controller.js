@@ -2,31 +2,6 @@ const Task = require('../models/task.model');
 const Notification = require('../models/notification.model');
 const db = require('../config/db');
 const googleSheetsService = require('../services/googleSheets.service');
-const projectModel = require('../models/project.model');
-const emailService = require('../services/email.service');
-
-// Helper function to notify project followers
-async function notifyProjectFollowers(projectId, subject, message, userId, htmlMessage = null) {
-  try {
-    const followers = await projectModel.getProjectFollowers(projectId);
-    const followerEmails = followers.map(f => f.email).filter(Boolean);
-    const followerIds = followers.map(f => f.id);
-
-    if (followerEmails.length > 0) {
-      // Use provided HTML message or default plain text wrapped in p tag
-      const emailHtml = htmlMessage || `<p>${message}</p>`;
-      await emailService.sendEmail(followerEmails, subject, emailHtml);
-    }
-
-    for (const followerId of followerIds) {
-      if (followerId !== userId) {
-        await Notification.createNotification(followerId, message, 'project_update');
-      }
-    }
-  } catch (error) {
-    console.error('Error notifying project followers:', error);
-  }
-}
 
 // Helper function to log task history
 async function logTaskHistory(taskId, projectId, action, fieldName, oldValue, newValue, taskTitle, userId, userName, userEmail) {
@@ -75,11 +50,11 @@ async function getTasksByProject(req, res) {
     const userId = req.user.id;
 
     let tasks;
-
+    
     // All roles (including employees) see all tasks for the project
     // Employees can work on any task in timesheet
     tasks = await Task.getTasksByProject(projectId);
-
+    
     res.json(tasks);
   } catch (err) {
     console.error(err);
@@ -106,15 +81,15 @@ async function getTaskById(req, res) {
 async function createTask(req, res) {
   try {
     const { project_id, title, description, status, assigned_to, assigned_by, due_date, allocated_time } = req.body;
-
+    
     console.log('Create task request body:', req.body);
-
+    
     if (!project_id || !title || title.trim() === '') {
       return res.status(400).json({ message: 'Project ID and task title are required' });
     }
-
+    
     // assigned_to is optional for all roles - no validation needed
-
+    
     // Auto-set assigned_by to current user's name for all roles
     // Get current user's name from database
     const [userRows] = await db.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
@@ -123,7 +98,7 @@ async function createTask(req, res) {
     const normalizedAssignedBy = userName; // Always use the creator's name
     const userRole = req.user.role?.toLowerCase();
     const userId = req.user.id;
-
+    
     // Parse assigned_to if provided, otherwise set to null
     let assignedToValue = null;
     if (assigned_to && assigned_to !== '' && assigned_to !== null && assigned_to !== undefined) {
@@ -132,13 +107,13 @@ async function createTask(req, res) {
         assignedToValue = null;
       }
     }
-
+    
     // If employee creates a task and doesn't assign it to anyone, assign it to themselves
     // This ensures the task shows up in their "My Tasks" dashboard immediately
     if (userRole === 'engineer' && !assignedToValue) {
       assignedToValue = userId;
     }
-
+    
     const taskData = {
       project_id: parseInt(project_id),
       title: title.trim(),
@@ -150,30 +125,30 @@ async function createTask(req, res) {
       allocated_time: allocated_time && allocated_time.trim() !== '' ? allocated_time.trim() : null,
       custom_fields: req.body.custom_fields || null
     };
-
+    
     console.log('Normalized task data:', taskData);
-
+    
     const task = await Task.createTask(taskData);
-
+    
     // Log task creation in history
     await logTaskHistory(task.id, project_id, 'create', null, null, null, title.trim(), req.user.id, userName || 'Unknown User', userEmail);
-
+    
     // Send notification to the assigned employee (only if assigned_to is provided)
     if (taskData.assigned_to) {
       try {
         // Get project name for the notification message
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-
+        
         // Get assigned user name for logging
         const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [taskData.assigned_to]);
         const assignedUserName = userRows.length > 0 ? userRows[0].name : 'Employee';
-
+        
         // Get assigner name
         const [assignerRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
         const assignerName = assignerRows.length > 0 ? assignerRows[0].name : 'Manager';
         const notificationMessage = `You have been assigned to task "${title}" in project "${projectName}" by ${assignerName}`;
-
+        
         await Notification.createNotification(taskData.assigned_to, notificationMessage, 'task_assigned');
         console.log(`Task assignment notification sent to employee ${taskData.assigned_to} (${assignedUserName}): ${notificationMessage}`);
       } catch (notifError) {
@@ -189,14 +164,14 @@ async function createTask(req, res) {
         const [projectRows] = await db.query('SELECT name, manager_id FROM projects WHERE id = ?', [project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
         const projectManagerId = projectRows.length > 0 ? projectRows[0].manager_id : null;
-
+        
         // Only notify if the manager is assigned to this project
         if (projectManagerId === managerId) {
           // Get manager name
           const [managerRows] = await db.query('SELECT name FROM users WHERE id = ?', [managerId]);
           const managerName = managerRows.length > 0 ? managerRows[0].name : 'Manager';
           let headManagerMessage;
-
+          
           if (taskData.assigned_to) {
             const [assignedUserRows] = await db.query('SELECT name FROM users WHERE id = ?', [taskData.assigned_to]);
             const assignedUserName = assignedUserRows.length > 0 ? assignedUserRows[0].name : 'Employee';
@@ -204,7 +179,7 @@ async function createTask(req, res) {
           } else {
             headManagerMessage = `Manager ${managerEmail} has created a new task "${title}" in project "${projectName}"`;
           }
-
+          
           await Notification.notifyHeadManagersForManager(managerId, headManagerMessage, 'task_created');
           console.log(`Task creation notification sent to head managers for manager ${managerId}: ${headManagerMessage}`);
         }
@@ -222,7 +197,7 @@ async function createTask(req, res) {
         // Get creator name
         const [creatorRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
         const creatorName = creatorRows.length > 0 ? creatorRows[0].name : 'Employee';
-
+        
         let taskMessage;
         if (taskData.assigned_to) {
           const [assignedUserRows] = await db.query('SELECT name FROM users WHERE id = ?', [taskData.assigned_to]);
@@ -231,15 +206,15 @@ async function createTask(req, res) {
         } else {
           taskMessage = `Employee ${creatorName} has created a new task "${title}" in project "${projectName}"`;
         }
-
+        
         // Notify all admins
         await Notification.notifyAllAdmins(taskMessage, 'task_created');
         console.log(`Task creation notification sent to admins: ${taskMessage}`);
-
+        
         // Notify all managers
         await Notification.notifyAllManagers(taskMessage, 'task_created');
         console.log(`Task creation notification sent to managers: ${taskMessage}`);
-
+        
         // Notify all head managers
         await Notification.notifyAllHeadManagers(taskMessage, 'task_created');
         console.log(`Task creation notification sent to head managers: ${taskMessage}`);
@@ -248,7 +223,7 @@ async function createTask(req, res) {
         // Don't fail the request if notification creation fails
       }
     }
-
+    
     // Notify all admins about task creation (for non-employee roles)
     // Employee notifications are handled separately above
     if (userRole !== 'engineer') {
@@ -259,7 +234,7 @@ async function createTask(req, res) {
         const [creatorRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
         const creatorName = creatorRows.length > 0 ? creatorRows[0].name : 'User';
         const creatorRole = req.user.role || 'User';
-
+        
         let adminMessage;
         if (taskData.assigned_to) {
           const [assignedUserRows] = await db.query('SELECT name FROM users WHERE id = ?', [taskData.assigned_to]);
@@ -268,7 +243,7 @@ async function createTask(req, res) {
         } else {
           adminMessage = `${creatorRole} ${creatorName} has created a new task "${title}" in project "${projectName}"`;
         }
-
+        
         await Notification.notifyAllAdmins(adminMessage, 'task_created');
         console.log(`Admin notification sent for task creation: ${adminMessage}`);
       } catch (notifError) {
@@ -276,22 +251,11 @@ async function createTask(req, res) {
         // Don't fail the request if notification creation fails
       }
     }
-
+    
     // Sync to Google Sheets (non-blocking)
     googleSheetsService.syncTask('create', task).catch(err => {
       console.error('Error syncing task to Google Sheets:', err);
     });
-
-    // Notify project followers
-    try {
-      const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [project_id]);
-      const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-      const projectFollowerSubject = `New Task: ${title} in Project ${projectName}`;
-      const projectFollowerMessage = `A new task "${title}" has been created in project "${projectName}" by ${userName || 'a user'}.`;
-      await notifyProjectFollowers(project_id, projectFollowerSubject, projectFollowerMessage, req.user.id);
-    } catch (followerError) {
-      console.error('Error notifying followers:', followerError);
-    }
 
     res.json({ success: true, task });
   } catch (err) {
@@ -306,25 +270,25 @@ async function updateTask(req, res) {
   try {
     const { id } = req.params;
     const { title, description, status, assigned_to, assigned_by, due_date, archived, custom_fields, allocated_time } = req.body;
-
+    
     // assigned_to is optional - no validation needed
-
+    
     // Get the current task to check if assigned_to or status changed
     const currentTask = await Task.getTaskById(id);
     if (!currentTask) {
       return res.status(404).json({ message: 'Task not found' });
     }
-
+    
     const previousAssignedTo = currentTask.assigned_to;
     const previousStatus = currentTask.status;
     const previousAllocatedTime = currentTask.allocated_time;
-
+    
     // Preserve due_date if not provided in request - use existing value from database
     let finalDueDate = due_date;
     if (finalDueDate === undefined || finalDueDate === null || finalDueDate === '') {
       finalDueDate = currentTask.due_date;
     }
-
+    
     // Parse assigned_to if provided, otherwise set to null
     let newAssignedTo = null;
     if (assigned_to && assigned_to !== '' && assigned_to !== null) {
@@ -333,7 +297,7 @@ async function updateTask(req, res) {
         newAssignedTo = null;
       }
     }
-
+    
     // Normalize status for comparison (both previous and new)
     // Convert project-style statuses to legacy statuses for database compatibility
     let normalizedPreviousStatus = previousStatus || 'pending';
@@ -344,7 +308,7 @@ async function updateTask(req, res) {
     } else if (['at-risk', 'off-track', 'on-hold'].includes(normalizedPreviousStatus)) {
       normalizedPreviousStatus = 'pending'; // Map other project statuses to pending
     }
-
+    
     let normalizedStatus = status || 'pending';
     if (normalizedStatus === 'in-progress') {
       normalizedStatus = 'in_progress';
@@ -353,20 +317,20 @@ async function updateTask(req, res) {
     } else if (['at-risk', 'off-track', 'on-hold'].includes(normalizedStatus)) {
       normalizedStatus = 'pending'; // Map other project statuses to pending
     }
-
+    
     const statusChanged = normalizedPreviousStatus !== normalizedStatus;
-
+    
     // Preserve assigned_by - don't allow changes, keep original creator
     // assigned_by should always remain as the original task creator
     const normalizedAssignedBy = currentTask.assigned_by; // Preserve original value
-
+    
     await Task.updateTask(id, { title, description, status: normalizedStatus, assigned_to: newAssignedTo, assigned_by: normalizedAssignedBy, due_date: finalDueDate, archived, custom_fields, allocated_time });
-
+    
     // Log task history for changed fields
     const [userRows] = await db.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
     const userName = userRows.length > 0 ? userRows[0].name : 'Unknown User';
     const userEmail = userRows.length > 0 ? userRows[0].email : '';
-
+    
     // Track changes for each field
     const fieldsToTrack = {
       title: { old: currentTask.title, new: title },
@@ -377,29 +341,29 @@ async function updateTask(req, res) {
       due_date: { old: currentTask.due_date, new: finalDueDate },
       allocated_time: { old: currentTask.allocated_time, new: allocated_time }
     };
-
+    
     for (const [field, values] of Object.entries(fieldsToTrack)) {
       if (values.old !== values.new) {
         await logTaskHistory(id, currentTask.project_id, 'update', field, values.old, values.new, title, req.user.id, userName, userEmail);
       }
     }
-
+    
     // Send notification to the newly assigned employee if assignment changed (only if newAssignedTo is provided)
     if (previousAssignedTo !== newAssignedTo && newAssignedTo) {
       try {
         // Get project name for the notification message
         const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-
+        
         // Get assigned user name for logging
         const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [newAssignedTo]);
         const assignedUserName = userRows.length > 0 ? userRows[0].name : 'Employee';
-
+        
         // Get assigner name
         const [assignerRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
         const assignerName = assignerRows.length > 0 ? assignerRows[0].name : 'Manager';
         const notificationMessage = `You have been assigned to task "${title}" in project "${projectName}" by ${assignerName}`;
-
+        
         await Notification.createNotification(newAssignedTo, notificationMessage, 'task_assigned');
         console.log(`Task assignment notification sent to employee ${newAssignedTo} (${assignedUserName}): ${notificationMessage}`);
       } catch (notifError) {
@@ -407,28 +371,28 @@ async function updateTask(req, res) {
         // Don't fail the request if notification creation fails
       }
     }
-
+    
     // Send notification to manager if status changed and user is an employee
     if (statusChanged && req.user.role?.toLowerCase() === 'engineer' && currentTask && currentTask.assigned_to) {
       try {
         // Get employee's manager
         const [employeeRows] = await db.query('SELECT manager_id FROM users WHERE id = ?', [currentTask.assigned_to]);
-
+        
         if (employeeRows.length > 0 && employeeRows[0].manager_id) {
           const managerId = employeeRows[0].manager_id;
-
+          
           // Get project name and employee email
           const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
           const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-
+          
           const [employeeUserRows] = await db.query('SELECT name FROM users WHERE id = ?', [currentTask.assigned_to]);
           const employeeName = employeeUserRows.length > 0 ? employeeUserRows[0].name : 'Employee';
-
+          
           // Format status for display
           const statusDisplay = normalizedStatus === 'in_progress' ? 'In Progress' : normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
-
+          
           const notificationMessage = `Employee ${employeeName} has updated task "${title}" in project "${projectName}" to status: ${statusDisplay}`;
-
+          
           await Notification.createNotification(managerId, notificationMessage, 'task_status_update');
           console.log(`Task status update notification sent to manager ${managerId}: ${notificationMessage}`);
         }
@@ -445,14 +409,14 @@ async function updateTask(req, res) {
         const [projectRows] = await db.query('SELECT name, manager_id FROM projects WHERE id = ?', [currentTask.project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
         const projectManagerId = projectRows.length > 0 ? projectRows[0].manager_id : null;
-
+        
         // Only notify if the manager is assigned to this project
         if (projectManagerId === managerId) {
           // Get manager name
           const [managerRows] = await db.query('SELECT name FROM users WHERE id = ?', [managerId]);
           const managerName = managerRows.length > 0 ? managerRows[0].name : 'Manager';
           let headManagerMessage = '';
-
+          
           // Build notification message based on what changed
           if (previousAssignedTo !== newAssignedTo) {
             const [oldUserRows] = await db.query('SELECT name FROM users WHERE id = ?', [previousAssignedTo]);
@@ -466,7 +430,7 @@ async function updateTask(req, res) {
           } else {
             headManagerMessage = `Manager ${managerName} has updated task "${title}" in project "${projectName}"`;
           }
-
+          
           await Notification.notifyHeadManagersForManager(managerId, headManagerMessage, 'task_updated');
           console.log(`Task update notification sent to head managers for manager ${managerId}: ${headManagerMessage}`);
         }
@@ -486,11 +450,11 @@ async function updateTask(req, res) {
         // Get updater name
         const [updaterRows] = await db.query('SELECT name FROM users WHERE id = ?', [employeeId]);
         const updaterName = updaterRows.length > 0 ? updaterRows[0].name : 'Employee';
-
+        
         // Get employee's manager_id from database
         const [employeeRows] = await db.query('SELECT manager_id FROM users WHERE id = ?', [employeeId]);
         const managerId = employeeRows.length > 0 && employeeRows[0].manager_id ? employeeRows[0].manager_id : null;
-
+        
         let updateMessage = '';
         // Build notification message based on what changed
         if (previousAssignedTo !== newAssignedTo && newAssignedTo) {
@@ -505,18 +469,18 @@ async function updateTask(req, res) {
         } else {
           updateMessage = `Employee ${updaterName} has updated task "${title}" in project "${projectName}"`;
         }
-
+        
         if (updateMessage) {
           // Notify all admins
           await Notification.notifyAllAdmins(updateMessage, 'task_updated');
           console.log(`Task update notification sent to admins: ${updateMessage}`);
-
+          
           // Notify employee's specific manager if they have one
           if (managerId) {
             try {
               await Notification.createNotification(managerId, updateMessage, 'task_updated');
               console.log(`Task update notification sent to employee's manager (ID: ${managerId}): ${updateMessage}`);
-
+              
               // Notify head managers for this manager
               await Notification.notifyHeadManagersForManager(managerId, updateMessage, 'task_updated');
               console.log(`Task update notification sent to head managers for manager ${managerId}: ${updateMessage}`);
@@ -530,7 +494,7 @@ async function updateTask(req, res) {
         // Don't fail the request if notification creation fails
       }
     }
-
+    
     // Notify all admins about task update (for non-employee roles)
     if (updaterRole !== 'engineer') {
       try {
@@ -541,7 +505,7 @@ async function updateTask(req, res) {
         const updaterName = updaterRows.length > 0 ? updaterRows[0].name : 'User';
         const updaterRoleDisplay = req.user.role || 'User';
         let adminMessage = '';
-
+        
         // Build notification message based on what changed
         if (previousAssignedTo !== newAssignedTo && newAssignedTo) {
           const [oldUserRows] = await db.query('SELECT name FROM users WHERE id = ?', [previousAssignedTo]);
@@ -555,7 +519,7 @@ async function updateTask(req, res) {
         } else {
           adminMessage = `${updaterRoleDisplay} ${updaterName} has updated task "${title}" in project "${projectName}"`;
         }
-
+        
         await Notification.notifyAllAdmins(adminMessage, 'task_updated');
         console.log(`Admin notification sent for task update: ${adminMessage}`);
       } catch (notifError) {
@@ -566,24 +530,12 @@ async function updateTask(req, res) {
 
     // Get updated task data for sync
     const updatedTask = await Task.getTaskById(id);
-
-    // Sync to Google Sheets (non-blocking)
+    
     // Sync to Google Sheets (non-blocking)
     if (updatedTask) {
       googleSheetsService.syncTask('update', updatedTask).catch(err => {
         console.error('Error syncing task to Google Sheets:', err);
       });
-    }
-
-    // Notify project followers
-    try {
-      const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
-      const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-      const projectFollowerSubject = `Task Updated: ${title} in Project ${projectName}`;
-      const projectFollowerMessage = `Task "${title}" in project "${projectName}" has been updated by ${userName || 'a user'}.`;
-      await notifyProjectFollowers(currentTask.project_id, projectFollowerSubject, projectFollowerMessage, req.user.id);
-    } catch (followerError) {
-      console.error('Error notifying followers:', followerError);
     }
 
     res.json({ success: true, message: 'Task updated successfully' });
@@ -605,15 +557,15 @@ async function deleteTask(req, res) {
   try {
     const { id } = req.params;
     const userRole = req.user.role?.toLowerCase();
-
+    
     // Only admin can delete tasks
     if (userRole !== 'admin') {
       return res.status(403).json({ success: false, message: 'Access denied. Only admins can delete tasks.' });
     }
-
+    
     // Get task details before deletion for notification and sync
     const currentTask = await Task.getTaskById(id);
-
+    
     // Sync deletion to Google Sheets (non-blocking) - before actual deletion
     if (currentTask) {
       console.log(`🔄 Attempting to sync task ${currentTask.id} DELETE to Google Sheets...`);
@@ -630,7 +582,7 @@ async function deleteTask(req, res) {
           console.error('Full error:', err);
         });
     }
-
+    
     if (currentTask) {
       // Log task deletion in history before deleting
       const [userRows] = await db.query('SELECT name, email FROM users WHERE id = ?', [req.user.id]);
@@ -638,7 +590,7 @@ async function deleteTask(req, res) {
       const userEmail = userRows.length > 0 ? userRows[0].email : '';
       await logTaskHistory(id, currentTask.project_id, 'delete', null, currentTask.title, null, currentTask.title, req.user.id, userName, userEmail);
     }
-
+    
     // Notify admin, manager, and head manager if task is deleted by an employee
     if (userRole === 'engineer' && currentTask) {
       try {
@@ -648,15 +600,15 @@ async function deleteTask(req, res) {
         const [deleterRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
         const deleterName = deleterRows.length > 0 ? deleterRows[0].name : 'Employee';
         const deleteMessage = `Employee ${deleterName} has deleted task "${currentTask.title}" in project "${projectName}"`;
-
+        
         // Notify all admins
         await Notification.notifyAllAdmins(deleteMessage, 'task_deleted');
         console.log(`Task deletion notification sent to admins: ${deleteMessage}`);
-
+        
         // Notify all managers
         await Notification.notifyAllManagers(deleteMessage, 'task_deleted');
         console.log(`Task deletion notification sent to managers: ${deleteMessage}`);
-
+        
         // Notify all head managers
         await Notification.notifyAllHeadManagers(deleteMessage, 'task_deleted');
         console.log(`Task deletion notification sent to head managers: ${deleteMessage}`);
@@ -665,9 +617,9 @@ async function deleteTask(req, res) {
         // Don't fail the request if notification creation fails
       }
     }
-
+    
     await Task.deleteTask(id);
-
+    
     // Notify head managers if task is deleted by a manager
     if (userRole === 'manager' && currentTask) {
       try {
@@ -675,7 +627,7 @@ async function deleteTask(req, res) {
         const [projectRows] = await db.query('SELECT name, manager_id FROM projects WHERE id = ?', [currentTask.project_id]);
         const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
         const projectManagerId = projectRows.length > 0 ? projectRows[0].manager_id : null;
-
+        
         // Only notify if the manager is assigned to this project
         if (projectManagerId === managerId) {
           // Get manager name
@@ -700,7 +652,7 @@ async function deleteTask(req, res) {
         const [deleterRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
         const deleterName = deleterRows.length > 0 ? deleterRows[0].name : 'User';
         const deleterRole = req.user.role || 'User';
-
+        
         const adminMessage = `${deleterRole} ${deleterName} has deleted task "${currentTask.title}" from project "${projectName}"`;
         await Notification.notifyAllAdmins(adminMessage, 'task_deleted');
         console.log(`Admin notification sent for task deletion: ${adminMessage}`);
@@ -708,19 +660,8 @@ async function deleteTask(req, res) {
         console.error('Error sending admin notification for task deletion:', notifError);
         // Don't fail the request if notification creation fails
       }
-
-      // Notify project followers
-      try {
-        const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [currentTask.project_id]);
-        const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-        const projectFollowerSubject = `Task Deleted: ${currentTask.title} in Project ${projectName}`;
-        const projectFollowerMessage = `Task "${currentTask.title}" in project "${projectName}" has been deleted by ${req.user.role || 'User'}.`;
-        await notifyProjectFollowers(currentTask.project_id, projectFollowerSubject, projectFollowerMessage, req.user.id);
-      } catch (followerError) {
-        console.error('Error notifying followers:', followerError);
-      }
     }
-
+    
     res.json({ success: true, message: 'Task deleted successfully' });
   } catch (err) {
     console.error(err);
@@ -745,21 +686,21 @@ async function getEmployeeTasks(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
     const userId = req.user.id;
-
+    
     // Only employees can access this endpoint
     if (userRole !== 'engineer') {
       return res.status(403).json({ message: 'Access denied. Only engineers can view their tasks.' });
     }
-
+    
     // Get employee's manager information
     const [userRows] = await db.query(
       'SELECT manager_id FROM users WHERE id = ?',
       [userId]
     );
-
+    
     let managerEmail = null;
     let managerId = null;
-
+    
     if (userRows.length > 0 && userRows[0].manager_id) {
       managerId = userRows[0].manager_id;
       // Get manager's email
@@ -767,12 +708,12 @@ async function getEmployeeTasks(req, res) {
         'SELECT email FROM users WHERE id = ?',
         [managerId]
       );
-
+      
       if (managerRows.length > 0) {
         managerEmail = managerRows[0].email;
       }
     }
-
+    
     // Get all tasks for this employee
     // This will return:
     // 1. Tasks assigned by manager/admin/head manager (if manager exists)
@@ -790,7 +731,7 @@ async function getEmployeeTasks(req, res) {
 async function getTaskComments(req, res) {
   try {
     const taskId = parseInt(req.params.id);
-
+    
     if (!taskId || isNaN(taskId)) {
       return res.status(400).json({ success: false, message: 'Invalid task ID' });
     }
@@ -858,45 +799,6 @@ async function createTaskComment(req, res) {
       LEFT JOIN users u ON tc.user_id = u.id
       WHERE tc.id = ?
     `, [result.insertId]);
-
-    // Notify Project Followers about new task comment
-    try {
-      const [taskRows] = await db.query('SELECT title, project_id FROM tasks WHERE id = ?', [taskId]);
-      const taskTitle = taskRows.length > 0 ? taskRows[0].title : 'a task';
-      const projectId = taskRows.length > 0 ? taskRows[0].project_id : null;
-
-      if (projectId) {
-        const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [projectId]);
-        const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
-        const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [userId]);
-        const commenterName = userRows.length > 0 ? userRows[0].name : 'User';
-
-        const followers = await projectModel.getProjectFollowers(projectId);
-        const followerEmails = followers.map(f => f.email).filter(Boolean);
-        const followerIds = followers.map(f => f.id);
-
-        const notificationMessage = `New comment on task "${taskTitle}" in project "${projectName}" by ${commenterName}: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`;
-
-        // 1. Email Notifications
-        if (followerEmails.length > 0) {
-          const emailSubject = `New Comment on Task: ${taskTitle}`;
-          const emailHtml = `<p><strong>${commenterName}</strong> commented on task <strong>"${taskTitle}"</strong> in project <strong>"${projectName}"</strong>:</p>
-                                    <blockquote>${comment}</blockquote>`;
-
-          await emailService.sendEmail(followerEmails, emailSubject, emailHtml);
-        }
-
-        // 2. In-App Notifications
-        for (const followerId of followerIds) {
-          // Don't notify the commenter
-          if (followerId !== userId) {
-            await Notification.createNotification(followerId, notificationMessage, 'task_comment');
-          }
-        }
-      }
-    } catch (notifError) {
-      console.error('Error sending notifications for task comment:', notifError);
-    }
 
     res.status(201).json({ success: true, comment: newComment[0] });
   } catch (error) {

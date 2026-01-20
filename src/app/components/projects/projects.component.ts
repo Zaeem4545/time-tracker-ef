@@ -52,10 +52,10 @@ export class ProjectsComponent implements OnInit {
     { id: 'allocated_time', name: 'allocated_time', label: 'Allocated Time', type: 'text', placeholder: 'HH:MM:SS', required: false, order: 5, nonDeletable: true },
     { id: 'attachment', name: 'attachment', label: 'Attachment', type: 'file', placeholder: 'Upload File', required: false, order: 6, nonDeletable: true }
   ];
-
+  
   // Store original dates to preserve them exactly
   originalProjectDates: { [key: number]: { start_date: string; end_date: string } } = {};
-
+  
   // Project editing
   editingProject: number | null = null;
   editProjectData: { [key: number]: any } = {}; // For inline editing in table
@@ -66,7 +66,7 @@ export class ProjectsComponent implements OnInit {
   showEditProjectModal: boolean = false; // Show edit project modal
   selectedProjectForEdit: any | null = null; // Project being edited in modal
   selectedAttachmentFile: File | null = null;
-
+  
   // Tasks management
   expandedProjects: Set<number> = new Set();
   projectTasks: { [key: number]: any[] } = {};
@@ -75,7 +75,7 @@ export class ProjectsComponent implements OnInit {
   openTaskMenuId: number | null = null; // Track which task menu is open
   openProjectMenuId: number | null = null; // Track which project menu is open
   showTaskModal: boolean = false;
-
+  
   // Project details modal
   selectedProjectForDetails: any | null = null;
   showProjectDetailsModal: boolean = false;
@@ -84,12 +84,12 @@ export class ProjectsComponent implements OnInit {
   loadingComments: boolean = false;
   editingProjectCommentId: number | null = null;
   editingProjectCommentText: string = '';
-
+  
   // Task history modal
   showTaskHistoryModal: boolean = false;
   projectHistory: any[] = [];
   loadingHistory: boolean = false;
-
+  
   // Task-specific history modal
   showTaskHistoryModalForTask: boolean = false;
   taskHistory: any[] = [];
@@ -98,13 +98,11 @@ export class ProjectsComponent implements OnInit {
   taskFormFields: DynamicField[] = [
     { id: 'title', name: 'title', label: 'Task Title', type: 'text', placeholder: 'Task Title', required: true, order: 0, nonDeletable: true },
     { id: 'description', name: 'description', label: 'Description', type: 'textarea', placeholder: 'Task Description', required: false, order: 1, nonDeletable: true },
-    {
-      id: 'status', name: 'status', label: 'Status', type: 'select', placeholder: 'Status', required: false, order: 2, nonDeletable: true, options: [
-        { value: 'pending', label: 'Pending' },
-        { value: 'in-progress', label: 'In Progress' },
-        { value: 'completed', label: 'Completed' }
-      ]
-    },
+    { id: 'status', name: 'status', label: 'Status', type: 'select', placeholder: 'Status', required: false, order: 2, nonDeletable: true, options: [
+      { value: 'pending', label: 'Pending' },
+      { value: 'in-progress', label: 'In Progress' },
+      { value: 'completed', label: 'Completed' }
+    ]},
     { id: 'assigned_to', name: 'assigned_to', label: 'Assign To', type: 'select', placeholder: 'Assign To (Optional)', required: false, order: 3, nonDeletable: true },
     { id: 'due_date', name: 'due_date', label: 'Due Date', type: 'date', placeholder: 'Due Date (Optional)', required: false, order: 4, nonDeletable: true },
     { id: 'allocated_time', name: 'allocated_time', label: 'Allocated Time', type: 'text', placeholder: 'HH:MM:SS', required: false, order: 5, nonDeletable: true }
@@ -122,7 +120,7 @@ export class ProjectsComponent implements OnInit {
   editTaskData: { [key: number]: { title: string; description: string; status: string; assigned_to: number | string | null; due_date: string; allocated_time?: string; custom_fields?: any } } = {};
   teamMembers: any[] = []; // Team members for managers
   employeeTasks: any[] = []; // All tasks for employees
-
+  
   // Time tracking
   selectedTaskForTimeTracking: number | null = null;
   taskTimeTracking: any[] = [];
@@ -141,7 +139,7 @@ export class ProjectsComponent implements OnInit {
   isCreateMode: boolean = false; // Track if component is in create-only mode
 
   constructor(
-    private adminService: AdminService,
+    private adminService: AdminService, 
     private authService: AuthService,
     private managerService: ManagerService,
     private router: Router,
@@ -150,7 +148,7 @@ export class ProjectsComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private toastService: ToastNotificationService,
     private confirmationService: ConfirmationModalService
-  ) { }
+  ) {}
 
   isMyProjectsMode: boolean = false; // New mode for "My Projects and Tasks"
 
@@ -159,21 +157,21 @@ export class ProjectsComponent implements OnInit {
     this.isCreateMode = this.router.url === '/create-project' || this.route.snapshot.data['mode'] === 'create';
     // Check if we're in "My Projects and Tasks" mode
     this.isMyProjectsMode = this.router.url === '/my-projects-tasks' || this.route.snapshot.data['mode'] === 'my-projects';
-
+    
     this.currentUserRole = this.authService.getRole();
     this.currentUserId = this.authService.getUserId();
     this.isHeadManager = this.currentUserRole?.toLowerCase() === 'head manager';
     this.isManager = this.currentUserRole?.toLowerCase() === 'manager';
     this.isAdmin = this.currentUserRole?.toLowerCase() === 'admin';
     this.isEmployee = this.currentUserRole?.toLowerCase() === 'engineer';
-
+    
     // Don't auto-open create form in create mode - let user click button to show it
     // Form will be hidden by default, user clicks "Create Project" to show it
-
+    
     // Initialize dynamic form for projects
     // Force reset form to ensure customer_id field is included
     this.dynamicFormService.resetForm('createProject', this.projectFormFields);
-
+    
     this.loadUsers();
     // Load customers first, then projects to ensure customer names are available
     this.adminService.getCustomers().subscribe({
@@ -199,7 +197,7 @@ export class ProjectsComponent implements OnInit {
         }
       }
     });
-
+    
     if (this.isHeadManager && !this.isCreateMode && !this.isMyProjectsMode) {
       this.loadSelectedProjects();
       this.loadSelectedManagers();
@@ -210,7 +208,7 @@ export class ProjectsComponent implements OnInit {
     if (this.isEmployee) {
       this.loadEmployeeTasks();
     }
-
+    
     // Check for query parameters to open modals when navigating from dashboard
     this.route.queryParams.subscribe(params => {
       if (params['viewProject']) {
@@ -232,7 +230,7 @@ export class ProjectsComponent implements OnInit {
         };
         setTimeout(checkProject, 300);
       }
-
+      
       if (params['editProject']) {
         const projectId = parseInt(params['editProject']);
         const checkProject = () => {
@@ -249,7 +247,7 @@ export class ProjectsComponent implements OnInit {
         };
         setTimeout(checkProject, 300);
       }
-
+      
       if (params['viewTask'] && params['projectId']) {
         const taskId = parseInt(params['viewTask']);
         const projectId = parseInt(params['projectId']);
@@ -267,7 +265,7 @@ export class ProjectsComponent implements OnInit {
         };
         setTimeout(checkTask, 500);
       }
-
+      
       if (params['editTask'] && params['projectId']) {
         const taskId = parseInt(params['editTask']);
         const projectId = parseInt(params['projectId']);
@@ -289,14 +287,14 @@ export class ProjectsComponent implements OnInit {
   }
 
   // Load users for task assignment dropdown
-  loadUsers() {
+  loadUsers() { 
     this.adminService.getUsers().subscribe(users => {
       this.users = users.map((user: any) => ({
         ...user,
         role: (user.role || '').toLowerCase()
       }));
       // Filter managers for assignment dropdown
-      this.managers = this.users.filter((user: any) =>
+      this.managers = this.users.filter((user: any) => 
         user.role && user.role.toLowerCase() === 'manager'
       );
       // After loading users, load selected managers if head manager
@@ -337,7 +335,7 @@ export class ProjectsComponent implements OnInit {
     if (project && project.customer_name) {
       return project.customer_name;
     }
-
+    
     if (!customerId || customerId === '' || customerId === null) return '';
     // Handle both number and string types
     const id = typeof customerId === 'string' ? parseInt(customerId) : customerId;
@@ -382,35 +380,35 @@ export class ProjectsComponent implements OnInit {
       this.cdr.detectChanges();
       return;
     }
-
+    
     const customerIdNum = typeof customerId === 'string' ? parseInt(customerId) : customerId;
     const selectedCustomer = this.customers.find(c => c.id === customerIdNum);
-
+    
     if (!selectedCustomer) {
       console.warn('Customer not found:', customerIdNum);
       return;
     }
-
+    
     if (this.editProjectData[projectId]) {
       // Auto-populate project name from customer's project_name
       if (selectedCustomer.project_name && (!this.editProjectData[projectId].name || this.editProjectData[projectId].name.trim() === '')) {
         this.editProjectData[projectId].name = selectedCustomer.project_name;
       }
-
+      
       // Auto-populate region directly (not in custom_fields)
       this.editProjectData[projectId].region = selectedCustomer.region || '';
-
+      
       // Also update the project object for immediate UI display
       const project = this.projects.find(p => p.id === projectId);
       if (project) {
         project.region = selectedCustomer.region || '';
-
+        
         // Update in filteredProjects and groupedProjects for immediate UI update
         const filteredProject = this.filteredProjects.find(p => p.id === projectId);
         if (filteredProject) {
           filteredProject.region = selectedCustomer.region || '';
         }
-
+        
         // Update in grouped projects
         Object.keys(this.groupedProjects).forEach(key => {
           const groupedProject = this.groupedProjects[key].find(p => p.id === projectId);
@@ -419,7 +417,7 @@ export class ProjectsComponent implements OnInit {
           }
         });
       }
-
+      
       // Force change detection to update UI immediately
       this.cdr.detectChanges();
     }
@@ -446,16 +444,16 @@ export class ProjectsComponent implements OnInit {
   // Get only employees for task assignment
   getEmployees(task?: any): any[] {
     let employees: any[] = [];
-
+    
     if (this.isManager) {
       // For managers, show only employees assigned to them (team members)
-      employees = this.teamMembers.filter((member: any) =>
+      employees = this.teamMembers.filter((member: any) => 
         member.role && member.role.toLowerCase() === 'engineer'
       );
-
+      
       // If editing a task and the assigned employee is not in teamMembers, include them from users list
       if (task && task.assigned_to) {
-        const assignedEmployee = this.users.find((u: any) =>
+        const assignedEmployee = this.users.find((u: any) => 
           u.id === task.assigned_to && u.role && u.role.toLowerCase() === 'engineer'
         );
         if (assignedEmployee && !employees.find((e: any) => e.id === assignedEmployee.id)) {
@@ -464,11 +462,11 @@ export class ProjectsComponent implements OnInit {
       }
     } else {
       // For admin, head manager, and employee, show all employees
-      employees = this.users.filter((user: any) =>
+      employees = this.users.filter((user: any) => 
         user.role && user.role.toLowerCase() === 'engineer'
       );
     }
-
+    
     return employees;
   }
 
@@ -480,7 +478,7 @@ export class ProjectsComponent implements OnInit {
     if (storedManagerIds) {
       try {
         const managerIds = JSON.parse(storedManagerIds);
-        this.selectedManagers = this.users.filter((user: any) =>
+        this.selectedManagers = this.users.filter((user: any) => 
           user.role && user.role.toLowerCase() === 'manager' && managerIds.includes(user.id)
         );
       } catch (e) {
@@ -493,28 +491,27 @@ export class ProjectsComponent implements OnInit {
   }
 
   // Project Management
-  loadProjects() {
+  loadProjects() { 
     this.adminService.getProjects().subscribe(projects => {
       // Format dates for HTML date inputs (YYYY-MM-DD format)
       // Store original dates to preserve them exactly
       this.projects = projects.map((p: any) => {
         const startDate = this.extractDateOnly(p.start_date);
         const endDate = this.extractDateOnly(p.end_date);
-
+        
         // Store original dates exactly as they come from database
         this.originalProjectDates[p.id] = {
           start_date: startDate,
           end_date: endDate
         };
-
+        
         return {
           ...p,
           start_date: startDate,
           end_date: endDate,
           manager_id: p.manager_id || null, // Ensure manager_id is set
           customer_id: p.customer_id || null, // Ensure customer_id is preserved
-          customer_name: p.customer_name || null, // Store customer_name from backend
-          is_following: !!p.is_following // Map boolean from backend (0/1)
+          customer_name: p.customer_name || null // Store customer_name from backend
         };
       });
       // Initialize newTask for each project
@@ -532,7 +529,7 @@ export class ProjectsComponent implements OnInit {
   // Update available regions from projects and tasks
   updateAvailableRegions(): void {
     const regions = new Set<string>();
-
+    
     // Extract regions from projects - use direct region column
     this.projects.forEach((project: any) => {
       // First check direct region column
@@ -542,14 +539,14 @@ export class ProjectsComponent implements OnInit {
       // Also check custom_fields as fallback (for backward compatibility)
       const customFields = this.getProjectCustomFields(project);
       if (customFields) {
-        const regionValue = customFields['region'] || customFields['Region'] ||
-          customFields['country'] || customFields['Country'];
+        const regionValue = customFields['region'] || customFields['Region'] || 
+                           customFields['country'] || customFields['Country'];
         if (regionValue && String(regionValue).trim() !== '') {
           regions.add(String(regionValue).trim());
         }
       }
     });
-
+    
     // Extract regions from tasks (if tasks have custom fields or region info)
     Object.keys(this.projectTasks).forEach(projectId => {
       const tasks = this.projectTasks[parseInt(projectId)];
@@ -558,12 +555,12 @@ export class ProjectsComponent implements OnInit {
           // Check if task has custom_fields or region field
           if (task.custom_fields) {
             try {
-              const taskCustomFields = typeof task.custom_fields === 'string'
-                ? JSON.parse(task.custom_fields)
+              const taskCustomFields = typeof task.custom_fields === 'string' 
+                ? JSON.parse(task.custom_fields) 
                 : task.custom_fields;
               if (taskCustomFields) {
-                const regionValue = taskCustomFields['region'] || taskCustomFields['Region'] ||
-                  taskCustomFields['country'] || taskCustomFields['Country'];
+                const regionValue = taskCustomFields['region'] || taskCustomFields['Region'] || 
+                                   taskCustomFields['country'] || taskCustomFields['Country'];
                 if (regionValue && String(regionValue).trim() !== '') {
                   regions.add(String(regionValue).trim());
                 }
@@ -579,7 +576,7 @@ export class ProjectsComponent implements OnInit {
         });
       }
     });
-
+    
     this.availableRegions = Array.from(regions).sort();
   }
 
@@ -618,33 +615,33 @@ export class ProjectsComponent implements OnInit {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-
+    
     // Close status dropdown if clicking outside
     if (this.statusDropdownOpen !== null) {
       if (!target.closest('.status-selector')) {
         this.statusDropdownOpen = null;
       }
     }
-
+    
     // Close project status dropdown if clicking outside
     if (this.projectStatusDropdownOpen !== null) {
       if (!target.closest('.status-selector')) {
         this.projectStatusDropdownOpen = null;
       }
     }
-
+    
     // Close search dropdown if clicking outside
     if (!target.closest('.search-container-top')) {
       this.showSearchDropdown = false;
     }
-
+    
     // Close task menu if clicking outside
     if (this.openTaskMenuId !== null) {
       if (!target.closest('.task-menu-container')) {
         this.openTaskMenuId = null;
       }
     }
-
+    
     // Close project menu if clicking outside
     if (this.openProjectMenuId !== null) {
       if (!target.closest('.project-menu-container')) {
@@ -690,37 +687,6 @@ export class ProjectsComponent implements OnInit {
     return this.activeFilters.includes(filterType);
   }
 
-  // Toggle follow status
-  toggleFollow(project: any, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
-
-    if (project.is_following) {
-      this.adminService.unfollowProject(project.id).subscribe({
-        next: () => {
-          project.is_following = false;
-          this.toastService.show(`Unfollowed project "${project.name}"`, 'success');
-        },
-        error: (err) => {
-          console.error('Error unfollowing project:', err);
-          this.toastService.show('Failed to unfollow project', 'error');
-        }
-      });
-    } else {
-      this.adminService.followProject(project.id).subscribe({
-        next: () => {
-          project.is_following = true;
-          this.toastService.show(`Followed project "${project.name}"`, 'success');
-        },
-        error: (err) => {
-          console.error('Error following project:', err);
-          this.toastService.show('Failed to follow project', 'error');
-        }
-      });
-    }
-  }
-
   // Set group by option (toggle multiple selection)
   setGroupBy(option: string): void {
     const index = this.groupBy.indexOf(option);
@@ -731,10 +697,10 @@ export class ProjectsComponent implements OnInit {
       // Add group by if not selected
       this.groupBy.push(option);
     }
-
+    
     // Show status column when status is selected in group by
     this.showStatusColumn = this.groupBy.includes('status');
-
+    
     this.applyFilters();
   }
 
@@ -860,8 +826,8 @@ export class ProjectsComponent implements OnInit {
         // Also check custom_fields as fallback (for backward compatibility)
         const customFields = this.getProjectCustomFields(project);
         if (customFields) {
-          const regionValue = customFields['region'] || customFields['Region'] ||
-            customFields['country'] || customFields['Country'];
+          const regionValue = customFields['region'] || customFields['Region'] || 
+                             customFields['country'] || customFields['Country'];
           if (regionValue && String(regionValue).toLowerCase().trim() === String(this.selectedRegionFilter).toLowerCase().trim()) {
             return true;
           }
@@ -924,8 +890,8 @@ export class ProjectsComponent implements OnInit {
           if (customFields) {
             for (const key in customFields) {
               const lowerKey = key.toLowerCase();
-              if ((lowerKey === 'region' || lowerKey.includes('region')) &&
-                String(customFields[key]).toLowerCase().includes(searchLower)) {
+              if ((lowerKey === 'region' || lowerKey.includes('region')) && 
+                  String(customFields[key]).toLowerCase().includes(searchLower)) {
                 return true;
               }
             }
@@ -944,8 +910,8 @@ export class ProjectsComponent implements OnInit {
           if (customFields) {
             for (const key in customFields) {
               const lowerKey = key.toLowerCase();
-              if ((lowerKey === 'customer' || lowerKey.includes('customer')) &&
-                String(customFields[key]).toLowerCase().includes(searchLower)) {
+              if ((lowerKey === 'customer' || lowerKey.includes('customer')) && 
+                  String(customFields[key]).toLowerCase().includes(searchLower)) {
                 return true;
               }
             }
@@ -956,8 +922,8 @@ export class ProjectsComponent implements OnInit {
           const tasks = this.projectTasks[project.id] || [];
           return tasks.some((task: any) => {
             return (task.title && task.title.toLowerCase().includes(searchLower)) ||
-              (task.description && task.description.toLowerCase().includes(searchLower)) ||
-              (task.status && task.status.toLowerCase().includes(searchLower));
+                   (task.description && task.description.toLowerCase().includes(searchLower)) ||
+                   (task.status && task.status.toLowerCase().includes(searchLower));
           });
         } else {
           // Default: search in all fields
@@ -982,7 +948,7 @@ export class ProjectsComponent implements OnInit {
           const tasks = this.projectTasks[project.id] || [];
           if (tasks.some((task: any) => {
             return (task.title && task.title.toLowerCase().includes(searchLower)) ||
-              (task.description && task.description.toLowerCase().includes(searchLower));
+                   (task.description && task.description.toLowerCase().includes(searchLower));
           })) return true;
           return false;
         }
@@ -1076,9 +1042,9 @@ export class ProjectsComponent implements OnInit {
     } else {
       this.groupedProjects = {};
     }
-
+    
     this.filteredProjects = filtered;
-
+    
     // Preserve expanded projects that are still in the filtered list
     const filteredProjectIds = new Set(filtered.map((p: any) => p.id));
     const expandedToKeep = new Set<number>();
@@ -1150,7 +1116,7 @@ export class ProjectsComponent implements OnInit {
   applySearchOption(option: string): void {
     this.selectedSearchOption = option;
     this.showSearchSuggestions = false;
-
+    
     // Apply specific search based on option
     if (option === 'project') {
       // Search in project names
@@ -1259,12 +1225,12 @@ export class ProjectsComponent implements OnInit {
   // Format date for display (e.g., "Jan 15, 2024")
   formatAllocatedTime(allocatedTime: any): string {
     if (!allocatedTime) return '';
-
+    
     // If it's already in HH:MM:SS format, return as is
     if (typeof allocatedTime === 'string' && allocatedTime.includes(':')) {
       return allocatedTime;
     }
-
+    
     // If it's a number (decimal hours), convert to HH:MM:SS
     if (typeof allocatedTime === 'number') {
       const totalSeconds = Math.round(allocatedTime * 3600);
@@ -1273,13 +1239,13 @@ export class ProjectsComponent implements OnInit {
       const seconds = totalSeconds % 60;
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
-
+    
     return allocatedTime ? String(allocatedTime) : '';
   }
 
   formatDateForDisplay(date: any): string {
     if (!date) return '-';
-
+    
     // Extract date part if it's a datetime string
     let dateStr = date;
     if (typeof date === 'string') {
@@ -1289,17 +1255,17 @@ export class ProjectsComponent implements OnInit {
         dateStr = date.split(' ')[0];
       }
     }
-
+    
     // Parse the date
     const d = new Date(dateStr + 'T00:00:00'); // Add time to avoid timezone issues
     if (isNaN(d.getTime())) return dateStr; // Return original if invalid
-
+    
     // Format as "MMM DD, YYYY" (e.g., "Jan 15, 2024")
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const month = months[d.getMonth()];
     const day = d.getDate();
     const year = d.getFullYear();
-
+    
     return `${month} ${day}, ${year}`;
   }
 
@@ -1332,10 +1298,10 @@ export class ProjectsComponent implements OnInit {
   // Calculate remaining allocated time for a project
   getRemainingAllocatedTime(project: any): string {
     if (!project || !project.allocated_time) return '';
-
+    
     const projectSeconds = this.timeToSeconds(project.allocated_time);
     if (projectSeconds === 0) return '';
-
+    
     // Get all tasks for this project
     const tasks = this.projectTasks[project.id] || [];
     let totalTaskSeconds = 0;
@@ -1344,7 +1310,7 @@ export class ProjectsComponent implements OnInit {
         totalTaskSeconds += this.timeToSeconds(task.allocated_time);
       }
     });
-
+    
     const remainingSeconds = projectSeconds - totalTaskSeconds;
     return this.secondsToTime(remainingSeconds);
   }
@@ -1352,22 +1318,22 @@ export class ProjectsComponent implements OnInit {
   // Extract date only (YYYY-MM-DD) without timezone conversion (for input fields)
   extractDateOnly(date: any): string {
     if (!date) return '';
-
+    
     // If it's already in YYYY-MM-DD format, return as is (no conversion needed)
     if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return date;
     }
-
+    
     // If it's a string with time component (ISO format), extract just the date part
     if (typeof date === 'string' && date.includes('T')) {
       return date.split('T')[0];
     }
-
+    
     // If it's a string with space separator (MySQL datetime format), extract date part
     if (typeof date === 'string' && date.includes(' ')) {
       return date.split(' ')[0];
     }
-
+    
     // Try to extract YYYY-MM-DD pattern from any string
     if (typeof date === 'string') {
       const dateMatch = date.match(/^\d{4}-\d{2}-\d{2}/);
@@ -1375,23 +1341,23 @@ export class ProjectsComponent implements OnInit {
         return dateMatch[0];
       }
     }
-
+    
     // Last resort: parse as Date but use UTC to avoid timezone issues
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
-
+    
     // Use UTC methods to avoid timezone conversion
     const year = d.getUTCFullYear();
     const month = d.getUTCMonth() + 1;
     const day = d.getUTCDate();
-
+    
     // Pad with leading zeros manually
     const monthStr = month < 10 ? '0' + month : String(month);
     const dayStr = day < 10 ? '0' + day : String(day);
-
+    
     return `${year}-${monthStr}-${dayStr}`;
   }
-
+  
   openCreateProjectModal() {
     this.newProject = {
       customer_id: null,
@@ -1415,18 +1381,18 @@ export class ProjectsComponent implements OnInit {
     if (!startDate || !endDate) {
       return ''; // If either date is empty, validation passes (dates are optional)
     }
-
+    
     const start = new Date(startDate);
     const end = new Date(endDate);
-
+    
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return ''; // Invalid dates, let the browser handle it
     }
-
+    
     if (start > end) {
       return 'Date is not correct, Please choose the correct Date.';
     }
-
+    
     return '';
   }
 
@@ -1445,7 +1411,7 @@ export class ProjectsComponent implements OnInit {
   createProject() {
     // Clear previous error
     this.createProjectError = '';
-
+    
     // Validate required fields
     if (!this.newProject.name || this.newProject.name.trim() === '') {
       this.createProjectError = 'Project name is required';
@@ -1459,7 +1425,7 @@ export class ProjectsComponent implements OnInit {
       this.createProjectError = 'Customer is required';
       return;
     }
-
+    
     // Validate dates if they exist
     if (this.newProject.start_date || this.newProject.end_date) {
       const dateError = this.validateDates(this.newProject.start_date, this.newProject.end_date);
@@ -1468,7 +1434,7 @@ export class ProjectsComponent implements OnInit {
         return;
       }
     }
-
+    
     // Build project data
     const projectData: any = {
       name: this.newProject.name.trim(),
@@ -1480,7 +1446,7 @@ export class ProjectsComponent implements OnInit {
       allocated_time: this.newProject.allocated_time || null,
       assigned_to: this.newProject.assigned_to || null
     };
-
+    
     // Auto-populate region from customer if not provided
     if (!this.newProject.region && projectData.customer_id) {
       const selectedCustomer = this.customers.find(c => c.id === projectData.customer_id);
@@ -1490,7 +1456,7 @@ export class ProjectsComponent implements OnInit {
     } else if (this.newProject.region) {
       projectData.region = this.newProject.region;
     }
-
+    
     // Upload file first if attachment exists
     if (this.newProject.attachment && this.newProject.attachment instanceof File) {
       this.adminService.uploadFile(this.newProject.attachment).subscribe({
@@ -1512,7 +1478,7 @@ export class ProjectsComponent implements OnInit {
       this.createProjectWithData(projectData);
     }
   }
-
+  
   private createProjectWithData(projectData: any): void {
     this.adminService.createProject(projectData).subscribe({
       next: () => {
@@ -1542,13 +1508,13 @@ export class ProjectsComponent implements OnInit {
       }
     });
   }
-
+  
   // Open edit project modal
   openEditProjectModal(project: any): void {
     // Ensure history modal is closed when opening edit modal
     this.showTaskHistoryModal = false;
     this.projectHistory = [];
-
+    
     // Load full project details and open edit modal
     this.adminService.getProjects().subscribe({
       next: (projects) => {
@@ -1630,13 +1596,13 @@ export class ProjectsComponent implements OnInit {
     this.editingProjectCommentId = null;
     this.editingProjectCommentText = '';
   }
-
+  
   getAttachmentFileName(attachmentPath: string): string {
     if (!attachmentPath) return '';
     const parts = attachmentPath.split('/');
     return parts[parts.length - 1] || attachmentPath;
   }
-
+  
   onAttachmentChange(event: any): void {
     const file = event.target.files[0];
     if (file) {
@@ -1657,19 +1623,19 @@ export class ProjectsComponent implements OnInit {
     // Use original dates if available, otherwise use current project dates
     const originalDates = this.originalProjectDates[project.id] || { start_date: '', end_date: '' };
     const customFields = this.getProjectCustomFields(project) || {};
-
+    
     // Initialize custom_fields object with all existing custom field names
     const allCustomFieldNames = this.getAllProjectCustomFieldNames();
     const initializedCustomFields: any = {};
     allCustomFieldNames.forEach((fieldName: string) => {
       initializedCustomFields[fieldName] = customFields[fieldName] || '';
     });
-
+    
     // Ensure region is included in custom_fields if it exists in project
     if (customFields['region']) {
       initializedCustomFields['region'] = customFields['region'];
     }
-
+    
     // If customer is selected, get region from customer
     if (project.customer_id) {
       const customer = this.customers.find(c => c.id === project.customer_id);
@@ -1677,7 +1643,7 @@ export class ProjectsComponent implements OnInit {
         initializedCustomFields['region'] = customer.region;
       }
     }
-
+    
     this.editProjectData[project.id] = {
       name: project.name,
       description: project.description || '',
@@ -1694,7 +1660,7 @@ export class ProjectsComponent implements OnInit {
     };
     this.editProjectError[project.id] = ''; // Clear any previous error
   }
-
+  
   cancelEdit(projectId: number) {
     this.editingProject = null;
     delete this.editProjectData[projectId];
@@ -1702,14 +1668,14 @@ export class ProjectsComponent implements OnInit {
     // Reload to restore original values
     this.loadProjects();
   }
-
+  
   // Save project from modal (matches dashboard structure)
   saveProject(): void {
     if (!this.selectedProjectForEdit) return;
-
+    
     const projectId = this.selectedProjectForEdit.id;
     const data = this.modalEditProjectData;
-
+    
     // Validation
     if (!data.name || data.name.trim() === '') {
       this.modalEditProjectError = 'Project name is required';
@@ -1723,12 +1689,12 @@ export class ProjectsComponent implements OnInit {
       this.modalEditProjectError = 'Customer is required';
       return;
     }
-
+    
     // Prepare update data
     const customerId = typeof data.customer_id === 'string' ? parseInt(data.customer_id) : data.customer_id;
     // Preserve existing manager_id (not editable in modal)
     const managerId = this.selectedProjectForEdit.manager_id || null;
-
+    
     // Normalize assigned_to: convert string to number, or null if empty/null/undefined (same logic as tasks)
     let assignedToValue: number | null = null;
     const assignedTo = data.assigned_to;
@@ -1742,7 +1708,7 @@ export class ProjectsComponent implements OnInit {
         }
       }
     }
-
+    
     // Handle attachment upload
     if (this.selectedAttachmentFile) {
       this.adminService.uploadFile(this.selectedAttachmentFile).subscribe({
@@ -1772,7 +1738,7 @@ export class ProjectsComponent implements OnInit {
       });
       return;
     }
-
+    
     // No new attachment, preserve existing or set to null
     const existingAttachment = this.selectedProjectForEdit.attachment || null;
     const updateData: any = {
@@ -1787,10 +1753,10 @@ export class ProjectsComponent implements OnInit {
       assigned_to: assignedToValue,
       attachment: existingAttachment
     };
-
+    
     this.updateProjectWithData(projectId, updateData);
   }
-
+  
   private updateProjectWithData(projectId: number, updateData: any): void {
     this.adminService.updateProject(projectId, updateData).subscribe({
       next: () => {
@@ -1839,35 +1805,35 @@ export class ProjectsComponent implements OnInit {
       }
     });
   }
-
+  
   // Save project from inline editing (table)
   saveProjectInline(projectId: number): void {
     const editData = this.editProjectData[projectId];
-
+    
     // Clear previous error
     this.editProjectError[projectId] = '';
-
+    
     if (!editData || !editData.name || editData.name.trim() === '') {
       this.editProjectError[projectId] = 'Project name is required';
       return;
     }
-
+    
     // Validate customer_id is required
     if (!editData.customer_id || editData.customer_id === '' || editData.customer_id === null) {
       this.editProjectError[projectId] = 'Customer is required';
       return;
     }
-
+    
     // Validate dates
     const dateError = this.validateDates(editData.start_date, editData.end_date);
     if (dateError) {
       this.editProjectError[projectId] = dateError;
       return;
     }
-
+    
     // Get original dates to preserve them exactly
     const originalDates = this.originalProjectDates[projectId] || { start_date: '', end_date: '' };
-
+    
     // Use original dates if the current dates match (to prevent timezone shifts)
     const normalizeDate = (date: string) => {
       if (!date) return '';
@@ -1875,19 +1841,19 @@ export class ProjectsComponent implements OnInit {
       if (date.includes(' ')) return date.split(' ')[0];
       return date.substring(0, 10);
     };
-
+    
     const currentStartDate = normalizeDate(editData.start_date || '');
     const currentEndDate = normalizeDate(editData.end_date || '');
     const originalStartDate = normalizeDate(originalDates.start_date || '');
     const originalEndDate = normalizeDate(originalDates.end_date || '');
-
-    const finalStartDate = (currentStartDate === originalStartDate && originalStartDate)
-      ? originalStartDate
+    
+    const finalStartDate = (currentStartDate === originalStartDate && originalStartDate) 
+      ? originalStartDate 
       : (currentStartDate || null);
-    const finalEndDate = (currentEndDate === originalEndDate && originalEndDate)
-      ? originalEndDate
+    const finalEndDate = (currentEndDate === originalEndDate && originalEndDate) 
+      ? originalEndDate 
       : (currentEndDate || null);
-
+    
     // Prepare custom_fields
     const customFields: any = {};
     if (editData.custom_fields && typeof editData.custom_fields === 'object') {
@@ -1898,16 +1864,16 @@ export class ProjectsComponent implements OnInit {
         }
       });
     }
-
+    
     // Convert customer_id to number if it's a string
     let customerId: number | null = null;
     if (editData.customer_id) {
       customerId = typeof editData.customer_id === 'string' ? parseInt(editData.customer_id) : editData.customer_id;
     }
-
+    
     const originalProject = this.projects.find(p => p.id === projectId);
     const originalAttachment = originalProject?.attachment || null;
-
+    
     const attachmentFile = editData.attachment instanceof File ? editData.attachment : null;
     let existingAttachment: string | null = null;
     if (editData.attachment && typeof editData.attachment === 'string' && editData.attachment.trim() !== '') {
@@ -1917,7 +1883,7 @@ export class ProjectsComponent implements OnInit {
     } else if (attachmentFile === null) {
       existingAttachment = originalAttachment;
     }
-
+    
     // Upload file first if it's a new file
     if (attachmentFile) {
       this.adminService.uploadFile(attachmentFile).subscribe({
@@ -1937,7 +1903,7 @@ export class ProjectsComponent implements OnInit {
       this.updateProjectWithDataInline(projectId, editData, customFields, customerId, finalStartDate, finalEndDate, existingAttachment);
     }
   }
-
+  
   private updateProjectWithDataInline(projectId: number, editData: any, customFields: any, customerId: number | null, finalStartDate: string | null, finalEndDate: string | null, attachment: string | null): void {
     // Normalize assigned_to: convert string to number, or null if empty/null/undefined (same logic as tasks)
     let assignedToValue: number | null = null;
@@ -1952,7 +1918,7 @@ export class ProjectsComponent implements OnInit {
         }
       }
     }
-
+    
     const dataToSend: any = {
       name: editData.name,
       description: editData.description || '',
@@ -1967,11 +1933,11 @@ export class ProjectsComponent implements OnInit {
       assigned_to: assignedToValue,
       attachment: attachment || null
     };
-
+    
     if (Object.keys(customFields).length > 0) {
       dataToSend.custom_fields = customFields;
     }
-
+    
     this.adminService.updateProject(projectId, dataToSend).subscribe({
       next: () => {
         this.toastService.show('Project updated successfully', 'success');
@@ -2002,13 +1968,13 @@ export class ProjectsComponent implements OnInit {
     if (project.status === newStatus) {
       return;
     }
-
+    
     // Convert customer_id to number if it's a string
     let customerId: number | null = null;
     if (project.customer_id) {
       customerId = typeof project.customer_id === 'string' ? parseInt(project.customer_id) : project.customer_id;
     }
-
+    
     const dataToSend: any = {
       name: project.name,
       description: project.description || '',
@@ -2019,13 +1985,13 @@ export class ProjectsComponent implements OnInit {
       customer_id: customerId,
       archived: project.archived === 1 || project.archived === true
     };
-
+    
     // Include custom_fields if they exist
     const customFields = this.getProjectCustomFields(project);
     if (customFields && Object.keys(customFields).length > 0) {
       dataToSend.custom_fields = customFields;
     }
-
+    
     this.adminService.updateProject(project.id, dataToSend).subscribe({
       next: () => {
         // Update local project status for immediate UI feedback
@@ -2053,7 +2019,7 @@ export class ProjectsComponent implements OnInit {
   // Toggle project archived status
   toggleProjectArchived(project: any): void {
     const newArchivedStatus = !(project.archived === 1 || project.archived === true);
-
+    
     const dataToSend: any = {
       name: project.name,
       description: project.description || '',
@@ -2066,13 +2032,13 @@ export class ProjectsComponent implements OnInit {
       allocated_time: project.allocated_time || null, // Include allocated_time to preserve it
       archived: newArchivedStatus
     };
-
+    
     // Include custom_fields if they exist
     const customFields = this.getProjectCustomFields(project);
     if (customFields && Object.keys(customFields).length > 0) {
       dataToSend.custom_fields = customFields;
     }
-
+    
     this.adminService.updateProject(project.id, dataToSend).subscribe({
       next: () => {
         // Update local project archived status for immediate UI feedback
@@ -2158,13 +2124,13 @@ export class ProjectsComponent implements OnInit {
   closeProjectMenu(): void {
     this.openProjectMenuId = null;
   }
-
+  
   deleteProject(projectId: number) {
     // Only admin can delete projects
     if (!this.isAdmin) {
       this.toastService.show('You do not have permission to delete projects', 'error');
       return;
-    }
+    } 
     this.confirmationService.show({
       title: 'Delete Project',
       message: 'Delete project? This will also delete all tasks.',
@@ -2215,7 +2181,7 @@ export class ProjectsComponent implements OnInit {
       } else {
         filteredTasks = tasks.filter((task: any) => task.archived === 1 || task.archived === true);
       }
-
+      
       this.projectTasks[projectId] = filteredTasks.map((task: any) => {
         // Parse custom_fields if it's a string
         let customFields = task.custom_fields;
@@ -2230,7 +2196,7 @@ export class ProjectsComponent implements OnInit {
         if (!customFields || typeof customFields !== 'object') {
           customFields = {};
         }
-
+        
         return {
           ...task,
           status: task.status === 'in_progress' ? 'in-progress' : task.status,
@@ -2240,16 +2206,16 @@ export class ProjectsComponent implements OnInit {
           custom_fields: customFields
         };
       });
-
+      
       // Update available regions after loading tasks
       this.updateAvailableRegions();
-
+      
       // Trigger change detection to update custom field columns
       // This ensures getAllTaskCustomFieldNames() returns the latest custom fields
       setTimeout(() => {
         // Force Angular to detect changes for custom field columns
       }, 0);
-
+      
       // Initialize dynamic form for task creation if not already done
       if (!this.newTask[projectId]) {
         this.newTask[projectId] = {};
@@ -2317,30 +2283,30 @@ export class ProjectsComponent implements OnInit {
       } else if (typeof project.custom_fields === 'object') {
         parsed = project.custom_fields;
       }
-
+      
       // Return null if parsed result is empty or null
       if (!parsed || (typeof parsed === 'object' && Object.keys(parsed).length === 0)) {
         return null;
       }
-
+      
       // Filter out system fields that shouldn't be displayed as custom fields
       const filtered: any = {};
       const excludedFields = ['archived', 'manager_id', 'custom_fields', 'custom_groups', 'allocated_time', 'status'];
-
+      
       Object.keys(parsed).forEach(key => {
         // Exclude system fields and nested objects
-        if (!excludedFields.includes(key.toLowerCase()) &&
-          !excludedFields.includes(key) &&
-          typeof parsed[key] !== 'object') {
+        if (!excludedFields.includes(key.toLowerCase()) && 
+            !excludedFields.includes(key) &&
+            typeof parsed[key] !== 'object') {
           filtered[key] = parsed[key];
         }
       });
-
+      
       // Return null if no valid custom fields remain
       if (Object.keys(filtered).length === 0) {
         return null;
       }
-
+      
       return filtered;
     } catch (e) {
       console.error('Error parsing custom_fields:', e, project.custom_fields);
@@ -2385,8 +2351,8 @@ export class ProjectsComponent implements OnInit {
             for (const formId in allConfigs) {
               const config = allConfigs[formId];
               if (config && config.fields && Array.isArray(config.fields)) {
-                const field = config.fields.find((f: any) =>
-                  (f.name && f.name === fieldName) ||
+                const field = config.fields.find((f: any) => 
+                  (f.name && f.name === fieldName) || 
                   (f.id && f.id === fieldName) ||
                   (f.name && String(f.name).toLowerCase() === String(fieldName).toLowerCase())
                 );
@@ -2606,7 +2572,7 @@ export class ProjectsComponent implements OnInit {
     if (value === null || value === undefined || value === '') {
       return '(empty)';
     }
-
+    
     // Handle boolean values
     if (value === 'true' || value === true || value === '1' || value === 1) {
       return 'Yes';
@@ -2614,7 +2580,7 @@ export class ProjectsComponent implements OnInit {
     if (value === 'false' || value === false || value === '0' || value === 0) {
       return 'No';
     }
-
+    
     // Handle dates
     if (fieldName.includes('date') || fieldName.includes('_date')) {
       try {
@@ -2626,7 +2592,7 @@ export class ProjectsComponent implements OnInit {
         // Not a valid date, continue
       }
     }
-
+    
     // Handle manager_id or assigned_to - try to get user name
     if (fieldName === 'manager_id' || fieldName === 'assigned_to') {
       const userId = parseInt(value);
@@ -2637,7 +2603,7 @@ export class ProjectsComponent implements OnInit {
         }
       }
     }
-
+    
     return String(value);
   }
 
@@ -2650,12 +2616,12 @@ export class ProjectsComponent implements OnInit {
       const diffMins = Math.floor(diffMs / 60000);
       const diffHours = Math.floor(diffMs / 3600000);
       const diffDays = Math.floor(diffMs / 86400000);
-
+      
       if (diffMins < 1) return 'Just now';
       if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
       if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
       if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-
+      
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (e) {
       return dateString;
@@ -2664,10 +2630,10 @@ export class ProjectsComponent implements OnInit {
 
   updateProjectAllocatedTime() {
     if (!this.selectedProjectForDetails) return;
-
+    
     const allocatedTime = this.selectedProjectForDetails.allocated_time;
     const projectId = this.selectedProjectForDetails.id;
-
+    
     this.adminService.updateProject(projectId, { allocated_time: allocatedTime }).subscribe({
       next: () => {
         // Update local project data
@@ -2810,15 +2776,15 @@ export class ProjectsComponent implements OnInit {
       this.toastService.show('Task title is required', 'warning');
       return;
     }
-
+    
     // Ensure team members are loaded for managers (optional, for dropdown population)
     if (this.isManager && this.teamMembers.length === 0) {
       this.loadTeamMembers();
     }
-
+    
     // Get form config to extract custom fields
     const config = this.dynamicFormService.getFormConfig(`createTask_${projectId}`);
-
+    
     // Build task data - start with standard fields from task object
     const taskData: any = {
       project_id: projectId, // Always include project_id
@@ -2830,11 +2796,11 @@ export class ProjectsComponent implements OnInit {
       due_date: task.due_date || null,
       allocated_time: task.allocated_time?.trim() || null
     };
-
+    
     // Extract custom fields from task object (everything that's not a standard field)
     const customFields: any = {};
     const standardFieldIds = ['title', 'description', 'status', 'assigned_to', 'due_date', 'allocated_time'];
-
+    
     // Get all keys from task object
     Object.keys(task).forEach(key => {
       // Skip standard fields and empty values
@@ -2846,14 +2812,14 @@ export class ProjectsComponent implements OnInit {
         }
       }
     });
-
+    
     // Normalize status - convert "in-progress" to "in_progress" for database compatibility
     let normalizedStatus = taskData.status || 'pending';
     if (normalizedStatus === 'in-progress') {
       normalizedStatus = 'in_progress';
     }
     taskData.status = normalizedStatus;
-
+    
     // assigned_to is optional for all roles - convert to number if provided, otherwise null
     let assignedToValue = null;
     if (taskData.assigned_to && taskData.assigned_to !== '' && taskData.assigned_to !== null) {
@@ -2863,20 +2829,20 @@ export class ProjectsComponent implements OnInit {
       }
     }
     taskData.assigned_to = assignedToValue;
-
+    
     // Ensure required fields
     if (!taskData.title || taskData.title.trim() === '') {
       this.toastService.show('Task title is required', 'warning');
       return;
     }
-
+    
     // Add custom_fields if any exist
     if (Object.keys(customFields).length > 0) {
       taskData.custom_fields = customFields;
     }
-
+    
     console.log('Creating task with data:', taskData);
-
+    
     this.adminService.createTask(taskData).subscribe({
       next: () => {
         this.toastService.show('Task created successfully', 'success');
@@ -2898,41 +2864,41 @@ export class ProjectsComponent implements OnInit {
     // Ensure history modal is closed when opening edit modal
     this.showTaskHistoryModalForTask = false;
     this.taskHistory = [];
-
+    
     this.selectedTaskForEdit = task;
     this.showEditTaskModal = true;
-
+    
     // Ensure team members are loaded for managers before editing
     if (this.isManager && this.teamMembers.length === 0) {
       this.loadTeamMembers();
     }
-
+    
     // Load comments for edit modal (don't load history automatically)
     this.loadTaskComments(task.id);
-
+    
     // Get custom fields from task
     const customFields = this.getTaskCustomFields(task) || {};
     const allCustomFieldNames = this.getAllTaskCustomFieldNames();
     const initializedCustomFields: any = {};
-
+    
     // Initialize all custom field names with existing values or empty strings
     allCustomFieldNames.forEach(fieldName => {
       initializedCustomFields[fieldName] = customFields[fieldName] || '';
     });
-
+    
     // Also include any custom fields from the task that might not be in allCustomFieldNames
     Object.keys(customFields).forEach(key => {
       if (!initializedCustomFields[key]) {
         initializedCustomFields[key] = customFields[key];
       }
     });
-
+    
     // Normalize status - keep task statuses as is (pending, in-progress, completed)
     let normalizedStatus = task.status || 'pending';
     if (normalizedStatus === 'in_progress') {
       normalizedStatus = 'in-progress';
     }
-
+    
     // Ensure assigned_to is a number or null
     let assignedToValue = null;
     if (task.assigned_to && task.assigned_to !== '' && task.assigned_to !== null) {
@@ -2941,7 +2907,7 @@ export class ProjectsComponent implements OnInit {
         assignedToValue = null;
       }
     }
-
+    
     this.editTaskData[task.id] = {
       title: task.title || '',
       description: task.description || '',
@@ -3252,12 +3218,12 @@ export class ProjectsComponent implements OnInit {
 
   getAssignedUserName(userId: number | null, task?: any): string {
     if (!userId) return '';
-
+    
     // First try to use assigned_to_name from backend if available
     if (task && task.assigned_to_name) {
       return task.assigned_to_name;
     }
-
+    
     // Fallback to looking up in users array
     const user = this.users.find(u => u.id === userId);
     return user ? (user.name || user.email || 'Unknown User') : '';
@@ -3266,13 +3232,13 @@ export class ProjectsComponent implements OnInit {
   // Get user name from email or name (for assigned_by field which now stores name, but may have legacy email data)
   getUserNameFromEmail(emailOrName: string | null | undefined): string {
     if (!emailOrName) return '-';
-
+    
     // If it contains @, it's likely an email - look up the user
     if (emailOrName.includes('@')) {
       const user = this.users.find(u => u.email === emailOrName);
       return user ? (user.name || emailOrName) : emailOrName;
     }
-
+    
     // Otherwise, it's already a name - return it directly
     return emailOrName;
   }
@@ -3285,22 +3251,22 @@ export class ProjectsComponent implements OnInit {
         this.toastService.show('Assigned To is required. Please select an engineer.', 'warning');
         return;
       }
-
+      
       // Ensure assigned_to is converted to number
       const assignedToValue = typeof task.assigned_to === 'string' ? parseInt(task.assigned_to) : Number(task.assigned_to);
-
+      
       if (isNaN(assignedToValue) || assignedToValue <= 0) {
         this.toastService.show('Please select a valid engineer.', 'warning');
         return;
       }
     }
-
+    
     // Normalize status - convert "in-progress" to "in_progress" for database compatibility
     let normalizedStatus = task.status || 'pending';
     if (normalizedStatus === 'in-progress') {
       normalizedStatus = 'in_progress';
     }
-
+    
     // Build update data - assigned_to is optional for all roles
     let assignedToValue = null;
     if (task.assigned_to && task.assigned_to !== '' && task.assigned_to !== null) {
@@ -3309,7 +3275,7 @@ export class ProjectsComponent implements OnInit {
         assignedToValue = null;
       }
     }
-
+    
     // Extract custom fields from task
     const customFields: any = {};
     if (task.custom_fields && typeof task.custom_fields === 'object') {
@@ -3320,7 +3286,7 @@ export class ProjectsComponent implements OnInit {
         }
       });
     }
-
+    
     const updateData: any = {
       title: task.title,
       description: task.description,
@@ -3330,12 +3296,12 @@ export class ProjectsComponent implements OnInit {
       due_date: task.due_date || null,
       allocated_time: task.allocated_time?.trim() || null
     };
-
+    
     // Add custom_fields if any exist
     if (Object.keys(customFields).length > 0) {
       updateData.custom_fields = customFields;
     }
-
+    
     const projectId = this.getProjectIdForTask(task.id);
     this.adminService.updateTask(task.id, updateData).subscribe({
       next: () => {
@@ -3360,21 +3326,21 @@ export class ProjectsComponent implements OnInit {
     if (task.status === newStatus) {
       return;
     }
-
+    
     // Normalize status - convert "in-progress" to "in_progress" for database compatibility
     let normalizedStatus = newStatus;
     if (normalizedStatus === 'in-progress') {
       normalizedStatus = 'in_progress';
     }
-
+    
     // Ensure assigned_to is a number
     const assignedToValue = typeof task.assigned_to === 'string' ? parseInt(task.assigned_to) : Number(task.assigned_to);
-
+    
     if (isNaN(assignedToValue) || assignedToValue <= 0) {
       this.toastService.show('Error: Invalid task assignment.', 'error');
       return;
     }
-
+    
     // Update task status
     this.adminService.updateTask(task.id, {
       title: task.title,
@@ -3475,7 +3441,7 @@ export class ProjectsComponent implements OnInit {
           };
         });
         this.applyFilters(); // Apply filters instead of direct assignment
-
+        
         // Initialize newTask for each project
         this.projects.forEach((p: any) => {
           if (!this.newTask[p.id]) {
@@ -3484,7 +3450,7 @@ export class ProjectsComponent implements OnInit {
           // Initialize dynamic form for each project's task creation
           this.dynamicFormService.initializeForm(`createTask_${p.id}`, this.taskFormFields);
         });
-
+        
         // Load tasks for each selected project
         this.projects.forEach((project: any) => {
           this.loadTasks(project.id);
@@ -3620,7 +3586,7 @@ export class ProjectsComponent implements OnInit {
     // Normalize manager_id: convert null or undefined to null
     // manager_id is already typed as number | null, so we just need to handle null/undefined
     const managerIdToAssign = (editData.manager_id === null || editData.manager_id === undefined) ? null : editData.manager_id;
-
+    
     this.adminService.assignManagerToProject(projectId, managerIdToAssign).subscribe({
       next: () => {
         this.toastService.show('Manager assignment updated successfully', 'success');
@@ -3653,13 +3619,13 @@ export class ProjectsComponent implements OnInit {
       allocated_time: project.allocated_time || null,
       archived: project.archived || false
     };
-
+    
     // Include custom_fields if they exist
     const customFields = this.getProjectCustomFields(project);
     if (customFields && Object.keys(customFields).length > 0) {
       dataToSend.custom_fields = customFields;
     }
-
+    
     this.adminService.updateProject(project.id, dataToSend).subscribe({
       next: () => {
         // Update local project status for immediate UI feedback

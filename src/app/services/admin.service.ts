@@ -31,8 +31,6 @@ export class AdminService {
   updateProject(id: number, project: any) { return this.http.put(buildApi(`projects/${id}`), project); }
   assignManagerToProject(id: number, managerId: number | null) { return this.http.put(buildApi(`projects/${id}/assign-manager`), { manager_id: managerId }); }
   selectProject(id: number) { return this.http.put<any>(buildApi(`projects/${id}/select`), {}); }
-  followProject(id: number) { return this.http.post<any>(buildApi(`projects/${id}/follow`), {}); }
-  unfollowProject(id: number) { return this.http.delete<any>(buildApi(`projects/${id}/follow`)); }
   deleteProject(id: number) { return this.http.delete(buildApi(`projects/${id}`)); }
 
   // Comments
