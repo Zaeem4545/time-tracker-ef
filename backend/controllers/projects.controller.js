@@ -1,15 +1,17 @@
 const db = require("../config/db");
 const Notification = require("../models/notification.model");
 const googleSheetsService = require("../services/googleSheets.service");
+const projectModel = require("../models/project.model");
+const emailService = require("../services/email.service");
 
 const formatDateForMySQL = (date) => {
-      if (!date) return null;
-      const d = new Date(date);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
+  if (!date) return null;
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 // Helper function to log project history
 async function logProjectHistory(
   projectId,
@@ -45,10 +47,24 @@ async function logProjectHistory(
 }
 
 // Get all projects - VIEW (All roles see all projects)
+// Get all projects - VIEW (All roles see all projects)
 async function getAllProjects(req, res) {
   try {
     const userRole = req.user.role?.toLowerCase();
     const userId = req.user.id;
+
+    // Use the model method that includes is_following status
+    const rows = await projectModel.getAllProjectsWithFollowStatus(userId);
+
+    // We still need to join with other tables if the model method doesn't do it, 
+    // OR we can update the model method to do the joins.
+    // Given the complexity of the original query in controller, let's keep the join logic here 
+    // but we can't easily mix the raw SQL with the model call unless the model does exactly what we need.
+    // ACTUALLY, checking the model implementation I added, it only does SELECT p.*.
+    // So to avoid breaking existing functionality (manager names etc), I should modify the query HERE instead of using the model,
+    // OR update the model to match this query.
+    // 
+    // Let's modify the query HERE to add the is_following check.
 
     let query = `
       SELECT DISTINCT p.*, 
@@ -57,25 +73,28 @@ async function getAllProjects(req, res) {
              hmp.head_manager_id as selected_by_head_manager_id,
              hm.email as selected_by_head_manager_email,
              c.name as customer_name,
-             creator.name as created_by_name
+             creator.name as created_by_name,
+             CASE WHEN pf.user_id IS NOT NULL THEN 1 ELSE 0 END as is_following
       FROM projects p 
       LEFT JOIN users u ON p.manager_id = u.id 
       LEFT JOIN head_manager_projects hmp ON p.id = hmp.project_id
       LEFT JOIN users hm ON hmp.head_manager_id = hm.id
       LEFT JOIN customers c ON p.customer_id = c.id
       LEFT JOIN users creator ON p.created_by = creator.id
+      LEFT JOIN project_followers pf ON p.id = pf.project_id AND pf.user_id = ?
     `;
 
-    let params = [];
+    let params = [userId];
 
     // All roles (admin, manager, head manager, employee) see all projects
     // No filtering needed
 
     query += ` ORDER BY p.id DESC`;
 
-    const [rows] = await db.query(query, params);
+    const [rowsResult] = await db.query(query, params);
+
     // Ensure custom_fields is properly parsed from JSON if needed
-    const formattedRows = rows.map((row) => {
+    const formattedRows = rowsResult.map((row) => {
       if (row.custom_fields && typeof row.custom_fields === "string") {
         try {
           row.custom_fields = JSON.parse(row.custom_fields);
@@ -157,13 +176,13 @@ async function createProject(req, res) {
     // Normalize customer_id: convert null, undefined, empty string, or string "null" to null
     const normalizedCustomerId =
       customer_id === null ||
-      customer_id === undefined ||
-      customer_id === "" ||
-      customer_id === "null"
+        customer_id === undefined ||
+        customer_id === "" ||
+        customer_id === "null"
         ? null
         : typeof customer_id === "string"
-        ? parseInt(customer_id)
-        : customer_id;
+          ? parseInt(customer_id)
+          : customer_id;
     // Get region from customer if not provided directly
     let projectRegion = region || null;
     if (!projectRegion && normalizedCustomerId) {
@@ -185,35 +204,35 @@ async function createProject(req, res) {
     // Normalize assigned_to: convert null, undefined, empty string, or string "null" to null
     const normalizedAssignedTo =
       assigned_to === null ||
-      assigned_to === undefined ||
-      assigned_to === "" ||
-      assigned_to === "null"
+        assigned_to === undefined ||
+        assigned_to === "" ||
+        assigned_to === "null"
         ? null
         : typeof assigned_to === "string"
-        ? parseInt(assigned_to)
-        : assigned_to;
+          ? parseInt(assigned_to)
+          : assigned_to;
 
     // Store creator ID (current user)
     const createdBy = req.user.id;
 
     const [result] = await db.query(
-  "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id, assigned_to, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-  [
-    name.trim(),
-    description.trim(),
-    formatDateForMySQL(start_date),
-    formatDateForMySQL(end_date),
-    customFieldsJson,
-    projectStatus,
-    isArchived,
-    normalizedCustomerId,
-    projectRegion,
-    allocated_time || null,
-    managerIdToSet,
-    normalizedAssignedTo,
-    createdBy,
-  ]
-);
+      "INSERT INTO projects (name, description, start_date, end_date, custom_fields, status, archived, customer_id, region, allocated_time, manager_id, assigned_to, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        name.trim(),
+        description.trim(),
+        formatDateForMySQL(start_date),
+        formatDateForMySQL(end_date),
+        customFieldsJson,
+        projectStatus,
+        isArchived,
+        normalizedCustomerId,
+        projectRegion,
+        allocated_time || null,
+        managerIdToSet,
+        normalizedAssignedTo,
+        createdBy,
+      ]
+    );
 
 
     const projectId = result.insertId;
@@ -224,11 +243,11 @@ async function createProject(req, res) {
         // Get assigned user name for logging
         const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [normalizedAssignedTo]);
         const assignedUserName = userRows.length > 0 ? userRows[0].name : 'User';
-        
+
         // Get assigner name
         const assignerName = creatorName;
         const notificationMessage = `You have been assigned to project "${name}" by ${assignerName}`;
-        
+
         await Notification.createNotification(normalizedAssignedTo, notificationMessage, 'project_assigned');
         console.log(`Project assignment notification sent to user ${normalizedAssignedTo} (${assignedUserName}): ${notificationMessage}`);
       } catch (notifError) {
@@ -369,7 +388,7 @@ async function createProject(req, res) {
 // Update project - UPDATE
 async function updateProject(req, res) {
   try {
-  const { id } = req.params;
+    const { id } = req.params;
     const {
       name,
       description,
@@ -409,9 +428,9 @@ async function updateProject(req, res) {
     // Normalize manager_id: convert null, undefined, empty string, or string "null" to null
     const normalizedManagerId =
       manager_id === null ||
-      manager_id === undefined ||
-      manager_id === "" ||
-      manager_id === "null"
+        manager_id === undefined ||
+        manager_id === "" ||
+        manager_id === "null"
         ? null
         : manager_id;
 
@@ -445,13 +464,13 @@ async function updateProject(req, res) {
     // Normalize customer_id: convert null, undefined, empty string, or string "null" to null
     const normalizedCustomerId =
       customer_id === null ||
-      customer_id === undefined ||
-      customer_id === "" ||
-      customer_id === "null"
+        customer_id === undefined ||
+        customer_id === "" ||
+        customer_id === "null"
         ? null
         : typeof customer_id === "string"
-        ? parseInt(customer_id)
-        : customer_id;
+          ? parseInt(customer_id)
+          : customer_id;
 
     // Get region from customer if not provided directly and customer_id is set
     let projectRegion = region || null;
@@ -465,17 +484,17 @@ async function updateProject(req, res) {
       }
     }
 
-    
+
     // Normalize assigned_to: convert null, undefined, empty string, or string "null" to null
     const normalizedAssignedTo =
       assigned_to === null ||
-      assigned_to === undefined ||
-      assigned_to === "" ||
-      assigned_to === "null"
+        assigned_to === undefined ||
+        assigned_to === "" ||
+        assigned_to === "null"
         ? null
         : typeof assigned_to === "string"
-        ? parseInt(assigned_to)
-        : assigned_to;
+          ? parseInt(assigned_to)
+          : assigned_to;
 
     // Update project (include status and archived if provided)
     const updateFields = [
@@ -613,18 +632,15 @@ async function updateProject(req, res) {
             [newArchivedStatus, id]
           );
           console.log(
-            `✅ Updated archived status for ${
-              updateResult.affectedRows
-            } task(s) in project ${id} to ${newArchivedStatus} (${
-              archived ? "archived" : "unarchived"
+            `✅ Updated archived status for ${updateResult.affectedRows
+            } task(s) in project ${id} to ${newArchivedStatus} (${archived ? "archived" : "unarchived"
             })`
           );
 
           // Verify the update worked
           if (updateResult.affectedRows > 0) {
             console.log(
-              `✅ Successfully ${archived ? "archived" : "unarchived"} ${
-                updateResult.affectedRows
+              `✅ Successfully ${archived ? "archived" : "unarchived"} ${updateResult.affectedRows
               } task(s) for project ${id}`
             );
           } else {
@@ -634,8 +650,7 @@ async function updateProject(req, res) {
           }
         } else {
           console.log(
-            `ℹ️ Project ${id} archived status unchanged (${
-              archived ? "archived" : "unarchived"
+            `ℹ️ Project ${id} archived status unchanged (${archived ? "archived" : "unarchived"
             }), skipping task update`
           );
         }
@@ -738,6 +753,45 @@ async function updateProject(req, res) {
           notifError
         );
       }
+    }
+
+    // Notify Project Followers
+    try {
+      const followers = await projectModel.getProjectFollowers(id);
+      const followerEmails = followers.map(f => f.email).filter(Boolean);
+      const followerIds = followers.map(f => f.id);
+
+      // Prepare notification content
+      const updateMessage = `Project "${name}" has been updated by ${userName}.`;
+
+      // 1. Email Notifications
+      if (followerEmails.length > 0) {
+        const emailSubject = `Project Updated: ${name}`;
+        let emailHtml = `<p>The project <strong>"${name}"</strong> has been updated by <strong>${userName}</strong>.</p>`;
+
+        // Add details about changes
+        emailHtml += `<h3>Changes:</h3><ul>`;
+        for (const [field, values] of Object.entries(fieldsToTrack)) {
+          if (values.old !== values.new) {
+            emailHtml += `<li><strong>${field}:</strong> Changed from "${values.old}" to "${values.new}"</li>`;
+          }
+        }
+        emailHtml += `</ul>`;
+        emailHtml += `<p>Click here to view the project.</p>`;
+
+        await emailService.sendEmail(followerEmails, emailSubject, emailHtml);
+      }
+
+      // 2. In-App Notifications
+      for (const followerId of followerIds) {
+        // Don't notify the user who made the change
+        if (followerId !== req.user.id) {
+          await Notification.createNotification(followerId, updateMessage, 'project_update');
+        }
+      }
+
+    } catch (error) {
+      console.error('Error sending project update notifications:', error);
     }
 
     // If a manager is assigned (and it's different from previous), create a notification for the new manager
@@ -1008,6 +1062,36 @@ async function deleteProject(req, res) {
       deleterEmail
     );
 
+    // Notify Project Followers about deletion BEFORE deleting
+    try {
+      const followers = await projectModel.getProjectFollowers(id);
+      const followerEmails = followers.map(f => f.email).filter(Boolean);
+      const followerIds = followers.map(f => f.id);
+
+      const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [req.user.id]);
+      const deleterName = userRows.length > 0 ? userRows[0].name : 'Admin';
+
+      const notificationMessage = `Project "${project.name}" has been deleted by ${deleterName}.`;
+
+      // 1. Email Notifications
+      if (followerEmails.length > 0) {
+        const emailSubject = `Project Deleted: ${project.name}`;
+        const emailHtml = `<p>The project <strong>"${project.name}"</strong> has been deleted by <strong>${deleterName}</strong>.</p>`;
+
+        await emailService.sendEmail(followerEmails, emailSubject, emailHtml);
+      }
+
+      // 2. In-App Notifications
+      for (const followerId of followerIds) {
+        // Don't notify the deleter
+        if (followerId !== req.user.id) {
+          await Notification.createNotification(followerId, notificationMessage, 'project_deleted');
+        }
+      }
+    } catch (notifError) {
+      console.error('Error sending notifications for project deletion:', notifError);
+    }
+
     // Delete the project
     await db.query("DELETE FROM projects WHERE id = ?", [id]);
 
@@ -1055,7 +1139,7 @@ async function deleteProject(req, res) {
 // Assign manager to project - Head Manager only
 async function assignManagerToProject(req, res) {
   try {
-  const { id } = req.params;
+    const { id } = req.params;
     const { manager_id } = req.body;
 
     // Check if user is head manager or admin
@@ -1087,9 +1171,9 @@ async function assignManagerToProject(req, res) {
     // Normalize manager_id: convert null, undefined, empty string, or string "null" to null
     const normalizedManagerId =
       manager_id === null ||
-      manager_id === undefined ||
-      manager_id === "" ||
-      manager_id === "null"
+        manager_id === undefined ||
+        manager_id === "" ||
+        manager_id === "null"
         ? null
         : manager_id;
 
@@ -1541,6 +1625,40 @@ async function createProjectComment(req, res) {
       [result.insertId]
     );
 
+    // Notify Project Followers about new comment
+    try {
+      const [projectRows] = await db.query('SELECT name FROM projects WHERE id = ?', [projectId]);
+      const projectName = projectRows.length > 0 ? projectRows[0].name : 'a project';
+      const [userRows] = await db.query('SELECT name FROM users WHERE id = ?', [userId]);
+      const commenterName = userRows.length > 0 ? userRows[0].name : 'User';
+
+      const followers = await projectModel.getProjectFollowers(projectId);
+      const followerEmails = followers.map(f => f.email).filter(Boolean);
+      const followerIds = followers.map(f => f.id);
+
+      const notificationMessage = `New comment on project "${projectName}" by ${commenterName}: "${comment.substring(0, 50)}${comment.length > 50 ? '...' : ''}"`;
+
+      // 1. Email Notifications
+      if (followerEmails.length > 0) {
+        const emailSubject = `New Comment on Project: ${projectName}`;
+        const emailHtml = `<p><strong>${commenterName}</strong> commented on project <strong>"${projectName}"</strong>:</p>
+                                <blockquote>${comment}</blockquote>
+                                <p>Click here to view the project.</p>`;
+
+        await emailService.sendEmail(followerEmails, emailSubject, emailHtml);
+      }
+
+      // 2. In-App Notifications
+      for (const followerId of followerIds) {
+        // Don't notify the commenter
+        if (followerId !== userId) {
+          await Notification.createNotification(followerId, notificationMessage, 'project_comment');
+        }
+      }
+    } catch (notifError) {
+      console.error('Error sending notifications for project comment:', notifError);
+    }
+
     res.status(201).json({ success: true, comment: newComment[0] });
   } catch (error) {
     console.error("Error creating project comment:", error);
@@ -1668,6 +1786,36 @@ async function deleteProjectComment(req, res) {
   }
 }
 
+// Follow project
+async function followProject(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    await projectModel.followProject(id, userId);
+
+    res.json({ success: true, message: 'Successfully followed project' });
+  } catch (error) {
+    console.error('Error following project:', error);
+    res.status(500).json({ success: false, message: 'Failed to follow project' });
+  }
+}
+
+// Unfollow project
+async function unfollowProject(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    await projectModel.unfollowProject(id, userId);
+
+    res.json({ success: true, message: 'Successfully unfollowed project' });
+  } catch (error) {
+    console.error('Error unfollowing project:', error);
+    res.status(500).json({ success: false, message: 'Failed to unfollow project' });
+  }
+}
+
 module.exports = {
   getAllProjects,
   createProject,
@@ -1680,4 +1828,7 @@ module.exports = {
   createProjectComment,
   updateProjectComment,
   deleteProjectComment,
+  logProjectHistory,
+  followProject,
+  unfollowProject
 };
